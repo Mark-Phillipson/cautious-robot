@@ -49,6 +49,10 @@ namespace BlazorApp.Client.Pages
                     wordsHelper = new WordsHelper(apiKey);
                     await LoadWordAsync();
                 }
+				else
+				{
+					Message="API key not found";
+				}
             }
         }
 
