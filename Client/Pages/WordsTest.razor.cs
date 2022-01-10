@@ -41,7 +41,7 @@ namespace BlazorApp.Client.Pages
         {
             if (Configuration != null)
             {
-                var apiKey = Configuration["WordsApi:key"];
+                var apiKey = Configuration["WordsApiKey"];
                 // var apiKey = Environment.GetEnvironmentVariable("WordsApiKey");
                 if (apiKey != null)
                 {
