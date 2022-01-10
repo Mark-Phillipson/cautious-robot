@@ -1,0 +1,7 @@
+appsettings.json
+*.dll
+*.exe
+*.gz
+*.zip
+*.sqlite
+Thumbs.db
