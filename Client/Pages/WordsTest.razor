@@ -6,6 +6,8 @@
 	<label class="control-label">Score</label> @score / @WordsToLoad
 	<label class="control-label">Maximum Word Length</label>
 	<input class="form-conform" type="number" style="width:50px" @bind="@MaximumWordLength" />
+	<label class="control-label">API Key</label>
+	<input class="form-conform" type="text" style="width:400px" @bind="@APIKey" />
 </div>
 <hr />
 @if (LoadWordResults?.WordResults != null)
