@@ -35,14 +35,15 @@ namespace BlazorApp.Client.Pages
                 await LoadWordsButton.FocusAsync();
             }
         }
-
-        // TODO Hideaway the API key
         protected override async Task OnInitializedAsync()
         {
             if (Configuration != null)
             {
                 var apiKey = Configuration["WordsApiKey"];
-                // var apiKey = Environment.GetEnvironmentVariable("WordsApiKey");
+				if (apiKey== null || apiKey=="TBC")
+				{
+                	apiKey = Environment.GetEnvironmentVariable("WordsApiKey");
+				}
                 if (apiKey != null)
                 {
                     wordsHelper = new WordsHelper(apiKey);
