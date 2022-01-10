@@ -9,22 +9,60 @@ namespace BlazorApp.Client.Pages
 {
     public partial class WordsTest
     {
-        [Inject]
-        HttpClient? client { get; set; }
+        [Inject] HttpClient? client
+        {
+            get;
+            set;
+        }
 
-        [Inject]
-        IConfiguration? Configuration { get; set; }
-        WordResult? wordResult { get; set; }
-        LoadWordResults? LoadWordResults { get; set; }
+        [Inject] IConfiguration? Configuration
+        {
+            get;
+            set;
+        }
+        WordResult? wordResult
+        {
+            get;
+            set;
+        }
+        LoadWordResults? LoadWordResults
+        {
+            get;
+            set;
+        }
         ElementReference LoadWordsButton;
         WordsHelper? wordsHelper;
-        public int MaximumWordLength { get; set; } = 20;
-        public string? Message { get; set; }
+        public int MaximumWordLength
+        {
+            get;
+            set;
+        }
+        = 20;
+        public string? Message
+        {
+            get;
+            set;
+        }
         string? result = "";
         private string? response;
-        private string dynamicClass { get; set; } = "";
-        public bool ShowWord { get; set; } = true;
-        public int WordsToLoad { get; private set; } = 5;
+        private string dynamicClass
+        {
+            get;
+            set;
+        }
+        = "";
+        public bool ShowWord
+        {
+            get;
+            set;
+        }
+        = true;
+        public int WordsToLoad
+        {
+            get;
+            private set;
+        }
+        = 5;
         private int currentQuestionNumber = 0;
         private int score;
 
@@ -35,24 +73,29 @@ namespace BlazorApp.Client.Pages
                 await LoadWordsButton.FocusAsync();
             }
         }
+
         protected override async Task OnInitializedAsync()
         {
             if (Configuration != null)
             {
-                var apiKey = Configuration["WordsApiKey"];
-				if (apiKey== null || apiKey=="TBC")
-				{
-                	apiKey = Environment.GetEnvironmentVariable("WordsApiKey");
-				}
+                var apiKey = "TBC";
+                if (apiKey == null || apiKey == "TBC")
+                {
+                    apiKey = Environment.GetEnvironmentVariable("WORDSAPIKEY");
+                }
+                if (apiKey == null || apiKey == "TBC")
+                {
+                    apiKey = Configuration["WordsApiKey"];
+                }
                 if (apiKey != null)
                 {
                     wordsHelper = new WordsHelper(apiKey);
                     await LoadWordAsync();
                 }
-				else
-				{
-					Message="API key not found";
-				}
+                else
+                {
+                    Message = "API key not found";
+                }
             }
         }
 
