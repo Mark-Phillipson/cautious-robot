@@ -29,8 +29,9 @@ namespace BlazorApp.Client.Pages
         private int currentQuestionNumber = 0;
         private int score;
         public string? APIKey { get; set; } =  null;
+		public bool HideKey { get; set; } = false;
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+		protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
@@ -103,6 +104,7 @@ namespace BlazorApp.Client.Pages
 			//Try to get the API key from the text box in the user interface
             if (APIKey != null && APIKey != "TBC")
             {
+				HideKey = true;
                 wordsHelper = new WordsHelper(APIKey);
             }
             if (wordsHelper != null)

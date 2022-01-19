@@ -1,25 +1,29 @@
 ﻿@page "/words"
-@DateTime.UtcNow.ToLongTimeString()
 <div class="row align-items-center g-2">
-	<div  class="col-auto">
-	<button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">Load
-		@WordsToLoad
-		more Words</button>
+	<div class="col-auto">
+		<button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">
+			Load
+			@WordsToLoad
+			more Words
+		</button>
 	</div>
-	<div  class="col-auto">
-	<label class="control-label">Score</label> @score / @WordsToLoad
+	<div class="col-auto">
+		<label class="control-label">Score</label> @score / @WordsToLoad
 	</div>
-	<div  class="col-auto">
-	<label class="visually-hidden">Maximum Word Length</label>
-	<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
+	<div class="col-auto">
+		<label class="visually-hidden">Maximum Word Length</label>
+		<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
 	</div>
-	<div  class="col-auto">
-	<label class="visually-hidden">API Key</label>
-	<input class="form-control" placeholder="API Key" type="text" style="width:400px" @bind="@APIKey" />
-	</div>
-	<div  class="col-auto">
-	<label class="visually-hidden">Begins With</label>
-	<input class="form-control" placeholder="Begins With" type="text" style="width:150px" @bind="@BeginsWith" />
+	@if (!HideKey)
+	{
+		<div class="col-auto">
+			<label class="visually-hidden">API Key</label>
+			<input class="form-control" placeholder="API Key" type="text" style="width:400px" @bind="@APIKey" />
+		</div>
+	}
+	<div class="col-auto">
+		<label class="visually-hidden">Begins With</label>
+		<input class="form-control" placeholder="Begins With" type="text" style="width:150px" @bind="@BeginsWith" />
 	</div>
 
 </div>
@@ -38,7 +42,9 @@
 			{
 				<div style="display:inline;" class="">
 					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word))" style="margin:3px"
-			class="btn btn-info btn-lg d-none d-lg-inline">@wordResultLoop?.word</button>
+				class="btn btn-info btn-lg d-none d-lg-inline">
+						@wordResultLoop?.word
+					</button>
 				</div>
 
 				@* <a target="_blank" href="https://en.wikipedia.org/wiki/@wordResult?.word">Look Up @wordResult?.word</a> *@
@@ -50,7 +56,9 @@
 			{
 				<div class="d-flex custom-layout d-lg-none">
 					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word))" style="margin:3px"
-			class="btn btn-primary btn-sm d-lg-none">@wordResultLoop?.word</button>
+				class="btn btn-primary btn-sm d-lg-none">
+						@wordResultLoop?.word
+					</button>
 				</div>
 			}
 		}
