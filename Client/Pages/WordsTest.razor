@@ -8,7 +8,7 @@
 		</button>
 	</div>
 	<div class="col-auto">
-		<label class="control-label">Score</label> @score / @WordsToLoad
+		<label class="control-label">Score </label> @score <text> / </text> @WordsToLoad
 	</div>
 	<div class="col-auto">
 		<label class="visually-hidden">Maximum Word Length</label>
@@ -141,3 +141,12 @@ else
 		}
 	</ul>
 }
+@if (score == WordsToLoad)
+{
+	<ul>
+		<li>
+			<h1 class="@dynamicClass text-danger d-none d-lg-block">Well done the Score is @score <text> out of </text> @WordsToLoad </h1>
+		</li>
+	</ul>
+}
+

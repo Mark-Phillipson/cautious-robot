@@ -84,7 +84,8 @@ namespace BlazorApp.Client.Pages
                     response = $"{response}. Click the Load Word button to continue...";
                     ShowWord = false;
                     wordResult = null;
-                    await LoadWordsButton.FocusAsync();
+					dynamicClass = "animate__animated animate__backInUp";
+					await LoadWordsButton.FocusAsync();
                 }
             }
             else
