@@ -1,14 +1,28 @@
 ﻿@page "/words"
-<div class="form-inline">
+<div class="row align-items-center g-2">
+	<div  class="col-auto">
 	<button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">Load
 		@WordsToLoad
 		more Words</button>
+	</div>
+	<div  class="col-auto">
 	<label class="control-label">Score</label> @score / @WordsToLoad
-	<label class="control-label">Maximum Word Length</label>
-	<input class="form-conform" type="number" style="width:50px" @bind="@MaximumWordLength" />
-	<label class="control-label">API Key</label>
-	<input class="form-conform" type="text" style="width:400px" @bind="@APIKey" />
+	</div>
+	<div  class="col-auto">
+	<label class="visually-hidden">Maximum Word Length</label>
+	<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
+	</div>
+	<div  class="col-auto">
+	<label class="visually-hidden">API Key</label>
+	<input class="form-control" placeholder="API Key" type="text" style="width:400px" @bind="@APIKey" />
+	</div>
+	<div  class="col-auto">
+	<label class="visually-hidden">Begins With</label>
+	<input class="form-control" placeholder="Begins With" type="text" style="width:150px" @bind="@BeginsWith" />
+	</div>
+
 </div>
+
 <hr />
 @if (LoadWordResults?.WordResults != null)
 {

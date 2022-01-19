@@ -12,18 +12,19 @@ public class WordsHelper
         _apiKey = apiKey;
     }
 
-    public async Task<LoadWordResults> GetRandomWord(string apiKey, int maximumWordsLength)
+    public async Task<LoadWordResults> GetRandomWord(string apiKey, int maximumWordsLength,string? beginsWith= null )
     {
         // https://www.wordsapi.com/ ( Documentation ) 500 requests per day free on basic
         var client = new HttpClient();
         LoadWordResults loadWordResults = new();
         var request = new HttpRequestMessage
         {
+
             Method = HttpMethod.Get,
             // RequestUri = new
             // Uri($"https://wordsapiv1.p.rapidapi.com/words/?random=true&partOfSpeech={partOfSpeech}"),
             RequestUri = new Uri(
-                $"https://wordsapiv1.p.rapidapi.com/words/?random=true&hasDetails=definitions&lettersMax={maximumWordsLength}"
+                $"https://wordsapiv1.p.rapidapi.com/words/?random=true&hasDetails=definitions&lettersMax={maximumWordsLength}&letterPattern=^{beginsWith}."
             ),
             // RequestUri = new Uri($"https://wordsapiv1.p.rapidapi.com/words/{Word}"),
             Headers =
@@ -48,13 +49,13 @@ public class WordsHelper
         return loadWordResults;
     }
 
-    public async Task<LoadWordResults> LoadWord(int wordsToLoad, int maximumWordsLength)
+    public async Task<LoadWordResults> LoadWord(int wordsToLoad, int maximumWordsLength,string? BeginsWith)
     {
         var loadWordResults = new LoadWordResults();
         loadWordResults.LettersToShow = 1;
         for (int i = 0; i < wordsToLoad; i++)
         {
-            var loadWordResultsSingle = await GetRandomWord(_apiKey, maximumWordsLength);
+            var loadWordResultsSingle = await GetRandomWord(_apiKey, maximumWordsLength,BeginsWith);
             try
             {
                 if (loadWordResultsSingle.Result != null)
