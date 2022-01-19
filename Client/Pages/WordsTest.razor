@@ -16,14 +16,14 @@
 			<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
 		</div>
 		<div class='d-lg-none'>
-			<input class="form-control" placeholder="Max Length" type="number" style="width:100px" @bind="@MaximumWordLength" />
+			<input class="form-control" placeholder="Max Len." type="number" @bind="@MaximumWordLength" />
 		</div>
 	</div>
 	@if (!HideKey)
 	{
 		<div class="col-auto">
 			<label class="visually-hidden">API Key</label>
-			<input class="form-control" placeholder="API Key" type="text" style="width:400px" @bind="@APIKey" />
+			<input class="form-control" placeholder="API Key" type="password" style="width:400px" @bind="@APIKey" />
 		</div>
 	}
 	<div class="col-auto">
@@ -146,6 +146,7 @@ else
 	<ul>
 		<li>
 			<h1 class="@dynamicClass text-danger d-none d-lg-block">Well done the Score is @score <text> out of </text> @WordsToLoad </h1>
+			<h5 class="@dynamicClass text-danger d-lg-none">Well done the Score is @score <text> out of </text> @WordsToLoad </h5>
 		</li>
 	</ul>
 }
