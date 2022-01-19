@@ -1,4 +1,5 @@
 ﻿@page "/words"
+@DateTime.UtcNow.ToLongTimeString()
 <div class="row align-items-center g-2">
 	<div  class="col-auto">
 	<button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">Load
