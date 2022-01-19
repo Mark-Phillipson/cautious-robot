@@ -12,7 +12,12 @@
 	</div>
 	<div class="col-auto">
 		<label class="visually-hidden">Maximum Word Length</label>
-		<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
+		<div class='d-none d-lg-block'>
+			<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
+		</div>
+		<div class='d-lg-none'>
+			<input class="form-control" placeholder="Max Length" type="number" style="width:100px" @bind="@MaximumWordLength" />
+		</div>
 	</div>
 	@if (!HideKey)
 	{
@@ -23,7 +28,12 @@
 	}
 	<div class="col-auto">
 		<label class="visually-hidden">Begins With</label>
-		<input class="form-control" placeholder="Begins With" type="text" style="width:150px" @bind="@BeginsWith" />
+		<div class='d-none d-lg-block'>
+			<input class="form-control" placeholder="Begins With" type="text" style="width:138px" @bind="@BeginsWith" />
+		</div>
+		<div class='d-lg-none'>
+			<input class="form-control" placeholder="Begins With" type="text" @bind="@BeginsWith" />
+		</div>
 	</div>
 
 </div>
