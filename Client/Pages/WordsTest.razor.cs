@@ -39,11 +39,11 @@ namespace BlazorApp.Client.Pages
 				else
 				{
 					AnswerState = true;
-					await Task.Delay(2000);
 					response = $"✅ ({guessedWord}) ";
 					response = $"{response}. Click the Load Word button to continue...";
-					ShowWord = false;
 					dynamicClass = "animate__animated animate__backInUp";
+					await Task.Delay(2000);
+					ShowWord = false;
 					wordResult = null;
 					ButtonClass[indexPosition] = "btn-info";
 					await LoadWordsButton.FocusAsync();

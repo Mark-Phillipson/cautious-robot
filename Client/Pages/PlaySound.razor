@@ -1,7 +1,7 @@
 ﻿@page "/sound";
 		@if (Play)
 		{
-			<audio autoplay controls hidden>
+			<audio autoplay controls hidden type="audio/mpeg" >
 				@if (AnswerState)
 				{
 				<source src="/Correct.mp3" />
@@ -14,7 +14,7 @@
 		}
 		else
 		{
-			<audio controls muted hidden>
+			<audio controls muted hidden type="audio/mpeg">
 				@if (AnswerState)
 				{
 				<source src="/Correct.mp3" />
