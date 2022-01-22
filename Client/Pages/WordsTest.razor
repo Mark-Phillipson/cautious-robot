@@ -1,31 +1,5 @@
 ﻿@page "/words"
 <div class="row align-items-center g-2">
-	<div class="col-auto">
-		<button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">
-			Load
-			@WordsToLoad
-			more Words
-		</button>
-	</div>
-	<div class="col-auto">
-		<label class="control-label">Score </label> @score <text> / </text> @WordsToLoad
-	</div>
-	<div class="col-auto">
-		<label class="visually-hidden">Maximum Word Length</label>
-		<div class='d-none d-lg-block'>
-			<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
-		</div>
-		<div class='d-lg-none'>
-			<input class="form-control" placeholder="Max Len." type="number" @bind="@MaximumWordLength" />
-		</div>
-	</div>
-	<div class="col-auto">
-		<label class="visually-hidden">Number of Words to Load</label>
-		<div class='d-none d-lg-block'>
-			<input class="form-control" @onblur="@(() => Reload())" placeholder="# Of Words" type="number" style="width:150px" @bind="@WordsToLoad" />
-		</div>
-
-	</div>
 	@if (!HideKey)
 	{
 		<div class="col-auto">
@@ -34,15 +8,45 @@
 		</div>
 	}
 	<div class="col-auto">
-		<label class="visually-hidden">Begins With</label>
-		<div class='d-none d-lg-block'>
-			<input class="form-control" placeholder="Begins With" type="text" style="width:138px" @bind="@BeginsWith" />
-		</div>
-		<div class='d-lg-none'>
-			<input class="form-control" placeholder="Begins With" type="text" @bind="@BeginsWith" />
-		</div>
+		<button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">
+			Load Words
+			@score / @WordsToLoad
+		</button>
 	</div>
+	<div class="col-auto">
+		<button class="btn btn-success" type="button" @onclick="@( ( ) => ShowOptions() )">Options >></button>
+	</div>
+	@if (showOptions)
+	{
+		<div class="col-auto">
+			<label class="visually-hidden">Maximum Word Length</label>
+			<div class='d-none d-lg-block'>
+				<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
+			</div>
+			<div class='d-lg-none'>
+				<input class="form-control" placeholder="Max Len." style="width:min-content" type="number" @bind="@MaximumWordLength" />
+			</div>
+		</div>
+		<div class="col-auto">
+			<label class="visually-hidden">Number of Words to Load</label>
+			<div class='d-none d-lg-block'>
+				<input class="form-control" @onblur="@(() => Reload())" placeholder="# Of Words" type="number" style="width:150px" @bind="@WordsToLoad" />
+			</div>
+			<div class='d-lg-none'>
+				<input class="form-control" @onblur="@(() => Reload())" placeholder="# Of Words" type="number" style="width:min-content" @bind="@WordsToLoad" />
+			</div>
 
+		</div>
+		<div class="col-auto">
+			<label class="visually-hidden">Begins With</label>
+			<div class='d-none d-lg-block'>
+				<input class="form-control" placeholder="Begins With" type="text" style="width:138px" @bind="@BeginsWith" />
+			</div>
+			<div class='d-lg-none'>
+				<input class="form-control" placeholder="Begins With" style="width:min-content" type="text" @bind="@BeginsWith" />
+			</div>
+		</div>
+	}
 </div>
 
 <hr />

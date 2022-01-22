@@ -16,6 +16,7 @@ namespace BlazorApp.Client.Pages
 		private int score;
 		WordsHelper? wordsHelper;
 		private int wordsToLoad = 5;
+		private bool showOptions = true;
 
 		private async Task CheckAnswerAsync(string? guessedWord, int indexPosition)
 		{
@@ -157,7 +158,10 @@ namespace BlazorApp.Client.Pages
 				}
 			}
 		}
-
+		private void ShowOptions()
+		{
+			showOptions = !showOptions;
+		}
 		public string? APIKey { get; set; } = null;
 		public string? BeginsWith
 		{
@@ -209,5 +213,6 @@ namespace BlazorApp.Client.Pages
 				wordsToLoad = value;
 			}
 		}
+
 	}
 }
