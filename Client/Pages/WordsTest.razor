@@ -19,6 +19,13 @@
 			<input class="form-control" placeholder="Max Len." type="number" @bind="@MaximumWordLength" />
 		</div>
 	</div>
+	<div class="col-auto">
+		<label class="visually-hidden">Number of Words to Load</label>
+		<div class='d-none d-lg-block'>
+			<input class="form-control" @onblur="@(() => Reload())" placeholder="# Of Words" type="number" style="width:150px" @bind="@WordsToLoad" />
+		</div>
+
+	</div>
 	@if (!HideKey)
 	{
 		<div class="col-auto">
@@ -44,33 +51,45 @@
 	@if (ShowWord == true)
 	{
 		<div>Select the word that matches the definition below:</div>
+		index = 0;
 	}
 	<div style="display:inline;" class="">
 		@foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
 		{
 			@if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
 			{
+				var indexPosition = index;
 				<div style="display:inline;" class="">
-					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word))" style="margin:3px"
-				class="btn btn-info btn-lg d-none d-lg-inline">
+					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition))" style="margin:3px"
+				class="btn @ButtonClass[index] btn-lg d-none d-lg-inline">
 						@wordResultLoop?.word
 					</button>
 				</div>
-
+				index = index + 1;
 				@* <a target="_blank" href="https://en.wikipedia.org/wiki/@wordResult?.word">Look Up @wordResult?.word</a> *@
 			}
+		}
+		@if (ShowWord == true)
+		{
+			index = 0;
 		}
 		@foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
 		{
 			@if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
 			{
+				var indexPosition = index;
 				<div class="d-flex custom-layout d-lg-none">
-					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word))" style="margin:3px"
+					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition))" style="margin:3px"
 				class="btn btn-primary btn-sm d-lg-none">
 						@wordResultLoop?.word
 					</button>
 				</div>
+				index = index + 1;
 			}
+		}
+		@if (ShowWord == true)
+		{
+			index = 99;
 		}
 
 	</div>
@@ -151,3 +170,15 @@ else
 	</ul>
 }
 
+@if (AnswerState && Play)
+{
+	<PlaySound AnswerState=true Play=true />
+}
+else if (Play)
+{
+	<PlaySound AnswerState=false Play=true />
+}
+else
+{
+	<PlaySound AnswerState=false Play=false />
+}

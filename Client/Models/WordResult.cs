@@ -5,6 +5,7 @@ namespace BlazorApp.Client.Models
 	public class WordResult
 	{
 		public Guid RandomOrder { get; set; } = Guid.NewGuid();
+		
 		public string? word { get; set; }
 		public Result[]? results { get; set; }
 		public Syllables? syllables { get; set; }
