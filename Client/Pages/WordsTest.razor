@@ -54,7 +54,7 @@
 {
 	@if (ShowWord == true)
 	{
-		<div>Select the word that matches the definition below:</div>
+		<div class="d-none d-lg-block">Select the word that matches the definition below:</div>
 		index = 0;
 	}
 	<div style="display:inline;" class="">
@@ -91,11 +91,6 @@
 				index = index + 1;
 			}
 		}
-		@if (ShowWord == true)
-		{
-			index = 99;
-		}
-
 	</div>
 
 	@if (@Message != null)
