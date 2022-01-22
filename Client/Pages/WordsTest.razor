@@ -84,7 +84,7 @@
 				var indexPosition = index;
 				<div class="d-flex custom-layout d-lg-none">
 					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition))" style="margin:3px"
-				class="btn btn-primary btn-sm d-lg-none">
+				class="btn @ButtonClass[index] btn-sm d-lg-none">
 						@wordResultLoop?.word
 					</button>
 				</div>
