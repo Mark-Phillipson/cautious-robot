@@ -6,9 +6,9 @@ namespace BlazorApp.Client.Helper
 	{
 	public string? Result  { get; set;}= null;
 	public string? Message { get; set;}= null;
-	public bool ShowWord  { get; set;}= false;
+	public bool ShowWord  { get; set;}= true;
 	public int LettersToShow { get; set;}=1;
 
-	public List<WordResult>? WordResults { get; set;}= new List<WordResult>() ;
+	public List<WordResult>? WordResults { get; set;}= new List<WordResult>();
 	}
 }

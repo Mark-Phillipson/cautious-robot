@@ -1,94 +1,90 @@
 ﻿@page "/words"
 <div class="row align-items-center g-2">
-	@if (!HideKey)
-	{
-		<div class="col-auto">
-			<label class="visually-hidden">API Key</label>
-			<input class="form-control" placeholder="API Key" type="password" style="width:400px" @bind="@APIKey" />
-		</div>
-	}
+		@if (!HideKey)
+		{
+			<div class="col-auto">
+				<label class="visually-hidden">API Key</label>
+				<input class="form-control" placeholder="API Key" type="password" style="width:200px" @bind="@GameOptions.APIKey" />
+			</div>
+		}
 	<div class="col-auto">
 		<button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">
 			Load Words
-			@score / @WordsToLoad
 		</button>
+			Correct: @questionsCorrect Answered: @questionsAnswered Total: @wordsToLoad
+@*			Index: @Index *@
 	</div>
 	<div class="col-auto">
 		<button class="btn btn-success" type="button" @onclick="@( ( ) => ShowOptions() )">Options >></button>
 	</div>
-	@if (showOptions)
-	{
-		<div class="col-auto">
-			<label class="visually-hidden">Maximum Word Length</label>
-			<div class='d-none d-lg-block'>
-				<input class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@MaximumWordLength" />
-			</div>
-			<div class='d-lg-none'>
-				<input class="form-control" placeholder="Max Len." style="width:min-content" type="number" @bind="@MaximumWordLength" />
-			</div>
-		</div>
-		<div class="col-auto">
-			<label class="visually-hidden">Number of Words to Load</label>
-			<div class='d-none d-lg-block'>
-				<input class="form-control" @onblur="@(() => Reload())" placeholder="# Of Words" type="number" style="width:150px" @bind="@WordsToLoad" />
-			</div>
-			<div class='d-lg-none'>
-				<input class="form-control" @onblur="@(() => Reload())" placeholder="# Of Words" type="number" style="width:min-content" @bind="@WordsToLoad" />
-			</div>
 
-		</div>
-		<div class="col-auto">
-			<label class="visually-hidden">Begins With</label>
-			<div class='d-none d-lg-block'>
-				<input class="form-control" placeholder="Begins With" type="text" style="width:138px" @bind="@BeginsWith" />
+		@if ((GameOptions?.ShowOptions ?? false))
+		{
+		<form>
+			<div class="col-auto">
+				<label class="d-none d-lg-block col-form-label-lg">Maximum Word Length</label>
+				<div class='d-none d-lg-block'>
+					<input required min="2" max="60" step="1" class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@GameOptions.MaximumWordLength" />
+
+				</div>
+				<div class='d-lg-none'>
+					<input class="form-control" placeholder="Max Len." style="width:min-content" type="number" @bind="@GameOptions.MaximumWordLength" />
+				</div>
 			</div>
-			<div class='d-lg-none'>
-				<input class="form-control" placeholder="Begins With" style="width:min-content" type="text" @bind="@BeginsWith" />
+			<div class="col-auto">
+				<label class="d-none d-lg-block col-form-label-lg">Begins With</label>
+				<div class='d-none d-lg-block'>
+					<input class="form-control" maxlength="@GameOptions.MaximumWordLength" placeholder="Begins With" type="text" style="width:138px" @bind="@GameOptions.BeginsWith" />
+				</div>
+				<div class='d-lg-none'>
+					<input class="form-control" placeholder="Begins With" style="width:min-content" type="text" @bind="@GameOptions.BeginsWith" />
+				</div>
 			</div>
-		</div>
-	}
+			@*<button class="btn btn-success btn-lg" type="submit" >Save</button>*@
+			</form>
+		}
 </div>
 
 <hr />
 @if (LoadWordResults?.WordResults != null)
 {
+	Index = 0;
 	@if (ShowWord == true)
 	{
 		<div class="d-none d-lg-block">Select the word that matches the definition below:</div>
-		index = 0;
 	}
 	<div style="display:inline;" class="">
 		@foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
 		{
 			@if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
 			{
-				var indexPosition = index;
+				var indexPosition1 = Index;
 				<div style="display:inline;" class="">
-					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition))" style="margin:3px"
-				class="btn @ButtonClass[index] btn-lg d-none d-lg-inline">
+					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
+				class="btn @ButtonClass[Index] btn-lg d-none d-lg-inline">
 						@wordResultLoop?.word
 					</button>
 				</div>
-				index = index + 1;
+				Index = Index + 1;
 				@* <a target="_blank" href="https://en.wikipedia.org/wiki/@wordResult?.word">Look Up @wordResult?.word</a> *@
 			}
 		}
-		@if (ShowWord == true)
+		@if ( true)
 		{
-			index = 0;
+			Index=0;
 		}
 		@foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
 		{
 			@if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
 			{
-				var indexPosition = index;
+				var indexPosition2 = Index;
 				<div class="d-flex custom-layout d-lg-none">
-					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition))" style="margin:3px"
-				class="btn @ButtonClass[index] btn-sm d-lg-none">
+					<button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition2))" style="margin:3px"
+				class="btn @ButtonClass[Index] btn-sm d-lg-none">
 						@wordResultLoop?.word
 					</button>
 				</div>
-				index = index + 1;
+				Index = Index + 1;
 			}
 		}
 	</div>
@@ -122,13 +118,14 @@ else
 			<h4>LOADING</h4>
 		</div>
 	</div>
-	@Message
+	<hr>
+	<div class="text-danger">@Message</div>
 }
 <hr />
 
 @if (LoadWordResults?.WordResults != null && ShowWord == true)
 {
-	@if (wordResult?.results?.Count() > 1)
+	@if (WordResult?.results?.Count() > 1)
 	{
 		<h2 class="d-none d-lg-block">Definitions</h2>
 		<h5 class="d-lg-none">Definitions</h5>
@@ -139,9 +136,9 @@ else
 		<h5 class="d-lg-none">Definition</h5>
 	}
 	<ul>
-		@if (wordResult?.results != null)
+		@if (WordResult?.results != null)
 		{
-			@foreach (var item in wordResult.results)
+			@foreach (var item in WordResult.results)
 			{
 				<li class='@dynamicClass'>
 					<h1 class='d-none d-lg-block'>
@@ -159,21 +156,21 @@ else
 		}
 	</ul>
 }
-@if (score == WordsToLoad)
+@if (questionsCorrect == wordsToLoad)
 {
 	<ul>
 		<li>
-			<h1 class="@dynamicClass text-danger d-none d-lg-block">Well done the Score is @score <text> out of </text> @WordsToLoad </h1>
-			<h5 class="@dynamicClass text-danger d-lg-none">Well done the Score is @score <text> out of </text> @WordsToLoad </h5>
+			<h1 class="@dynamicClass text-success d-none d-lg-block">Congratulations Next Level..✔</h1>
+			<h5 class="@dynamicClass text-success d-lg-none">Congratulations Next Level..✔</h5>
 		</li>
 	</ul>
 }
 
-@if (AnswerState && Play)
+@if (AnswerState && PlayAudio)
 {
 	<PlaySound AnswerState=true Play=true />
 }
-else if (Play)
+else if (PlayAudio)
 {
 	<PlaySound AnswerState=false Play=true />
 }

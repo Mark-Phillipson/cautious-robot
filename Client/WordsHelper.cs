@@ -12,7 +12,7 @@ public class WordsHelper
         _apiKey = apiKey;
     }
 
-    public async Task<LoadWordResults> GetRandomWord(string apiKey, int maximumWordsLength,string? beginsWith= null )
+    public async static Task<LoadWordResults> GetRandomWord(string apiKey, int maximumWordsLength,string? beginsWith= null )
     {
         // https://www.wordsapi.com/ ( Documentation ) 500 requests per day free on basic
         var client = new HttpClient();
@@ -51,8 +51,7 @@ public class WordsHelper
 
     public async Task<LoadWordResults> LoadWord(int wordsToLoad, int maximumWordsLength,string? BeginsWith)
     {
-        var loadWordResults = new LoadWordResults();
-        loadWordResults.LettersToShow = 1;
+        var loadWordResults = new LoadWordResults() { LettersToShow = 1 };
         for (int i = 0; i < wordsToLoad; i++)
         {
             var loadWordResultsSingle = await GetRandomWord(_apiKey, maximumWordsLength,BeginsWith);

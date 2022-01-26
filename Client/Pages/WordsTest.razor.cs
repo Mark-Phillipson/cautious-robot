@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using BlazorApp.Client.Models;
-using Newtonsoft.Json;
 using BlazorApp.Client.Helper;
-using Microsoft.Extensions.Configuration;
-using BlazorApp.Client;
 
 namespace BlazorApp.Client.Pages
 {
@@ -13,119 +10,117 @@ namespace BlazorApp.Client.Pages
 		ElementReference LoadWordsButton;
 		private string? response;
 		string? result = "";
-		private int score;
 		WordsHelper? wordsHelper;
-		private int wordsToLoad = 5;
-		private bool showOptions = true;
+		private int questionsAnswered=0;
+		private int questionsCorrect = 0;
 
 		private async Task CheckAnswerAsync(string? guessedWord, int indexPosition)
 		{
-			Play = true;
+			PlayAudio = true;
 			if (guessedWord == LoadWordResults?.WordResults?[currentQuestionNumber].word)
 			{
 				ButtonClass[indexPosition] = "btn-success";
-				score++;
+				questionsAnswered++;
+				questionsCorrect++;
 				dynamicClass = "";
-				if (currentQuestionNumber < (WordsToLoad - 1))
+				if (currentQuestionNumber < (wordsToLoad - 1))
 				{
 					currentQuestionNumber++;
 					response = "";
 					AnswerState = true;
-					await Task.Delay(2000);
-					wordResult = LoadWordResults?.WordResults?[currentQuestionNumber];
+					await Task.Delay(1000);
+					WordResult = LoadWordResults?.WordResults?[currentQuestionNumber];
 					dynamicClass = "animate__animated animate__backInUp";
 					ButtonClass[indexPosition] = "btn-info";
 				}
 				else
 				{
 					AnswerState = true;
-					response = $"✅ ({guessedWord}) ";
-					response = $"{response}. Click the Load Word button to continue...";
+					//response = $"✅ ({guessedWord}) ";
 					dynamicClass = "animate__animated animate__backInUp";
-					await Task.Delay(2000);
+					await Task.Delay(1000);
+					try
+					{
+						ButtonClass[indexPosition] = "btn-info";
+					}
+					catch (Exception exception)
+					{
+
+						throw  new Exception($" error changing button class {exception.Message}");
+					}
 					ShowWord = false;
-					wordResult = null;
-					ButtonClass[indexPosition] = "btn-info";
-					await LoadWordsButton.FocusAsync();
+					PlayAudio = false;
+					await LoadWordAsync();
 				}
 			}
 			else
 			{
+				questionsCorrect--;
 				ButtonClass[indexPosition] = "btn-danger";
 				AnswerState = false;
-				await Task.Delay(2000);
-				//response = $"✖{guessedWord}";
+				await Task.Delay(1000);
 				ButtonClass[indexPosition] = "btn-info";
 			}
 			await LoadWordsButton.FocusAsync();
-			Play = false;
+			PlayAudio = false;
+
 		}
 		private async Task LoadWordAsync()
 		{
 			LoadWordResults = null;
+			WordResult = null;
+			if (questionsCorrect == wordsToLoad)
+			{
+				wordsToLoad++;
+			}
+			else if (questionsCorrect < wordsToLoad)
+			{
+				wordsToLoad = 2;
+			}
 			response = "";
-			score = 0;
+			questionsAnswered = 0;
+			questionsCorrect = 0;
+			Index=0;
 			dynamicClass = "";
 			currentQuestionNumber = 0;
 			ShowWord = true;
+			ReloadButtonClass();
 			// Try to get the API key from the text box in the user interface
-			if (APIKey != null && APIKey != "TBC")
+			if (GameOptions.APIKey != null && GameOptions.APIKey != "TBC")
 			{
 				HideKey = true;
-				wordsHelper = new WordsHelper(APIKey);
+				wordsHelper = new WordsHelper(GameOptions.APIKey);
 			}
 			if (wordsHelper != null)
 			{
 				LoadWordResults =
-					await wordsHelper.LoadWord(WordsToLoad, MaximumWordLength ?? 20, BeginsWith?.ToLower());
+					await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower());
 			}
 			Message = LoadWordResults?.Message;
 			result = LoadWordResults?.Result;
 			if (LoadWordResults?.WordResults?.Count > 0)
 			{
-				wordResult = LoadWordResults.WordResults[0];
+				WordResult = LoadWordResults.WordResults[0];
 			}
 		}
-		private async Task Reload()
+		private void ReloadButtonClass()
 		{
 			ButtonClass = new List<string>();
-			for (int i = 0; i < WordsToLoad; i++)
+			for (int i = 0; i < wordsToLoad; i++)
 			{
 				ButtonClass.Add("btn-info");
 			}
-			await LoadWordAsync();
 		}
-		public bool AnswerState { get; set; } = false;
-		public bool Play { get; set; } = false;
-		[Inject] HttpClient? client { get; set; }
+		private int wordsToLoad = 2;
 
-		[Inject]
-		IConfiguration? Configuration
-		{
-			get;
-			set;
-		}
-		private string dynamicClass
-		{
-			get;
-			set;
-		}
-		= "";
-		int index
-		{
-			get;
-			set;
-		} = 0;
-		LoadWordResults? LoadWordResults
-		{
-			get;
-			set;
-		}
-		WordResult? wordResult
-		{
-			get;
-			set;
-		}
+		public GameOptions GameOptions { get; set; } = new GameOptions();
+		public bool AnswerState { get; set; } = false;
+		public bool PlayAudio { get; set; } = false;
+		[Inject] IConfiguration? Configuration { get; set; }
+		private string dynamicClass = "";
+		private int Index { get; set; } = 0;
+		LoadWordResults? LoadWordResults { get; set; }
+		WordResult? WordResult { get; set; }
 
 		protected override async Task OnAfterRenderAsync(bool firstRender)
 		{
@@ -151,6 +146,7 @@ namespace BlazorApp.Client.Pages
 				{
 					wordsHelper = new WordsHelper(apiKey);
 					await LoadWordAsync();
+					GameOptions = new GameOptions();
 				}
 				else
 				{
@@ -160,59 +156,14 @@ namespace BlazorApp.Client.Pages
 		}
 		private void ShowOptions()
 		{
-			showOptions = !showOptions;
-		}
-		public string? APIKey { get; set; } = null;
-		public string? BeginsWith
-		{
-			get;
-			set;
-		}
-		= null;
-		public List<string> ButtonClass
-		{
-			get;
-			set;
-		}
-		= new List<string>(){
-			"btn-info", "btn-info", "btn-info", "btn-info", "btn-info",
-		};
-		public bool HideKey
-		{
-			get;
-			set;
-		}
-		= false;
-		public int? MaximumWordLength
-		{
-			get;
-			set;
-		}
-		= null;
-		public string? Message
-		{
-			get;
-			set;
-		}
-		public bool ShowWord
-		{
-			get;
-			set;
-		}
-		= true;
-		public int WordsToLoad
-		{
-			get => wordsToLoad;
-			private set
+			if (GameOptions!= null )
 			{
-				if (wordsToLoad == value)
-				{
-					return;
-				}
-
-				wordsToLoad = value;
+				GameOptions.ShowOptions = !GameOptions.ShowOptions;
 			}
 		}
-
+		public List<string> ButtonClass { get; set; } = new List<string>() { "btn-info", "btn-info", "btn-info", "btn-info", "btn-info", };
+		public bool HideKey { get; set; } = false;
+		public string? Message { get; set; }
+		public bool ShowWord { get; set; } = true;
 	}
 }
