@@ -46,6 +46,16 @@
 </div>
 
 <hr />
+@if (questionsCorrect == wordsToLoad)
+{
+	<ul>
+		<li>
+			<h1 class="@dynamicClass text-success d-none d-lg-block">Congratulations Next Level..✔</h1>
+			<img src="images/fireworks.gif" class="d-none d-lg-block"/>
+			<h5 class="@dynamicClass text-success d-lg-none">Congratulations Next Level..✔</h5>
+		</li>
+	</ul>
+}
 @if (LoadWordResults?.WordResults != null)
 {
 	Index = 0;
@@ -88,7 +98,6 @@
 			}
 		}
 	</div>
-
 	@if (@Message != null)
 	{
 		<hr />
@@ -107,7 +116,6 @@
 		else
 		{
 			<h1 class='text-success'>@response</h1>
-
 		}
 	}
 }
@@ -156,15 +164,7 @@ else
 		}
 	</ul>
 }
-@if (questionsCorrect == wordsToLoad)
-{
-	<ul>
-		<li>
-			<h1 class="@dynamicClass text-success d-none d-lg-block">Congratulations Next Level..✔</h1>
-			<h5 class="@dynamicClass text-success d-lg-none">Congratulations Next Level..✔</h5>
-		</li>
-	</ul>
-}
+
 
 @if (AnswerState && PlayAudio)
 {
