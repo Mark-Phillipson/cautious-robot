@@ -67,6 +67,7 @@ namespace BlazorApp.Client.Pages
 		}
 		private async Task LoadWordAsync()
 		{
+			Message = null;
 			LoadWordResults = null;
 			WordResult = null;
 			if (questionsCorrect == wordsToLoad)
