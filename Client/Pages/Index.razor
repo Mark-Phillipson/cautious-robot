@@ -1,10 +1,74 @@
 ﻿@page "/"
+@using BlazorApp.Shared
+@inject HttpClient Http
 
 <PageTitle>Words</PageTitle>
 
-<h1>Welcome</h1>
+<h1>Welcome to Words</h1>
 
 Click on <a class="btn btn-lg btn-primary" href="words/">Words</a> to start.
-<hr>
-<img src="/images/BlazorwithKomodoDragon.png" width="660" class="d-none d-lg-block" />
-<img src="/images/BlazorwithKomodoDragon.png" width="200" class="d-lg-none" />
+
+
+<section>
+	<article class="d-lg-none" style="display:flex;flex-direction:column">
+		<div class="card m-1" style="width: 15rem;">
+			<div class="card-img-top text-center">
+				<a href="https://serenade.ai/" class="btn btn-primary"><img src="/images/Serenade.jpg" /></a>
+			</div>
+			<div class="card-body">
+				<h5 class="card-title">Serenade</h5>
+				<p class="card-text">Developed using Serenade</p>
+			</div>
+		</div>
+
+		<div class="card m-2 p-2" style="width: 15rem;">
+			<a href="https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor" target="_blank"><img src="/images/BlazorIcon.png" class="card-img-top d-block mx-auto img-responsive" style="max-height:100px;max-width:100px" alt="Blazor Logo"></a>
+			<div class="card-body">
+				<h5 class="card-title">Blazor</h5>
+				<p class="card-text">Blazor Client WebAssembly Application</p>
+			</div>
+		</div>
+		<div class="card m-2 p-2" style="width: 15rem;">
+			<a href="https://dotnet.microsoft.com/apps/aspnet" target="_blank"><img src="/images/ASP-NET-logo.png" class="card-img-top d-block mx-auto img-responsive" style="max-height:100px;max-width:100px" alt="Dot Net Logo"></a>
+			<div class="card-body">
+				<h5 class="card-title">ASP.NET</h5>
+				<p class="card-text">ASP.NET Web Application</p>
+			</div>
+		</div>
+	</article>
+
+	<div class="d-none d-lg-block">
+		<article style="display:flex;flex-direction:row">
+			<div class="card m-2 p-2" style="width: 18rem;">
+				<div class="card-img-top d-none d-lg-block"  style="text-align:center">
+					<a href="https://serenade.ai/"><img src="/images/Serenade.jpg" target="_blank"/ class="card-img-top" alt="Serenade Logo"></a>
+				</div>
+				<div class="card-body" style="text-align:center">
+					<h5 class="card-title">Serenade</h5>
+					<p class="card-text">Developed using Serenade in Visual Studio Code</p>
+				</div>
+			</div>
+			<div class="card m-2 p-2" style="width: 18rem;">
+				<a href="https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor" target="_blank"><img src="/images/BlazorIcon.png" class="card-img-top" alt="Blazor Logo"></a>
+				<div class="card-body" style="text-align:center">
+					<h5 class="card-title">Blazor</h5>
+					<p class="card-text">Blazor Client WebAssembly Application</p>
+				</div>
+			</div>
+			<div class="card m-2 p-2" style="width: 18rem;">
+				<a href="https://dotnet.microsoft.com/apps/aspnet" target="_blank"><img src="/images/ASP-NET-logo.png" class="card-img-top" alt="Dot Net Logo"></a>
+				<div class="card-body" style="text-align:center">
+					<h5 class="card-title">ASP.NET</h5>
+					<p class="card-text">ASP.NET Web Application</p>
+				</div>
+			</div>
+		</article>
+	</div>
+
+	<div class="upwork-logo">
+		<a title="Click to View Profile" target="_blank" href="https://www.upwork.com/fl/markp2" class="btn btn-lg btn-outline-primary">
+		<img src="https://res-3.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_256,w_256,f_auto,q_auto:eco/v1458909923/jv1y1vzf06gt64m50lll.png" alt="Upwork Logo" class="d-block mx-auto img-responsive" width="50"/>
+		</a>
+	</div>
+</section>
+
