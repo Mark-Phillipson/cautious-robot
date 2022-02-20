@@ -1,0 +1,8 @@
+.custom-layout {
+	display: flex !important;
+	align-content: center;
+	justify-content: space-around;
+	flex-direction: column;
+	flex-wrap: nowrap;
+	align-items: stretch;
+}

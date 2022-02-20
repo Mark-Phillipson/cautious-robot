@@ -4,7 +4,7 @@ using BlazorApp.Client.Helper;
 
 namespace BlazorApp.Client.Pages
 {
-	public partial class WordsTest
+	public partial class DefinitionsGame
 	{
 		private int currentQuestionNumber = 0;
 		ElementReference LoadWordsButton;

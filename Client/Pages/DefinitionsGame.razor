@@ -1,4 +1,4 @@
-﻿@page "/words"
+﻿@page "/definitions"
 <div class="row align-items-center g-2">
     @if (!HideKey)
     {
@@ -39,7 +39,6 @@
                     <input class="form-control" placeholder="Begins With" style="width:min-content" type="text" @bind="@GameOptions.BeginsWith" />
                 </div>
             </div>
-            @*<button class="btn btn-success btn-lg" type="submit" >Save</button>*@
         </form>
     }
 </div>
@@ -52,7 +51,7 @@
             <h1 class="@dynamicClass text-success d-none d-lg-block">Congratulations Next Level..✔</h1>
             <img src="/images/Fireworks.gif" class="d-none d-lg-block" />
             <img src="/images/Fireworks.gif" width="200" class="d-lg-none" />
-            
+
             <h5 class="@dynamicClass text-success d-lg-none">Congratulations Next Level..✔</h5>
         </li>
     </ul>
@@ -62,18 +61,39 @@
     Index = 0;
     @if (ShowWord == true)
     {
-        <div class="d-none d-lg-block">Select the word that matches the definition below:</div>
-    }
-    <div style="display:inline;" class="">
-        @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
+        @if (LoadWordResults?.WordResults != null && ShowWord == true)
         {
-            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
+            <br />
+            <h3 class="d-none d-lg-block">Current Word</h3>
+            <h6 class="d-lg-none">Current Word</h6>
+            @if (WordResult != null)
+            {
+                <div style="font-size:10em;color:white" class='d-none d-lg-block'>
+                    @WordResult.word
+                </div>
+                <h1 class='d-lg-none' style="color:white">
+                    @WordResult.word
+                </h1>
+            }
+        }
+        <div class="d-none d-lg-block">Select the definition that matches the word above:</div>
+    }
+    <div style="display:block;" class="">
+        @foreach (var wordResultLoop in LoadWordResults?.WordResults.OrderBy(x => x.RandomOrder))
+        {
+            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word) && wordResultLoop?.results?.Count() > 0)
             {
                 var indexPosition1 = Index;
                 <div style="display:inline;" class="">
                     <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
-                class="btn @ButtonClass[Index] btn-lg d-none d-lg-inline">
-                        @wordResultLoop?.word
+                class="btn @ButtonClass[Index] btn-lg d-none d-lg-block">
+                        @wordResultLoop?.results[0].definition
+                        @if (!string.IsNullOrWhiteSpace(@wordResultLoop?.results[0].partOfSpeech))
+                        {
+                            <text> (</text>
+
+                            @wordResultLoop?.results[0].partOfSpeech <text>)</text>
+                        }
                     </button>
                 </div>
                 Index = Index + 1;
@@ -86,13 +106,18 @@
         }
         @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
         {
-            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
+            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word) && wordResultLoop?.results?.Count() > 0)
             {
                 var indexPosition2 = Index;
                 <div class="d-flex custom-layout d-lg-none">
                     <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition2))" style="margin:3px"
                 class="btn @ButtonClass[Index] btn-sm d-lg-none">
-                        @wordResultLoop?.word
+                        @wordResultLoop?.results[0].definition
+                        @if (!string.IsNullOrWhiteSpace(@wordResultLoop?.results[0].partOfSpeech))
+                        {
+                            <text> (</text>
+                            @wordResultLoop?.results[0].partOfSpeech <text>)</text>
+                        }
                     </button>
                 </div>
                 Index = Index + 1;
@@ -129,41 +154,6 @@ else
     </div>
     <hr>
     <div class="text-danger">@Message</div>
-}
-<hr />
-
-@if (LoadWordResults?.WordResults != null && ShowWord == true)
-{
-    @if (WordResult?.results?.Count() > 1)
-    {
-        <h2 class="d-none d-lg-block">Definitions</h2>
-        <h5 class="d-lg-none">Definitions</h5>
-    }
-    else
-    {
-        <h2 class="d-none d-lg-block">Definition</h2>
-        <h5 class="d-lg-none">Definition</h5>
-    }
-    <ul>
-        @if (WordResult?.results != null)
-        {
-            @foreach (var item in WordResult.results)
-            {
-                <li class='@dynamicClass'>
-                    <h1 class='d-none d-lg-block'>
-                        @item?.definition
-                    </h1>
-                    <h4 class='d-lg-none'>
-                        @item?.definition
-                    </h4>
-                    @if (item?.partOfSpeech != null)
-                    {
-                        <span> (@item?.partOfSpeech)</span>
-                    }
-                </li>
-            }
-        }
-    </ul>
 }
 
 
