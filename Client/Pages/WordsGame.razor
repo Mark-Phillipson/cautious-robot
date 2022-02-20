@@ -31,6 +31,15 @@
                 </div>
             </div>
             <div class="col-auto">
+                <label class="d-none d-lg-block col-form-label-lg">Show Synonyms Instead</label>
+                <div class='d-none d-lg-block'>
+                    <input class="checkbox" type="checkbox" @bind="@GameOptions.IncludeSynonymsInstead" />
+                </div>
+                <div class='d-lg-none'>
+                    <input class="checkbox" type="checkbox" @bind="@GameOptions.IncludeSynonymsInstead" />
+                </div>
+            </div>
+            <div class="col-auto">
                 <label class="d-none d-lg-block col-form-label-lg">Begins With</label>
                 <div class='d-none d-lg-block'>
                     <input class="form-control" maxlength="@GameOptions.MaximumWordLength" placeholder="Begins With" type="text" style="width:138px" @bind="@GameOptions.BeginsWith" />
@@ -52,7 +61,7 @@
             <h1 class="@dynamicClass text-success d-none d-lg-block">Congratulations Next Level..✔</h1>
             <img src="/images/Fireworks.gif" class="d-none d-lg-block" />
             <img src="/images/Fireworks.gif" width="200" class="d-lg-none" />
-            
+
             <h5 class="@dynamicClass text-success d-lg-none">Congratulations Next Level..✔</h5>
         </li>
     </ul>
@@ -62,7 +71,14 @@
     Index = 0;
     @if (ShowWord == true)
     {
-        <div class="d-none d-lg-block">Select the word that matches the definition below:</div>
+        @if (GameOptions?.IncludeSynonymsInstead == true)
+        {
+            <div class="d-none d-lg-block">Select the word that matches the Synonyms below:</div>
+        }
+        else
+        {
+            <div class="d-none d-lg-block">Select the word that matches the definition below:</div>
+        }
     }
     <div style="display:inline;" class="">
         @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
@@ -134,36 +150,67 @@ else
 @if (LoadWordResults?.WordResults != null && ShowWord == true)
 {
 
-    @if (WordResult?.results?.Count() > 1)
+    @if (WordResult?.results?.Count() > 1 && GameOptions?.IncludeSynonymsInstead == false)
     {
         <h2 class="d-none d-lg-block">Definitions</h2>
         <h5 class="d-lg-none">Definitions</h5>
     }
     else
     {
-        <h2 class="d-none d-lg-block">Definition</h2>
-        <h5 class="d-lg-none">Definition</h5>
-    }
-    <ul>
-        @if (WordResult?.results != null)
+        @if (GameOptions?.IncludeSynonymsInstead==true)
         {
-            @foreach (var item in WordResult.results)
-            {
-                <li class='@dynamicClass'>
-                    <h1 class='d-none d-lg-block'>
-                        @item?.definition
-                    </h1>
-                    <h4 class='d-lg-none'>
-                        @item?.definition
-                    </h4>
-                    @if (item?.partOfSpeech != null)
-                    {
-                        <span> (@item?.partOfSpeech)</span>
-                    }
-                </li>
-            }
+            <h2 class="d-none d-lg-block">Synonyms</h2>
+            <h5 class="d-lg-none">Synonyms</h5>
         }
-    </ul>
+        else
+        {
+            <h2 class="d-none d-lg-block">Definition</h2>
+            <h5 class="d-lg-none">Definition</h5>
+        }
+    }
+    @if (GameOptions?.IncludeSynonymsInstead == true && WordResult?.results?[0]?.synonyms?.Count()>0)
+    {
+        <ul>
+            @if (WordResult?.results?[0]!= null )
+            {
+                @foreach (var item in WordResult?.results?[0]?.synonyms)
+                {
+                    <li class='@dynamicClass'>
+                        <h1 class='d-none d-lg-block'>
+                            @item
+                        </h1>
+                        <h4 class='d-lg-none'>
+                            @item
+                        </h4>
+                    </li>
+                }
+            }
+        </ul>
+    }
+    else
+    {
+        <ul>
+            @if (WordResult?.results != null)
+            {
+                @foreach (var item in WordResult.results)
+                {
+                    <li class='@dynamicClass'>
+                        <h1 class='d-none d-lg-block'>
+                            @item?.definition
+                        </h1>
+                        <h4 class='d-lg-none'>
+                            @item?.definition
+                        </h4>
+                        @if (item?.partOfSpeech != null)
+                        {
+                            <span> (@item?.partOfSpeech)</span>
+                        }
+                    </li>
+                }
+
+            }
+        </ul>
+    }
 }
 
 
