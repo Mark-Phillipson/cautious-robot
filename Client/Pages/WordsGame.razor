@@ -33,10 +33,11 @@
             <div class="col-auto">
                 <label class="d-none d-lg-block col-form-label-lg">Show Synonyms Instead</label>
                 <div class='d-none d-lg-block'>
-                    <input class="checkbox" type="checkbox" @bind="@GameOptions.IncludeSynonymsInstead" />
+                    <input class="form-check-input" type="checkbox" @bind="@GameOptions.IncludeSynonymsInstead" />
                 </div>
                 <div class='d-lg-none'>
-                    <input class="checkbox" type="checkbox" @bind="@GameOptions.IncludeSynonymsInstead" />
+                    <label class="col-form-label-sm">Synonyms</label>
+                    <input class="form-check-input" type="checkbox" @bind="@GameOptions.IncludeSynonymsInstead" />
                 </div>
             </div>
             <div class="col-auto">
