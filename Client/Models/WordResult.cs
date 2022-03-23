@@ -6,8 +6,8 @@ namespace BlazorApp.Client.Models
 	{
 		public Guid RandomOrder { get; set; } = Guid.NewGuid();
 		
-		public string? word { get; set; }
-		public Result[]? results { get; set; }
+		public string? word { get; }
+		public Result[]? results { get;  }
 		public Syllables? syllables { get; set; }
 		//The pronunciation contains characters that mess up the Serialising of values in JSON to an object
 		// public Pronunciation? pronunciation { get; set; }
@@ -27,9 +27,9 @@ namespace BlazorApp.Client.Models
 
 	public class Result
 	{
-		public string? definition { get; set; }
-		public string? partOfSpeech { get; set; }
-		public string[]? synonyms { get; set; }
+		public string? definition { get; }
+		public string? partOfSpeech { get;  }
+		public string[]? synonyms { get;  }
 		public string[]? typeOf { get; set; }
 		public string[]? hasTypes { get; set; }
 		public string[]? derivation { get; set; }
