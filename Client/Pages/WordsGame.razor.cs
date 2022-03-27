@@ -148,7 +148,7 @@ namespace BlazorApp.Client.Pages
 					wordsHelper = new WordsHelper(apiKey);
 					await LoadWordAsync();
 					GameOptions = new GameOptions();
-					Authentication = new("f921b96c-ab1c-4de7-93c7-011dc6104df2");
+					//Authentication = new("f921b96c-ab1c-4de7-93c7-011dc6104df2");
 				}
 				else
 				{
