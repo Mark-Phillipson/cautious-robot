@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using BlazorApp.Client.Models;
 using BlazorApp.Client.Helper;
-using BlazorApp.Client.TextToSpeech;
 
 namespace BlazorApp.Client.Pages
 {
@@ -167,11 +166,7 @@ namespace BlazorApp.Client.Pages
 		public bool HideKey { get; set; } = false;
 		public string? Message { get; set; }
 		public bool ShowWord { get; set; } = true;
-		Authentication? Authentication { get; set; }= null;
-		private async void Play()
-		{
-
-			//
-		}
+		
+		
 	}
 }
