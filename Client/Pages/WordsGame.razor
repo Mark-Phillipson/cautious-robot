@@ -4,17 +4,17 @@
     {
         <div class="col-auto">
             <label class="visually-hidden">API Key</label>
-            <input class="form-control" placeholder="API Key" type="password" style="width:200px" @bind="@GameOptions.APIKey" />
+            <input class="form-control form-control-sm" placeholder="API Key" type="password" style="width:200px" @bind="@GameOptions.APIKey" />
         </div>
     }
     <div class="col-auto">
-        <button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">
+        <button @ref="LoadWordsButton" class="btn btn-primary btn-sm" accesskey="w" @onclick="LoadWordAsync">
             Load Words
         </button>
         <label>Level: <span class="badge bg-warning">@(wordsToLoad-1)</span> </label>
     </div>
     <div class="col-auto">
-        <button class="btn btn-success" type="button" @onclick="@( ( ) => ShowOptions() )">Options >></button>
+        <button class="btn btn-success btn-sm" type="button" @onclick="@( ( ) => ShowOptions() )">Options >></button>
     </div>
 
     @if ((GameOptions?.ShowOptions ?? false))
@@ -89,7 +89,7 @@
                 var indexPosition1 = Index;
                 <div style="display:inline;" class="">
                     <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
-                class="btn @ButtonClass[Index] btn-lg d-none d-lg-inline">
+                class="btn @ButtonClass[Index] btn-lg d-none d-md-inline">
                         @wordResultLoop?.word
                     </button>
                 </div>
@@ -106,9 +106,10 @@
             @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
             {
                 var indexPosition2 = Index;
-                <div class="d-flex custom-layout d-lg-none">
+                <div class="d-flex custom-layout d-md-none">
+                    
                     <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition2))" style="margin:3px"
-                class="btn @ButtonClass[Index] btn-sm d-lg-none">
+                class="btn @ButtonClass[Index] btn-sm d-md-none">
                         @wordResultLoop?.word
                     </button>
                 </div>
