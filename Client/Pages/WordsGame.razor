@@ -89,7 +89,7 @@
                 var indexPosition1 = Index;
                 <div style="display:inline;" class="">
                     <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
-                class="btn @ButtonClass[Index] btn-lg d-none d-md-inline">
+                class="btn @ButtonClass[Index] btn-lg d-none d-sm-inline">
                         @wordResultLoop?.word
                     </button>
                 </div>
@@ -106,10 +106,10 @@
             @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
             {
                 var indexPosition2 = Index;
-                <div class="d-flex custom-layout d-md-none">
+                <div class="d-flex custom-layout d-sm-none">
                     
                     <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition2))" style="margin:3px"
-                class="btn @ButtonClass[Index] btn-sm d-md-none">
+                class="btn @ButtonClass[Index] btn-sm d-sm-none">
                         @wordResultLoop?.word
                     </button>
                 </div>
