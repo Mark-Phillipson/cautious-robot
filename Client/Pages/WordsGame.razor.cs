@@ -94,7 +94,7 @@ namespace BlazorApp.Client.Pages
 			if (wordsHelper != null)
 			{
 				LoadWordResults =
-					await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower());
+					await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower(),GameOptions?.WordType);
 			}
 			Message = LoadWordResults?.Message;
 			result = LoadWordResults?.Result;
