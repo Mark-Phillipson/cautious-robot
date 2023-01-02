@@ -1,0 +1,34 @@
+﻿@page "/sound";
+		@if (Play)
+		{
+			<audio autoplay controls hidden type="audio/mpeg" >
+				@if (AnswerState)
+				{
+				<source src="/Correct.mp3" />
+				}
+				else
+				{
+				<source src="/Incorrect.mp3" />
+				}
+			</audio>
+		}
+		else
+		{
+			<audio controls muted hidden type="audio/mpeg">
+				@if (AnswerState)
+				{
+				<source src="/Correct.mp3" />
+				}
+				else
+				{
+				<source src="/Incorrect.mp3" />
+				}
+			</audio>
+		}
+@code
+{
+	[Parameter]
+	public bool Play { get; set; }= true;
+	[Parameter]
+	public bool AnswerState { get; set; } = false;
+}

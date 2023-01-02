@@ -1,0 +1,233 @@
+﻿@page "/words"
+<div class="row align-items-center g-2">
+    @if (!HideKey)
+    {
+        <div class="col-auto">
+            <label class="visually-hidden">API Key</label>
+            <input class="form-control form-control-sm" placeholder="API Key" type="password" style="width:200px" @bind="@GameOptions.APIKey" />
+        </div>
+    }
+    <div class="col-auto">
+        <button @ref="LoadWordsButton" class="btn btn-primary btn-sm" accesskey="w" @onclick="LoadWordAsync">
+            Load Words
+        </button>
+        <label>Level: <span class="badge bg-warning">@(wordsToLoad-1)</span> </label>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-success btn-sm" type="button" @onclick="@( ( ) => ShowOptions() )">Options >></button>
+    </div>
+
+    @if ((GameOptions?.ShowOptions ?? false))
+    {
+        <form>
+            <div class="col-auto">
+                <label class="d-none d-lg-block col-form-label-lg">Maximum Word Length</label>
+                <div class='d-none d-lg-block'>
+                    <input required min="2" max="60" step="1" class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@GameOptions.MaximumWordLength" />
+
+                </div>
+                <div class='d-lg-none'>
+                    <input class="form-control" placeholder="Max Len." style="width:min-content" type="number" @bind="@GameOptions.MaximumWordLength" />
+                </div>
+            </div>
+            <div class="col-auto">
+                <label class="d-none d-lg-block col-form-label-lg">Show Synonyms Instead</label>
+                <div class='d-none d-lg-block'>
+                    <input class="form-check-input" type="checkbox" @bind="@GameOptions.IncludeSynonymsInstead" />
+                </div>
+                <div class='d-lg-none'>
+                    <label class="col-form-label-sm">Synonyms</label>
+                    <input class="form-check-input" type="checkbox" @bind="@GameOptions.IncludeSynonymsInstead" />
+                </div>
+            </div>
+            <div class="col-auto">
+                <label class="d-none d-lg-block col-form-label-lg">Begins With</label>
+                <div class='d-none d-lg-block'>
+                    <input class="form-control" maxlength="@GameOptions.MaximumWordLength" placeholder="Begins With" type="text" style="width:138px" @bind="@GameOptions.BeginsWith" />
+                </div>
+                <div class='d-lg-none'>
+                    <input class="form-control" placeholder="Begins With" style="width:min-content" type="text" @bind="@GameOptions.BeginsWith" />
+                </div>
+                <label class="d-none d-lg-block col-form-label-lg">Word Type (verb or noun)</label>
+
+                <input  class="form-control" placeholder="Word Type e.g. noun" style="width:min-content" type="text" @bind="@GameOptions.WordType" />
+            </div>
+            @*<button class="btn btn-success btn-lg" type="submit" >Save</button>*@
+        </form>
+    }
+</div>
+
+<hr />
+@if (questionsCorrect == wordsToLoad)
+{
+    <ul class="list-unstyled">
+        <li>
+            <h1 class="@dynamicClass text-success d-none d-lg-block">Congratulations Next Level..✔</h1>
+            <img src="/images/Fireworks.gif" class="d-none d-lg-block" />
+            <img src="/images/Fireworks.gif" width="200" class="d-lg-none" />
+
+            <h5 class="@dynamicClass text-success d-lg-none">Congratulations Next Level..✔</h5>
+        </li>
+    </ul>
+}
+@if (LoadWordResults?.WordResults != null)
+{
+    Index = 0;
+    @if (ShowWord == true)
+    {
+        @if (GameOptions?.IncludeSynonymsInstead == true)
+        {
+            <div class="d-none d-lg-block">Select the word that matches the Synonyms below:</div>
+        }
+        else
+        {
+            <div class="d-none d-lg-block">Select the word that matches the definition below:</div>
+        }
+    }
+    <div style="display:inline;" class="">
+        @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
+        {
+            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
+            {
+                var indexPosition1 = Index;
+                <div style="display:inline;" class="">
+                    <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
+                class="btn @ButtonClass[Index] btn-lg d-none d-sm-inline">
+                        @wordResultLoop?.word
+                    </button>
+                </div>
+                Index = Index + 1;
+                @* <a target="_blank" href="https://en.wikipedia.org/wiki/@wordResult?.word">Look Up @wordResult?.word</a> *@
+            }
+        }
+        @if (true)
+        {
+            Index = 0;
+        }
+        @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
+        {
+            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
+            {
+                var indexPosition2 = Index;
+                <div class="d-flex custom-layout d-sm-none">
+                    
+                    <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition2))" style="margin:3px"
+                class="btn @ButtonClass[Index] btn-sm d-sm-none">
+                        @wordResultLoop?.word
+                    </button>
+                </div>
+                Index = Index + 1;
+            }
+        }
+    </div>
+    @if (@Message != null)
+    {
+        <hr />
+        <h1 class="text-danger">Unexpected Error Please load another word.</h1>
+        <div class="text-danger">@Message</div>
+        <h5>Json Received:</h5>
+        <h6 class="text-muted">@result</h6>
+    }
+
+    @if (response != null)
+    {
+        @if (response.Contains("✖"))
+        {
+            <h1 class='text-danger'>@response</h1>
+        }
+        else
+        {
+            <h1 class='text-success'>@response</h1>
+        }
+    }
+}
+else
+{
+    <div style="display:normal;margin:auto;" class="">
+        <div class="loader d-flex flex-column justify-content-center align-items-center">
+            <h4>LOADING</h4>
+        </div>
+    </div>
+    <hr>
+    <div class="text-danger">@Message</div>
+}
+
+@if (LoadWordResults?.WordResults != null && ShowWord == true)
+{
+
+    @if (WordResult?.results?.Count() > 1 && GameOptions?.IncludeSynonymsInstead == false)
+    {
+        <h2 class="d-none d-lg-block">Definitions</h2>
+        <h5 class="d-lg-none">Definitions</h5>
+    }
+    else
+    {
+        @if (GameOptions?.IncludeSynonymsInstead==true)
+        {
+            <h2 class="d-none d-lg-block">Synonyms</h2>
+            <h5 class="d-lg-none">Synonyms</h5>
+        }
+        else
+        {
+            <h2 class="d-none d-lg-block">Definition</h2>
+            <h5 class="d-lg-none">Definition</h5>
+        }
+    }
+    @if (GameOptions?.IncludeSynonymsInstead == true && WordResult?.results?[0]?.synonyms?.Count()>0)
+    {
+        <ul>
+            @if (WordResult?.results?[0]!= null )
+            {
+                @foreach (var item in WordResult?.results?[0]?.synonyms)
+                {
+                    <li class='@dynamicClass'>
+                        <h1 class='d-none d-lg-block'>
+                            @item
+                        </h1>
+                        <h4 class='d-lg-none'>
+                            @item
+                        </h4>
+                    </li>
+                }
+            }
+        </ul>
+    }
+    else
+    {
+        <ul>
+            @if (WordResult?.results != null)
+            {
+                @foreach (var item in WordResult.results)
+                {
+                    <li class='@dynamicClass'>
+                        <h1 class='d-none d-lg-block'>
+                            @item?.definition
+                        </h1>
+                        <h4 class='d-lg-none'>
+                            @item?.definition
+                        </h4>
+                        @if (item?.partOfSpeech != null)
+                        {
+                            <span> (@item?.partOfSpeech)</span>
+                        }
+                    </li>
+                }
+
+            }
+        </ul>
+    }
+}
+
+
+@if (AnswerState && PlayAudio)
+{
+    <PlaySound AnswerState=true Play=true />
+}
+else if (PlayAudio)
+{
+    <PlaySound AnswerState=false Play=true />
+}
+else
+{
+    <PlaySound AnswerState=false Play=false />
+}
