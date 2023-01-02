@@ -8,17 +8,20 @@ namespace MauiWords;
 
 public class WordsHelper
 {
+    
     private readonly string _apiKey;
 
     public WordsHelper(string apiKey)
     {
         _apiKey = apiKey;
+        
     }
 
     public async static Task<LoadWordResults> GetRandomWord(string apiKey, int maximumWordsLength, string beginsWith = null, string wordType = null)
     {
         // https://www.wordsapi.com/ ( Documentation ) 500 requests per day free on basic
-        var client = new HttpClient();
+     HttpClient client;
+    client = new HttpClient();
         LoadWordResults loadWordResults = new();
         string uri = $"https://wordsapiv1.p.rapidapi.com/words/?random=true&hasDetails=definitions&lettersMax={maximumWordsLength}&letterPattern=^{beginsWith}.";
         if (wordType != null && (wordType == "verb" || wordType == "noun"))

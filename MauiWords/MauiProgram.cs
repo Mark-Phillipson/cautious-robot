@@ -17,9 +17,11 @@ namespace MauiWords
                 });
 
             builder.Services.AddMauiBlazorWebView();
+            //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration["API_Prefix"] ?? "") });
+
 
 #if DEBUG
-		builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();
 #endif
 
