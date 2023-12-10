@@ -26,12 +26,9 @@ public class WordsHelper
         {
 
             Method = HttpMethod.Get,
-            // RequestUri = new
-            // Uri($"https://wordsapiv1.p.rapidapi.com/words/?random=true&partOfSpeech={partOfSpeech}"),
             RequestUri = new Uri(
                 uri
             ),
-            // RequestUri = new Uri($"https://wordsapiv1.p.rapidapi.com/words/{Word}"),
             Headers =
             {
                 { "x-rapidapi-key", apiKey },
