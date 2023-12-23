@@ -13,7 +13,7 @@ namespace BlazorApp.Client.Pages
 		WordsHelper? wordsHelper;
 		private int questionsAnswered=0;
 		private int questionsCorrect = 0;
-
+		private int counter = 0;
 		private async Task CheckAnswerAsync(string? guessedWord, int indexPosition)
 		{
 			PlayAudio = true;

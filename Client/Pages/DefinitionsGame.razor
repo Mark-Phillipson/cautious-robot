@@ -79,15 +79,17 @@
         <div class="d-none d-lg-block">Select the definition that matches the word above:</div>
     }
     <div style="display:block;" class="">
-        @foreach (var wordResultLoop in LoadWordResults?.WordResults.OrderBy(x => x.RandomOrder))
+       @{counter=0 ;}
+       @foreach (var wordResultLoop in LoadWordResults?.WordResults?.OrderBy(x => x.RandomOrder))
         {
+           counter++;
             @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word) && wordResultLoop?.results?.Count() > 0)
             {
                 var indexPosition1 = Index;
                 <div style="display:inline;" class="">
-                    <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
+                    <button  accesskey="@(counter<10 ? counter.ToString():"")" @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
                 class="btn @ButtonClass[Index] btn-lg d-none d-lg-block">
-                        @wordResultLoop?.results[0].definition
+                     <u>@(counter<10?counter.ToString():"")</u>    @wordResultLoop?.results[0].definition
                         @if (!string.IsNullOrWhiteSpace(@wordResultLoop?.results[0].partOfSpeech))
                         {
                             <text> (</text>
@@ -103,16 +105,19 @@
         @if (true)
         {
             Index = 0;
-        }
+         counter=0;
+      }
+
         @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
         {
+           counter++;
             @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word) && wordResultLoop?.results?.Count() > 0)
             {
                 var indexPosition2 = Index;
                 <div class="d-flex custom-layout d-lg-none">
-                    <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition2))" style="margin:3px"
+                    <button accesskey="@(counter<10?counter.ToString():"")" @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition2))" style="margin:3px"
                 class="btn @ButtonClass[Index] btn-sm d-lg-none">
-                        @wordResultLoop?.results[0].definition
+                        <u>@(counter<10?counter.ToString():"")</u> @wordResultLoop?.results[0].definition
                         @if (!string.IsNullOrWhiteSpace(@wordResultLoop?.results[0].partOfSpeech))
                         {
                             <text> (</text>

@@ -85,15 +85,17 @@
         }
     }
     <div style="display:inline;" class="">
+       @{wordCounter=0;}
         @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
         {
-            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
+            wordCounter++;
+         @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word))
             {
                 var indexPosition1 = Index;
                 <div style="display:inline;" class="">
-                    <button @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
+                    <button accesskey="@(wordCounter<10 ? wordCounter.ToString() : "")" @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
                 class="btn @ButtonClass[Index] btn-lg d-none d-sm-inline">
-                        @wordResultLoop?.word
+                        <u>@wordCounter.ToString() </u> @wordResultLoop?.word
                     </button>
                 </div>
                 Index = Index + 1;
