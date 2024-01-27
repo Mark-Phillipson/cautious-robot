@@ -1,7 +1,7 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">
-            Words using @System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription
+            Words 
             <span class="text-info" style="font-size:xx-small"></span></a>
 
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -13,8 +13,8 @@
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+            <NavLink accesskey="h" class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> <u>H</u>ome
             </NavLink>
         </div>
         <div class="nav-item px-3">
@@ -25,6 +25,11 @@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="definitions">
                 <span class="oi oi-bug" aria-hidden="true"></span> Definitions
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="playcodele">
+                <span class="oi oi-book" aria-hidden="true"></span>Codele
             </NavLink>
         </div>
         <div class="nav-item px-3">
@@ -40,6 +45,8 @@
     </nav>
 </div>
 
+<p class='text-secondary mx-2' style='font-size:10px; position: fixed; bottom: 0; left: 0; right: 0;'>Using @System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription</p>
+
 @code {
     private bool collapseNavMenu = true;
 
@@ -50,3 +57,4 @@
         collapseNavMenu = !collapseNavMenu;
     }
 }
+

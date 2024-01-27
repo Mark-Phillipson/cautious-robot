@@ -1,4 +1,5 @@
 ﻿@page "/definitions"
+<div class="background">
 <div class="row align-items-center g-2">
     @if (!HideKey)
     {
@@ -9,7 +10,7 @@
     }
     <div class="col-auto">
         <button @ref="LoadWordsButton" class="btn btn-primary btn-lg" accesskey="w" @onclick="LoadWordAsync">
-            Load Words
+            Load Words / Reset
         </button>
         <label>Level: <span class="badge bg-warning">@(wordsToLoad-1)</span> </label>
     </div>
@@ -174,3 +175,4 @@ else
 {
     <PlaySound AnswerState=false Play=false />
 }
+</div>

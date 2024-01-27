@@ -1,0 +1,108 @@
+﻿@page "/playcodele"
+@inject HttpClient Http
+@using CodeleLogic
+<div class="background p-5">
+    <div class='row'>
+        <div class='col-md-6'>
+            <h3>Play Codele</h3>
+            <p>Guess the 5 letter, coding-related word in 5 tries or less!</p>
+
+            <br>
+
+            <p><strong>Attempt #: @attempts</strong></p>
+
+            <!-- display the player's guesses -->
+            <table>
+                @foreach (var guess in guesses)
+                {
+                    List<(char, LetterStatus)>? statuses = guess.GuessStatus;
+                    <tr>
+                        <div class="btn-group" role="group" aria-label="Basic example">
+                            @if (statuses != null)
+                            {
+                                foreach (var status in statuses)
+                                {
+                                    char letter = Char.ToUpper(status.Item1);
+                                    if (status.Item2 == LetterStatus.Correct)
+                                    {
+                                        <button type="button" class="btn btn-success btn-lg">@letter</button>
+                                    }
+                                    else if (status.Item2 == LetterStatus.IncorrectPosition)
+                                    {
+                                        <button type="button" class="btn btn-warning btn-lg">@letter</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-lg">@letter</button>
+                                    }
+                                }
+                            }
+                        </div>
+                    </tr>
+                    <br>
+                }
+            </table>
+            <br>
+            <!-- display message if guess is not 5 characters long -->
+            @if (displayGuessSizeMsg == true)
+            {
+                <p style="color: rgb(197, 3, 3);">Guess must be 5 characters long @message</p>
+            }
+            <!-- input box for the player to type and submit a guess -->
+            <label class='m-2' for='guess'><u>G</u>uess</label>
+            <input class='form-control form-control-lg m-2' style='width:200px' @ref="guess" maxlength="5" required
+                id="guess" autofocus accesskey="g" placeholder="Type your guess" @bind="newGuess" />
+            @if (!showModal)
+            {
+                <button class='btn btn-lg btn-primary m-2' accesskey="s"
+                    @onclick="SubmitGuess"><u>S</u>ubmit</button>
+            }
+
+            @if (showModal && answer != null)
+            {
+                <div>
+                    <h4 class="modal-title">@gameStatusMessage</h4>
+                </div>
+                <div>
+                    <p><strong>Correct Answer: </strong> @answer.ToUpper()</p>
+                </div>
+                <div>
+                    <button accesskey="n" type="button" class="btn btn-outline-success btn-lg"
+                        @onclick="StartNewGame"><u>N</u>ew
+                        Game?</button>
+                </div>
+                @if (gameStatusMessage == "You Won!") { 
+                    <PlaySound AnswerState=true Play=true />
+                }
+                else
+                {
+                    <PlaySound AnswerState=false Play=true />
+                }
+            }
+
+        </div>
+        <div class='col-md-6'>
+            @if (answers != null)
+            {
+                <table class="table table-bordered table-striped" id="table1">
+                    <tr>
+                        <td style='font-weight:bold;font-size:40px;color:white'>
+                            @{
+                                counter = 0;
+                            }
+                            @foreach (var answer in answers.OrderBy(x => x))
+                            {
+                                counter++;
+                                @answer.ToUpper()
+                                @if (counter < answers.Length)
+                                {
+                                    <text>, </text>
+                                }
+                            }
+                        </td>
+                    </tr>
+                </table>
+            }
+        </div>
+    </div>
+</div>
