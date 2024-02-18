@@ -43,5 +43,9 @@
     "scope",
     "alias",
     "macro",
-    "const"
+    "const",
+    "field",
+    "short",
+    "float",
+    "start"
 ]
