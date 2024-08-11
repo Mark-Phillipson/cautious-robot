@@ -11,9 +11,9 @@ namespace BlazorApp.Client.Pages
 		private string? response;
 		string? result = "";
 		WordsHelper? wordsHelper;
-		private int questionsAnswered=0;
+		private int questionsAnswered = 0;
 		private int questionsCorrect = 0;
-		 private  int wordCounter = 0;
+		private int wordCounter = 0;
 		private async Task CheckAnswerAsync(string? guessedWord, int indexPosition)
 		{
 			PlayAudio = true;
@@ -46,7 +46,7 @@ namespace BlazorApp.Client.Pages
 					catch (Exception exception)
 					{
 
-						throw  new Exception($" error changing button class {exception.Message}");
+						throw new Exception($" error changing button class {exception.Message}");
 					}
 					ShowWord = false;
 					PlayAudio = false;
@@ -81,7 +81,7 @@ namespace BlazorApp.Client.Pages
 			response = "";
 			questionsAnswered = 0;
 			questionsCorrect = 0;
-			Index=0;
+			Index = 0;
 			dynamicClass = "";
 			currentQuestionNumber = 0;
 			ShowWord = true;
@@ -95,7 +95,7 @@ namespace BlazorApp.Client.Pages
 			if (wordsHelper != null)
 			{
 				LoadWordResults =
-					await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower(),GameOptions?.WordType);
+					await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower(), GameOptions?.WordType);
 			}
 			Message = LoadWordResults?.Message;
 			result = LoadWordResults?.Result;
@@ -158,7 +158,7 @@ namespace BlazorApp.Client.Pages
 		}
 		private void ShowOptions()
 		{
-			if (GameOptions!= null )
+			if (GameOptions != null)
 			{
 				GameOptions.ShowOptions = !GameOptions.ShowOptions;
 			}
@@ -167,7 +167,7 @@ namespace BlazorApp.Client.Pages
 		public bool HideKey { get; set; } = false;
 		public string? Message { get; set; }
 		public bool ShowWord { get; set; } = true;
-		
-		
+
+
 	}
 }

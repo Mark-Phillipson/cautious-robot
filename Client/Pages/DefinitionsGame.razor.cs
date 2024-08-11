@@ -11,7 +11,7 @@ namespace BlazorApp.Client.Pages
 		private string? response;
 		string? result = "";
 		WordsHelper? wordsHelper;
-		private int questionsAnswered=0;
+		private int questionsAnswered = 0;
 		private int questionsCorrect = 0;
 		private int counter = 0;
 		private async Task CheckAnswerAsync(string? guessedWord, int indexPosition)
@@ -46,7 +46,7 @@ namespace BlazorApp.Client.Pages
 					catch (Exception exception)
 					{
 
-						throw  new Exception($" error changing button class {exception.Message}");
+						throw new Exception($" error changing button class {exception.Message}");
 					}
 					ShowWord = false;
 					PlayAudio = false;
@@ -81,7 +81,7 @@ namespace BlazorApp.Client.Pages
 			response = "";
 			questionsAnswered = 0;
 			questionsCorrect = 0;
-			Index=0;
+			Index = 0;
 			dynamicClass = "";
 			currentQuestionNumber = 0;
 			ShowWord = true;
@@ -157,7 +157,7 @@ namespace BlazorApp.Client.Pages
 		}
 		private void ShowOptions()
 		{
-			if (GameOptions!= null )
+			if (GameOptions != null)
 			{
 				GameOptions.ShowOptions = !GameOptions.ShowOptions;
 			}

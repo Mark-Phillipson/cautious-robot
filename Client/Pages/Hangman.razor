@@ -1,0 +1,128 @@
+@page "/hangman"
+<h1>Hangman </h1>
+<div class='row'>
+    <div class='col-md-8'>
+        <h2>Guess the word by selecting letters.</h2>
+        @if (!HideKey)
+        {
+            <div class="col-auto">
+                <label class="visually-hidden">API Key</label>
+                <input class="form-control form-control-sm" placeholder="API Key" type="password" style="width:200px"
+                    @bind="@apiKey" />
+            </div>
+            <button class='btn btn-primary' @onclick="(() => HideKey = true)">Submit</button>
+        }
+        <button accesskey='1' class='btn btn-primary' @onclick="(() =>  StartNewGame())"><u>1</u> Load New Word</button>
+        <div>
+            <br />
+            @if (CurrentWord != null)
+            {
+                @foreach (char letter in CurrentWord)
+                {
+                    if (CorrectGuesses.Contains(letter))
+                    {
+                        <button class='btn btn-lg btn-success m-1' disabled>@letter</button>
+                    }
+                    else if (letter == ' ')
+                    {
+                        <button class='btn btn-lg btn-outline-secondary m-1'>/</button>
+                    }
+                    else
+                    {
+                        <button class='btn btn-lg btn-outline-danger m-1'>_</button>
+                    }
+                }
+            }
+            <br />
+            <br />
+        </div>
+
+        <div>
+            <h2 class='fs-3 text-success'>@WordDescription</h2>
+            @if (loading)
+            {
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+
+            @if (IncorrectGuesses != null && IncorrectGuesses.Count > 0)
+            {
+                <p>Incorrect: @IncorrectGuesses.Count</p>
+            }
+            else
+            {
+                <p>Incorrect: 0</p>
+            }
+            @if (CorrectGuesses != null && CorrectGuesses.Count > 0)
+            {
+                <p>Correct: @CorrectGuesses.Count</p>
+            }
+            else
+            {
+                <p>Correct: 0</p>
+            }
+            <h2 class='text-danger'>@GameStatus</h2>
+            @if (GameStatus.Contains("You lose!") || GameStatus == "You win!")
+            {
+                <button accesskey='2' class='btn btn-lg btn-danger' @onclick="(() => StartNewGame())"><u>2</u> Play
+                    Again</button>
+            }
+        </div>
+        <br />
+        <br />
+        <div>
+            @if (CorrectGuesses != null && IncorrectGuesses != null)
+            {
+                @foreach (var letter in Alphabet)
+                {
+                    if (CorrectGuesses.Contains(letter) || IncorrectGuesses.Contains(letter))
+                    {
+                        <button class='btn btn-lg btn-secondary m-1' disabled>@letter</button>
+                    }
+                    else
+                    {
+                        <button accesskey='@letter' class='btn btn-lg btn-outline-danger m-1'
+                            @onclick="(() => MakeGuess(letter))">@letter</button>
+                    }
+                    @if (letter == 'P')
+                    {
+                        <br />
+                        @for (int i = 0; i < 2; i++)
+                        {
+                            <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        }
+                    }
+                    @if (letter == 'L')
+                    {
+                        <br />
+                        @for (int i = 0; i < 3; i++)
+                        {
+                            <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        }
+                    }
+                }
+            }
+        </div>
+    </div>
+    <div class='col-md-4'>
+        @if (IncorrectGuesses?.Count < HangmanStages.Count)
+        {
+            <pre class='fs-3'>@HangmanStages[IncorrectGuesses.Count]</pre>
+        }
+    </div>
+</div>
+@if (GameStatus == "You win!")
+{
+    <PlaySound AnswerState=true Play=true />
+}
+else if (GameStatus.Contains("You lose!"))
+{
+    <PlaySound AnswerState=false Play=true />
+}
+else
+{
+    <PlaySound AnswerState=false Play=false />
+}
