@@ -81,8 +81,8 @@
     }
     <div style="display:block;" class="">
        @{counter=0 ;}
-       @if (LoadWordResults!= null  && LoadWordResults.WordResults != null) 
-       @foreach (var wordResultLoop in LoadWordResults?.WordResults?.OrderBy(x => x.RandomOrder))
+       @if (LoadWordResults!= null  && LoadWordResults?.WordResults != null) {
+       @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
         {
            counter++;
             @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word) && wordResultLoop?.results?.Count() > 0)
@@ -104,13 +104,13 @@
                 @* <a target="_blank" href="https://en.wikipedia.org/wiki/@wordResult?.word">Look Up @wordResult?.word</a> *@
             }
         }
-}
+        }
         @if (true)
         {
             Index = 0;
          counter=0;
       }
-
+@if (LoadWordResults?.WordResults!=null) { 
         @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
         {
            counter++;
@@ -130,6 +130,7 @@
                 </div>
                 Index = Index + 1;
             }
+        }
         }
     </div>
     @if (@Message != null)

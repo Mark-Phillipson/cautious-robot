@@ -179,9 +179,9 @@ else
     @if (GameOptions?.IncludeSynonymsInstead == true && WordResult?.results?[0]?.synonyms?.Count()>0)
     {
         <ul>
-            @if (WordResult?.results?[0]!= null )
+            @if (WordResult!=null && WordResult.results[0]!= null && WordResult.results[0].synonyms != null)
             {
-                @foreach (var item in WordResult?.results?[0]?.synonyms)
+                @foreach (var item in WordResult.results[0].synonyms)
                 {
                     <li class='@dynamicClass'>
                         <h1 class='d-none d-lg-block'>

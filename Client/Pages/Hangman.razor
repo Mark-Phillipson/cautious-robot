@@ -1,5 +1,6 @@
 @page "/hangman"
 <h1>Hangman </h1>
+<PageTitle>Hangman</PageTitle>
 <div class='row'>
     <div class='col-md-8'>
         <h2>Guess the word by selecting letters.</h2>
@@ -76,34 +77,20 @@
         <div>
             @if (CorrectGuesses != null && IncorrectGuesses != null)
             {
-                @foreach (var letter in Alphabet)
-                {
-                    if (CorrectGuesses.Contains(letter) || IncorrectGuesses.Contains(letter))
+                <div class='letters-container'>
+                    @foreach (var letter in Alphabet.OrderBy(x => x))
                     {
-                        <button class='btn btn-lg btn-secondary m-1' disabled>@letter</button>
-                    }
-                    else
-                    {
-                        <button accesskey='@letter' class='btn btn-lg btn-outline-danger m-1'
-                            @onclick="(() => MakeGuess(letter))">@letter</button>
-                    }
-                    @if (letter == 'P')
-                    {
-                        <br />
-                        @for (int i = 0; i < 2; i++)
+                        if (CorrectGuesses.Contains(letter) || IncorrectGuesses.Contains(letter))
                         {
-                            <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <button class='letter btn btn-lg btn-secondary m-1' disabled>@letter</button>
+                        }
+                        else
+                        {
+                            <button accesskey='@letter' class='letter btn btn-lg btn-outline-danger m-1'
+                                @onclick="(() => MakeGuess(letter))">@letter</button>
                         }
                     }
-                    @if (letter == 'L')
-                    {
-                        <br />
-                        @for (int i = 0; i < 3; i++)
-                        {
-                            <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                        }
-                    }
-                }
+                </div>
             }
         </div>
     </div>

@@ -121,11 +121,6 @@ namespace BlazorApp.Client.Pages
                          'Z', 'X', 'C', 'V', 'B', 'N', 'M'
                     };
 
-        protected override async Task OnInitializedAsync()
-        {
-
-
-        }
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
@@ -162,8 +157,12 @@ namespace BlazorApp.Client.Pages
             if (apiKey != null && apiKey != "" && apiKey != "TBC")
             {
                 wordsHelper = new WordsHelper(apiKey);
-                LoadWordResults loadWordResults = await wordsHelper.LoadWord(1, 30, null, null);
-                CurrentWord = loadWordResults?.WordResults?[0].word ?? "Testing";
+                LoadWordResults loadWordResults;
+                do
+                {
+                    loadWordResults = await wordsHelper.LoadWord(1, 30, null, null);
+                    CurrentWord = loadWordResults?.WordResults?[0].word ?? "Testing";
+                } while (CurrentWord.Contains("-") && CurrentWord.Contains("."));//If the word contains a hyphen or a period, get another word
                 WordDescription = loadWordResults?.WordResults?[0].results?[0].definition ?? "The word is testing";
             }
             CurrentWord = CurrentWord.ToUpper();
