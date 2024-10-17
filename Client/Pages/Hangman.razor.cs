@@ -162,7 +162,7 @@ namespace BlazorApp.Client.Pages
                 {
                     loadWordResults = await wordsHelper.LoadWord(1, 30, null, null);
                     CurrentWord = loadWordResults?.WordResults?[0].word ?? "Testing";
-                } while (CurrentWord.Contains("-") && CurrentWord.Contains("."));//If the word contains a hyphen or a period, get another word
+                } while (CurrentWord.Any(char.IsDigit) || CurrentWord.Contains("-") || CurrentWord.Contains(".")); // If the word contains a hyphen, a period, or a number, get another word
                 WordDescription = loadWordResults?.WordResults?[0].results?[0].definition ?? "The word is testing";
             }
             CurrentWord = CurrentWord.ToUpper();
