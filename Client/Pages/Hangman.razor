@@ -1,9 +1,9 @@
 @page "/hangman"
-<h1>Hangman </h1>
+<h1 class='hide-on-mobile' >Hangman </h1>
 <PageTitle>Hangman</PageTitle>
 <div class='row'>
     <div class='col-md-8'>
-        <h2>Guess the word by selecting letters.</h2>
+        <h2 class='hide-on-mobile' >Guess the word by selecting letters.</h2>
         @if (!HideKey)
         {
             <div class="col-auto">
@@ -13,7 +13,7 @@
             </div>
             <button class='btn btn-primary' @onclick="(() => HideKey = true)">Submit</button>
         }
-        <button accesskey='1' class='btn btn-primary' @onclick="(() =>  StartNewGame())"><u>1</u> Load New Word</button>
+        <button accesskey='1' class='btn btn-primary btn-sm' @onclick="(() =>  StartNewGame())"><u>1</u> Load New Word</button>
         <div>
             <br />
             @if (CurrentWord != null)
@@ -22,15 +22,15 @@
                 {
                     if (CorrectGuesses.Contains(letter))
                     {
-                        <button class='btn btn-lg btn-success m-1' disabled>@letter</button>
+                        <button class='btn btn-sm btn-success m-1' disabled>@letter</button>
                     }
                     else if (letter == ' ')
                     {
-                        <button class='btn btn-lg btn-outline-secondary m-1'>/</button>
+                        <button class='btn btn-sm btn-outline-secondary m-1'>/</button>
                     }
                     else
                     {
-                        <button class='btn btn-lg btn-outline-danger m-1'>_</button>
+                        <button class='btn btn-sm btn-outline-danger m-1'>_</button>
                     }
                 }
             }
@@ -39,7 +39,9 @@
         </div>
 
         <div>
-            <h2 class='fs-3 text-success'>@WordDescription</h2>
+            <h2 class='fs-3 text-success hide-on-mobile'>@WordDescription</h2>
+            <h6 class='fs-6 text-success show-on-mobile'>@WordDescription</h6>
+
             @if (loading)
             {
                 <div class="text-center">
@@ -48,32 +50,33 @@
                     </div>
                 </div>
             }
-
+            <p>
             @if (IncorrectGuesses != null && IncorrectGuesses.Count > 0)
             {
-                <p>Incorrect: @IncorrectGuesses.Count</p>
+                <span class='hide-on-mobile' >Incorrect: @IncorrectGuesses.Count </span> 
             }
             else
             {
-                <p>Incorrect: 0</p>
+                <span class='hide-on-mobile' >Incorrect: 0 &nbsp;</span>
             }
             @if (CorrectGuesses != null && CorrectGuesses.Count > 0)
             {
-                <p>Correct: @CorrectGuesses.Count</p>
+                <span> Correct: @CorrectGuesses.Count </span>
             }
             else
             {
-                <p>Correct: 0</p>
+                <span> Correct: 0 </span>
             }
-            <h2 class='text-danger'>@GameStatus</h2>
+            </p>
+            <h6 class='text-danger'>@GameStatus</h6>
             @if (GameStatus.Contains("You lose!") || GameStatus == "You win!")
             {
                 <button accesskey='2' class='btn btn-lg btn-danger' @onclick="(() => StartNewGame())"><u>2</u> Play
                     Again</button>
             }
         </div>
-        <br />
-        <br />
+        <br class='hide-on-mobile'  />
+        <br class='hide-on-mobile'  />
         <div>
             @if (CorrectGuesses != null && IncorrectGuesses != null)
             {
@@ -82,11 +85,11 @@
                     {
                         if (CorrectGuesses.Contains(letter) || IncorrectGuesses.Contains(letter))
                         {
-                            <button class='letter btn btn-lg btn-secondary m-1' disabled>@letter</button>
+                            <button class='letter btn btn-sm btn-secondary m-1' disabled>@letter</button>
                         }
                         else
                         {
-                            <button accesskey='@letter' class='letter btn btn-lg btn-outline-danger m-1'
+                            <button accesskey='@letter' class='letter btn btn-sm btn-outline-danger m-1'
                                 @onclick="(() => MakeGuess(letter))">@letter</button>
                         }
                     }
