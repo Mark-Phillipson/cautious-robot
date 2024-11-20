@@ -70,11 +70,14 @@
                     {
                         if (CorrectGuesses.Contains(letter) || IncorrectGuesses.Contains(letter))
                         {
-                            <button class='letter btn btn-sm btn-secondary m-1' disabled>@letter</button>
+                            <button class='hide-on-mobile letter btn btn-lg btn-secondary m-1' disabled>@letter</button>
+                            <button class='show-on-mobile letter text-right btn btn-sm btn-secondary m-1' disabled>@letter</button>
                         }
                         else
                         {
-                            <button accesskey='@letter' class='letter btn btn-sm btn-outline-info text-right m-1'
+                            <button accesskey='@letter' class='hide-on-mobile letter btn btn-lg btn-outline-info m-1'
+                                @onclick="(() => MakeGuess(letter))">@letter</button>
+                            <button accesskey='@letter' class='show-on-mobile letter btn btn-sm btn-outline-info text-right m-1'
                                 @onclick="(() => MakeGuess(letter))">@letter</button>
                         }
                     }
@@ -85,8 +88,8 @@
     <div class='col-md-4'>
         @if (IncorrectGuesses?.Count < HangmanStages.Count)
         {
-            <pre class='fs-1 hide-on-mobile'>@HangmanStages[IncorrectGuesses.Count]</pre>
-            <pre class='fs-6 show-on-mobile'>@HangmanStages[IncorrectGuesses.Count]</pre>
+            <pre class='fs-1 hide-on-mobile text-danger'>@HangmanStages[IncorrectGuesses.Count]</pre>
+            <pre class='fs-6 show-on-mobile text-danger'>@HangmanStages[IncorrectGuesses.Count]</pre>
         }
     </div>
 </div>
