@@ -109,7 +109,7 @@ namespace BlazorApp.Client.Pages
                 }
                 else
                 {
-                    return "Press a Letter...";
+                    return "";
                 }
             }
         }

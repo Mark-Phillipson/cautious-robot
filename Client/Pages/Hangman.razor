@@ -11,11 +11,11 @@
                 <input class="form-control form-control-sm" placeholder="API Key" type="password" style="width:200px"
                     @bind="@apiKey" />
             </div>
-            <button class='btn btn-primary' @onclick="(() => HideKey = true)">Submit</button>
+            <button class='btn btn-primary btn-sm' @onclick="(() => HideKey = true)">Submit</button>
         }
         <button accesskey='1' class='btn btn-primary btn-sm' @onclick="(() =>  StartNewGame())"><u>1</u> Load New Word</button>
         <div>
-            <br />
+            <br class='hide-on-mobile'  />
             @if (CurrentWord != null)
             {
                 @foreach (char letter in CurrentWord)
@@ -34,8 +34,8 @@
                     }
                 }
             }
-            <br />
-            <br />
+            <br class='hide-on-mobile'  />
+            <br class='hide-on-mobile'  />
         </div>
 
         <div>
@@ -51,27 +51,12 @@
                 </div>
             }
             <p>
-            @if (IncorrectGuesses != null && IncorrectGuesses.Count > 0)
-            {
-                <span class='hide-on-mobile' >Incorrect: @IncorrectGuesses.Count </span> 
-            }
-            else
-            {
-                <span class='hide-on-mobile' >Incorrect: 0 &nbsp;</span>
-            }
-            @if (CorrectGuesses != null && CorrectGuesses.Count > 0)
-            {
-                <span> Correct: @CorrectGuesses.Count </span>
-            }
-            else
-            {
-                <span> Correct: 0 </span>
-            }
+                <span class='text-success' > Correct: @(CorrectGuesses?.Count ?? 0)</span><span class='text-danger' > Incorrect: @(IncorrectGuesses?.Count ?? 0) </span>
             </p>
-            <h6 class='text-danger'>@GameStatus</h6>
             @if (GameStatus.Contains("You lose!") || GameStatus == "You win!")
             {
-                <button accesskey='2' class='btn btn-lg btn-danger' @onclick="(() => StartNewGame())"><u>2</u> Play
+                <h1 class='text-info'>@GameStatus</h1>
+                <button accesskey='2' class='btn btn-sm btn-success' @onclick="(() => StartNewGame())"><u>2</u> Play
                     Again</button>
             }
         </div>
@@ -89,7 +74,7 @@
                         }
                         else
                         {
-                            <button accesskey='@letter' class='letter btn btn-sm btn-outline-danger m-1'
+                            <button accesskey='@letter' class='letter btn btn-sm btn-outline-info text-right m-1'
                                 @onclick="(() => MakeGuess(letter))">@letter</button>
                         }
                     }
@@ -100,7 +85,8 @@
     <div class='col-md-4'>
         @if (IncorrectGuesses?.Count < HangmanStages.Count)
         {
-            <pre class='fs-3'>@HangmanStages[IncorrectGuesses.Count]</pre>
+            <pre class='fs-1 hide-on-mobile'>@HangmanStages[IncorrectGuesses.Count]</pre>
+            <pre class='fs-6 show-on-mobile'>@HangmanStages[IncorrectGuesses.Count]</pre>
         }
     </div>
 </div>
