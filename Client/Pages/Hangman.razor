@@ -68,6 +68,7 @@
                 <div class='letters-container'>
                     @foreach (var letter in Alphabet.OrderBy(x => x))
                     {
+                        
                         if (CorrectGuesses.Contains(letter) || IncorrectGuesses.Contains(letter))
                         {
                             <button class='hide-on-mobile letter btn btn-lg btn-secondary m-1' disabled>@letter</button>
@@ -76,9 +77,9 @@
                         else
                         {
                             <button accesskey='@letter' class='hide-on-mobile letter btn btn-lg btn-outline-info m-1'
-                                @onclick="(() => MakeGuess(letter))">@letter</button>
+                                @onclick="(() => MakeGuess(letter))">@TalonAlphabet[letter.ToString()]</button>
                             <button accesskey='@letter' class='show-on-mobile letter btn btn-sm btn-outline-info text-right m-1'
-                                @onclick="(() => MakeGuess(letter))">@letter</button>
+                                @onclick="(() => MakeGuess(letter))">@TalonAlphabet[letter.ToString()]</button>
                         }
                     }
                 </div>

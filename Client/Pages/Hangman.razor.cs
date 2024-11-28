@@ -120,7 +120,15 @@ namespace BlazorApp.Client.Pages
                          'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L' ,
                          'Z', 'X', 'C', 'V', 'B', 'N', 'M'
                     };
-
+        private Dictionary<string, string> TalonAlphabet = new Dictionary<string, string>
+        {
+            { "Q", "quench" }, { "W", "whale" }, { "E", "eve" }, { "R", "red" }, { "T", "trap" },
+            { "Y", "yank" }, { "U", "urge" }, { "I", "sit" }, { "O", "odd" }, { "P", "pit" },
+            { "A", "act" }, { "S", "sun" }, { "D", "drum" }, { "F", "fox" }, { "G", "golf" },
+            { "H", "hot" }, { "J", "jury" }, { "K", "krunch" }, { "L", "look" },
+            { "Z", "zip" }, { "X", "plex" }, { "C", "cat" }, { "V", "vest" }, { "B", "bat" },
+            { "N", "near" }, { "M", "mike" }
+        };
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
