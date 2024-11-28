@@ -122,12 +122,12 @@ namespace BlazorApp.Client.Pages
                     };
         private Dictionary<string, string> TalonAlphabet = new Dictionary<string, string>
         {
-            { "Q", "quench" }, { "W", "whale" }, { "E", "eve" }, { "R", "red" }, { "T", "trap" },
-            { "Y", "yank" }, { "U", "urge" }, { "I", "sit" }, { "O", "odd" }, { "P", "pit" },
-            { "A", "act" }, { "S", "sun" }, { "D", "drum" }, { "F", "fox" }, { "G", "golf" },
-            { "H", "hot" }, { "J", "jury" }, { "K", "krunch" }, { "L", "look" },
-            { "Z", "zip" }, { "X", "plex" }, { "C", "cat" }, { "V", "vest" }, { "B", "bat" },
-            { "N", "near" }, { "M", "mike" }
+            { "Q", "Quench" }, { "W", "Whale" }, { "E", "Eve" }, { "R", "Red" }, { "T", "Trap" },
+            { "Y", "Yank" }, { "U", "Urge" }, { "I", "sIt" }, { "O", "Odd" }, { "P", "Pit" },
+            { "A", "Act" }, { "S", "Sun" }, { "D", "Drum" }, { "F", "Fox" }, { "G", "Golf" },
+            { "H", "Hot" }, { "J", "Jury" }, { "K", "crunch" }, { "L", "Look" },
+            { "Z", "Zip" }, { "X", "pleX" }, { "C", "Cat" }, { "V", "Vest" }, { "B", "Bat" },
+            { "N", "Near" }, { "M", "Mike" }
         };
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
