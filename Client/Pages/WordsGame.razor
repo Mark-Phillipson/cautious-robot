@@ -176,22 +176,19 @@ else
             <h5 class="d-lg-none">Definition</h5>
         }
     }
-    @if (GameOptions?.IncludeSynonymsInstead == true && WordResult?.results?[0]?.synonyms?.Count()>0)
+    @if (GameOptions?.IncludeSynonymsInstead == true && (WordResult?.results?.FirstOrDefault()?.synonyms?.Any() == true))
     {
         <ul>
-            @if (WordResult!=null && WordResult.results[0]!= null && WordResult.results[0].synonyms != null)
+            @foreach (var item in WordResult?.results?.FirstOrDefault()?.synonyms ?? Enumerable.Empty<string>())
             {
-                @foreach (var item in WordResult.results[0].synonyms)
-                {
-                    <li class='@dynamicClass'>
-                        <h1 class='d-none d-lg-block'>
-                            @item
-                        </h1>
-                        <h4 class='d-lg-none'>
-                            @item
-                        </h4>
-                    </li>
-                }
+                <li class='@dynamicClass'>
+                    <h1 class='d-none d-lg-block'>
+                        @item
+                    </h1>
+                    <h4 class='d-lg-none'>
+                        @item
+                    </h4>
+                </li>
             }
         </ul>
     }
