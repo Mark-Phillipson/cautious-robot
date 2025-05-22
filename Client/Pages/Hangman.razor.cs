@@ -22,65 +22,6 @@ namespace BlazorApp.Client.Pages
         { "GRAPE", "A small juicy fruit that grows in clusters." },
         { "ORANGE", "A round citrus fruit with a tough bright reddish-yellow rind." }
         };
-        public List<string> HangmanStages = new List<string>
-    {
-        @"
-        +---+
-        |   |
-            |
-            |
-            |
-            |
-      =========",
-        @"
-        +---+
-        |   |
-        O   |
-            |
-            |
-            |
-      =========",
-        @"
-        +---+
-        |   |
-        O   |
-        |   |
-            |
-            |
-      =========",
-        @"
-        +---+
-        |   |
-        O   |
-       /|   |
-            |
-            |
-      =========",
-        @"
-        +---+
-        |   |
-        O   |
-       /|\  |
-            |
-            |
-      =========",
-        @"
-        +---+
-        |   |
-        O   |
-       /|\  |
-       /    |
-            |
-      =========",
-        @"
-        +---+
-        |   |
-       :(   |
-       /|\  |
-       / \  |
-      Ouch! |
-      ========="
-    };
 
         private string CurrentWord = "";
         private string WordDescription = "Please click Load New Word to begin.";

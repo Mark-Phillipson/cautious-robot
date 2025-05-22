@@ -1,0 +1,45 @@
+﻿@* HangmanSvg.razor *@
+@using Microsoft.AspNetCore.Components
+
+@code {
+    [Parameter] public int Stage { get; set; }
+}
+
+<svg width="120" height="180" viewBox="0 0 120 180">
+    <!-- Gallows -->
+    <line x1="20" y1="170" x2="100" y2="170" stroke="#c0c0c0" stroke-width="6" />
+    <line x1="40" y1="170" x2="40" y2="20" stroke="#c0c0c0" stroke-width="6" />
+    <line x1="40" y1="20" x2="90" y2="20" stroke="#c0c0c0" stroke-width="6" />
+    <line x1="90" y1="20" x2="90" y2="40" stroke="#c0c0c0" stroke-width="6" />
+
+    @* Head *@
+    @if (Stage > 0)
+    {
+        <circle cx="90" cy="55" r="15" stroke="#e74c3c" stroke-width="4" fill="none" />
+    }
+    @* Body *@
+    @if (Stage > 1)
+    {
+        <line x1="90" y1="70" x2="90" y2="110" stroke="#e74c3c" stroke-width="4" />
+    }
+    @* Left Arm *@
+    @if (Stage > 2)
+    {
+        <line x1="90" y1="80" x2="75" y2="100" stroke="#e74c3c" stroke-width="4" />
+    }
+    @* Right Arm *@
+    @if (Stage > 3)
+    {
+        <line x1="90" y1="80" x2="105" y2="100" stroke="#e74c3c" stroke-width="4" />
+    }
+    @* Left Leg *@
+    @if (Stage > 4)
+    {
+        <line x1="90" y1="110" x2="75" y2="140" stroke="#e74c3c" stroke-width="4" />
+    }
+    @* Right Leg *@
+    @if (Stage > 5)
+    {
+        <line x1="90" y1="110" x2="105" y2="140" stroke="#e74c3c" stroke-width="4" />
+    }
+</svg>

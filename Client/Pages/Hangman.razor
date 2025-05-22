@@ -87,11 +87,7 @@
         </div>
     </div>
     <div class='col-md-4'>
-        @if (IncorrectGuesses?.Count < HangmanStages.Count)
-        {
-            <pre class='fs-1 hide-on-mobile text-danger'>@HangmanStages[IncorrectGuesses.Count]</pre>
-            <pre class='fs-6 show-on-mobile text-danger'>@HangmanStages[IncorrectGuesses.Count]</pre>
-        }
+        <HangmanSvg Stage="@(IncorrectGuesses != null ? IncorrectGuesses.Count : 0)" />
     </div>
 </div>
 @if (GameStatus == "You win!")
