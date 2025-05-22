@@ -1,0 +1,263 @@
+﻿
+@page "/scrabblegame"
+
+@* ScrabbleGame.razor *@
+<div class="scrabble-layout">
+    <aside class="scrabble-instructions" aria-label="How to Play">
+        <h2>How to Play Scrabble Game</h2>
+        <ol>
+            <li>Your tile rack contains 7 random letters. Each tile can be selected by clicking or using access keys 1–7.</li>
+            <li>Select tiles in order to form a word. The selected word will appear below the rack.</li>
+            <li>Click <b>Play Word</b> (Alt+W) to place your word in the center row of the board.</li>
+            <li>Use <b>Shuffle Tiles</b> (Alt+S) to get new random tiles.</li>
+            <li>Use <b>Clear Selection</b> (Alt+C) to reset your current word selection.</li>
+            <li>All controls are accessible by keyboard, voice, and eye tracker.</li>
+        </ol>
+        <p>Try to make real words for a challenge! (Dictionary validation coming soon.)</p>
+    </aside>
+    <main class="scrabble-board" tabindex="0" aria-label="Scrabble Board" role="region">
+        <table class="board-table" aria-label="Scrabble Board Preview">
+            @for (int row = 0; row < 5; row++)
+            {
+                <tr>
+                @for (int col = 0; col < 5; col++)
+                {
+                    <td class="board-cell">@GetBoardCell(row, col)</td>
+                }
+                </tr>
+            }
+        </table>
+        <div class="tile-rack" aria-label="Your Tiles">
+            <span>Tiles:</span>
+            @for (int i = 0; i < tileRack.Count; i++)
+            {
+                var tile = tileRack[i];
+                <button class="tile-btn @(selectedTileIndices.Contains(i) ? "selected" : null)" @onclick="() => OnSelectTile(i)" accesskey="@GetTileAccessKey(i)" aria-label="Select tile @tile (Alt+@GetTileAccessKey(i))">@tile</button>
+            }
+        </div>
+        <div class="selected-word" aria-label="Selected Word">
+            <span class="selected-word-label">Word you are building:</span>
+            <span class="selected-word-value">
+                @if (selectedTileIndices.Count == 0)
+                {
+                    <span class="placeholder">(Click tiles above to build a word)</span>
+                }
+                else
+                {
+                    @foreach (var idx in selectedTileIndices)
+                    {
+                        <button class="tile-btn selected built-word-tile" @onclick="() => OnDeselectTile(idx)" title="Remove letter">@tileRack[idx]</button>
+                    }
+                }
+            </span>
+        </div>
+    private void OnDeselectTile(int index)
+    {
+        selectedTileIndices.Remove(index);
+    }
+        <nav class="scrabble-controls" aria-label="Game Controls">
+            <button @onclick="OnShuffleTiles" accesskey="s" aria-label="Shuffle Tiles (Alt+S)">Shuffle Tiles (Alt+S)</button>
+            <button @onclick="OnPlayWord" accesskey="w" aria-label="Play Word (Alt+W)">Play Word (Alt+W)</button>
+            <button @onclick="OnClearSelection" accesskey="c" aria-label="Clear Selection (Alt+C)">Clear Selection (Alt+C)</button>
+        </nav>
+    </main>
+</div>
+
+@code {
+    private static readonly string ScrabbleLetters = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ";
+    private List<char> tileRack = new();
+    private List<int> selectedTileIndices = new();
+    private char[,] board = new char[5,5];
+    private Random rng = new();
+
+    protected override void OnInitialized()
+    {
+        ShuffleTiles();
+        ClearBoard();
+    }
+
+    private void ShuffleTiles()
+    {
+        tileRack = Enumerable.Range(0, 7)
+            .Select(_ => ScrabbleLetters[rng.Next(ScrabbleLetters.Length)])
+            .ToList();
+        selectedTileIndices.Clear();
+    }
+
+    private void ClearBoard()
+    {
+        for (int r = 0; r < 5; r++)
+            for (int c = 0; c < 5; c++)
+                board[r, c] = '.';
+    }
+
+    private void OnShuffleTiles()
+    {
+        ShuffleTiles();
+        StateHasChanged();
+    }
+
+    private void OnSelectTile(int index)
+    {
+        if (!selectedTileIndices.Contains(index))
+            selectedTileIndices.Add(index);
+    }
+
+    private void OnClearSelection()
+    {
+        selectedTileIndices.Clear();
+    }
+
+    private void OnPlayWord()
+    {
+        // Place the selected word horizontally in the center row
+        if (selectedTileIndices.Count == 0) return;
+        int row = 2;
+        int startCol = (5 - selectedTileIndices.Count) / 2;
+        for (int i = 0; i < selectedTileIndices.Count && (startCol + i) < 5; i++)
+        {
+            board[row, startCol + i] = tileRack[selectedTileIndices[i]];
+        }
+        selectedTileIndices.Clear();
+    }
+
+    private string GetBoardCell(int row, int col)
+    {
+        var ch = board[row, col];
+        return ch == '.' ? "" : ch.ToString();
+    }
+
+    private string SelectedWord => string.Join("", selectedTileIndices
+        .Where(i => i >= 0 && i < tileRack.Count)
+        .Select(i => tileRack[i]));
+
+    private string GetTileAccessKey(int i)
+    {
+        // Use 1-7 for access keys
+        return (i + 1).ToString();
+    }
+}
+
+<style>
+.scrabble-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    min-height: 80vh;
+    width: 100vw;
+}
+.scrabble-instructions {
+    flex: 1 1 0;
+    max-width: 400px;
+    background: #f8f9fa;
+    padding: 2rem 1rem;
+    margin: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 0 8px #e0e0e0;
+    font-size: 1.1rem;
+    color: #333;
+    height: fit-content;
+}
+.scrabble-board {
+    flex: 2 1 0;
+    margin: 1rem 0;
+    min-width: 400px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #333;
+    background: #fafafa;
+    box-shadow: 0 0 10px #bbb;
+    padding: 1rem;
+}
+.board-table {
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+.board-cell {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #888;
+    text-align: center;
+    font-size: 1.5rem;
+    background: #fff;
+}
+.tile-rack {
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.tile-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    border: 2px solid #0078d4;
+    border-radius: 6px;
+    background: #e6f0fa;
+    cursor: pointer;
+}
+.tile-btn:disabled {
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+}
+.tile-btn.selected {
+    background: #ffe066;
+    border: 2px solid #ffb300;
+    color: #333;
+    font-weight: bold;
+}
+.selected-word {
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    font-size: 1.3rem;
+    text-align: center;
+}
+.selected-word-label {
+    font-weight: bold;
+    margin-right: 0.5rem;
+    color: #0078d4;
+}
+.selected-word-value {
+.selected-word-value {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+    color: #222;
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    min-height: 48px;
+}
+.built-word-tile {
+    margin: 0 2px;
+    background: #ffe066;
+    border: 2px solid #ffb300;
+    color: #333;
+    font-weight: bold;
+    cursor: pointer;
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 1.2rem;
+    border-radius: 6px;
+}
+.placeholder {
+    color: #aaa;
+    font-style: italic;
+}
+}
+.scrabble-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+button[accesskey] {
+    outline: 2px solid #0078d4;
+    outline-offset: 2px;
+}
+</style>
