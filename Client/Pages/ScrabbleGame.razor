@@ -32,7 +32,7 @@
             @for (int i = 0; i < tileRack.Count; i++)
             {
                 var tile = tileRack[i];
-                <button class="tile-btn @(selectedTileIndices.Contains(i) ? "selected" : null)" @onclick="() => OnSelectTile(i)" accesskey="@GetTileAccessKey(i)" aria-label="Select tile @tile (Alt+@GetTileAccessKey(i))">@tile</button>
+                <button class="tile-btn @(IsSelected(i))" @onclick="() => OnSelectTile(i)" accesskey="@GetTileAccessKey(i)" aria-label="Select tile @tile (Alt+@GetTileAccessKey(i))">@tile</button>
             }
         </div>
         <div class="selected-word" aria-label="Selected Word">
@@ -46,15 +46,14 @@
                 {
                     @foreach (var idx in selectedTileIndices)
                     {
-                        <button class="tile-btn selected built-word-tile" @onclick="() => OnDeselectTile(idx)" title="Remove letter">@tileRack[idx]</button>
+                        @if (IsValidIndex(idx))
+                        {
+                            <button class="tile-btn selected built-word-tile" @onclick="() => OnDeselectTile(idx)" title="Remove letter">@tileRack[idx]</button>
+                        }
                     }
                 }
             </span>
         </div>
-    private void OnDeselectTile(int index)
-    {
-        selectedTileIndices.Remove(index);
-    }
         <nav class="scrabble-controls" aria-label="Game Controls">
             <button @onclick="OnShuffleTiles" accesskey="s" aria-label="Shuffle Tiles (Alt+S)">Shuffle Tiles (Alt+S)</button>
             <button @onclick="OnPlayWord" accesskey="w" aria-label="Play Word (Alt+W)">Play Word (Alt+W)</button>
@@ -82,6 +81,7 @@
             .Select(_ => ScrabbleLetters[rng.Next(ScrabbleLetters.Length)])
             .ToList();
         selectedTileIndices.Clear();
+        StateHasChanged();
     }
 
     private void ClearBoard()
@@ -99,8 +99,10 @@
 
     private void OnSelectTile(int index)
     {
-        if (!selectedTileIndices.Contains(index))
+        if (IsValidIndex(index) && !selectedTileIndices.Contains(index)) {
             selectedTileIndices.Add(index);
+            StateHasChanged();
+        }
     }
 
     private void OnClearSelection()
@@ -127,9 +129,22 @@
         return ch == '.' ? "" : ch.ToString();
     }
 
+    private void OnDeselectTile(int index)
+    {
+        if (IsValidIndex(index)) {
+            selectedTileIndices.Remove(index);
+        }
+        StateHasChanged();
+    }
+
+
     private string SelectedWord => string.Join("", selectedTileIndices
-        .Where(i => i >= 0 && i < tileRack.Count)
+        .Where(IsValidIndex)
         .Select(i => tileRack[i]));
+
+    private bool IsValidIndex(int index) => index >= 0 && index < tileRack.Count;
+
+    private string IsSelected(int index) => selectedTileIndices.Contains(index) ? "selected" : null;
 
     private string GetTileAccessKey(int i)
     {
@@ -199,17 +214,20 @@
     border-radius: 6px;
     background: #e6f0fa;
     cursor: pointer;
+    cursor: pointer;
+}
+.tile-btn.selected {
+    background-color: #ffe066;
+    border-color: #ffb300;
+    color: #333;
+    font-weight: bold;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
 }
 .tile-btn:disabled {
     background: #ccc;
     color: #888;
     cursor: not-allowed;
-}
-.tile-btn.selected {
-    background: #ffe066;
-    border: 2px solid #ffb300;
-    color: #333;
-    font-weight: bold;
 }
 .selected-word {
     margin-bottom: 1rem;
@@ -232,7 +250,6 @@
     gap: 0.25rem;
     align-items: center;
     min-height: 48px;
-}
 .built-word-tile {
     margin: 0 2px;
     background: #ffe066;
