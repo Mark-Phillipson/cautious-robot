@@ -1,220 +1,355 @@
 ﻿@page "/scrabblegame"
 
-@* ScrabbleGame.razor *@
 <div class="scrabble-layout">
-    <aside class="scrabble-instructions" aria-label="How to Play">
-        <h2>How to Play Scrabble Game</h2>
-        <ol>
-            <li>Your tile rack contains 7 random letters. Each tile can be selected by clicking or using access keys 1–7.</li>
-            <li>Select tiles in order to form a word. The selected word will appear below the rack.</li>
-            <li>Click <b>Play Word</b> (Alt+W) to place your word in the center row of the board.</li>
-            <li>Use <b>Shuffle Tiles</b> (Alt+S) to get new random tiles.</li>
-            <li>Use <b>Clear Selection</b> (Alt+C) to reset your current word selection.</li>
-            <li>All controls are accessible by keyboard, voice, and eye tracker.</li>
-        </ol>
-        <p>Try to make real words for a challenge! (Dictionary validation coming soon.)</p>
-    </aside>
-    <main class="scrabble-board" tabindex="0" aria-label="Scrabble Board" role="region">
-        <table class="board-table" aria-label="Scrabble Board Preview">
-            @for (int row = 0; row < 5; row++)
-            {
+    <div class="game-section">
+        <div class="score-display">
+            <h3>Current Score: @currentScore</h3>
+            <h4>Last Word Score: @lastWordScore</h4>
+        </div>
+        <main class="scrabble-board" tabindex="0" aria-label="Scrabble Board" role="region">
+            <table class="board-table" aria-label="Scrabble Board Preview">
                 <tr>
-                @for (int col = 0; col < 5; col++)
-                {
-                    <td class="board-cell">@GetBoardCell(row, col)</td>
-                }
-                </tr>
-            }
-        </table>
-        <div class="tile-rack" aria-label="Your Tiles">
-            <span>Tiles:</span>            @for (int i = 0; i < tileRack.Count; i++)
-            {
-                var index = i;  // Capture the index in a local variable
-                var tile = tileRack[index];
-                <button class="tile-btn @(IsSelected(index))" @onclick="() => OnSelectTile(index)" accesskey="@GetTileAccessKey(index)" aria-label="Select tile @tile (Alt+@GetTileAccessKey(index))">@tile</button>
-            }
-        </div>        <div class="selected-word" aria-label="Selected Word">
-            <div class="selected-word-label">Word you are building:</div>
-            <div class="selected-word-value" role="group" aria-label="Selected letters">
-                @if (selectedTileIndices.Count == 0)
-                {
-                    <span class="placeholder">(Click tiles above to build a word)</span>
-                }
-                else
-                {
-                    @foreach (var idx in selectedTileIndices)
+                    @for (int col = 0; col < 15; col++)
                     {
-                        @if (IsValidIndex(idx))
-                        {
-                            <button type="button" class="built-word-tile" @onclick="() => OnDeselectTile(idx)" title="Remove letter @tileRack[idx]">@tileRack[idx]</button>
-                        }
+                        var currentCol = col;
+                        <td class="board-cell @(currentCol == 7 ? "center-cell" : "")" 
+                            @onclick="() => OnCellClick(currentCol)">
+                            @GetBoardCell(currentCol)
+                        </td>
                     }
+                </tr>
+            </table>
+
+            <div class="tile-rack" aria-label="Your Tiles">
+                <span>Tiles:</span>
+                @for (int i = 0; i < tileRack.Count; i++)
+                {
+                    var index = i;
+                    var tile = tileRack[i];
+                    <button class="tile-btn @(selectedTileIndices.Contains(index) ? "selected" : "")"
+                            @onclick="() => SelectTile(index)"
+                            type="button">
+                        @tile
+                        <span class="letter-score">@letterScores[tile]</span>
+                    </button>
                 }
             </div>
+
+            <div class="selected-word" aria-label="Selected Word">
+                <div class="selected-word-label">Word you are building:</div>
+                <div class="selected-word-value" role="group" aria-label="Selected letters">
+                    @if (!HasSelectedLetters)
+                    {
+                        <span class="placeholder">(Click tiles and center letter to build a word)</span>
+                    }
+                    else
+                    {
+                        @foreach (var (letter, isCenter) in GetSelectedWord())
+                        {
+                            <button type="button" 
+                                    class="built-word-tile @(isCenter ? "center-letter" : "")"
+                                    @onclick="() => RemoveLetter(letter, isCenter)">
+                                @letter
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+
+            <nav class="scrabble-controls" aria-label="Game Controls">
+                <button @onclick="ShuffleTiles" type="button">Shuffle Tiles</button>
+                <button @onclick="PlayWord" type="button">Play Word</button>
+                <button @onclick="ClearSelection" type="button">Clear Selection</button>
+                <button @onclick="StartNewGame" type="button">New Game</button>
+            </nav>
+        </main>
+    </div>
+    
+    <section class="instructions-section" aria-label="How to Play">
+        <h2>How to Play Scrabble Practice Game</h2>
+        <div class="instructions-content">
+            <ol>
+                <li>Practice making Scrabble words using the center letter on the board (highlighted in gold).</li>
+                <li>Your tile rack shows 7 letters. Each tile displays its Scrabble point value in the corner.</li>
+                <li>Click the center letter and your own tiles to create a word (up to 7 letters total).</li>
+                <li>The center letter can be used at any position in your word.</li>
+                <li>Controls:
+                    <ul>
+                        <li><b>Play Word</b> (Alt+W) - Place your word if it uses the center letter</li>
+                        <li><b>Shuffle Tiles</b> (Alt+S) - Get new random letters</li>
+                        <li><b>Clear Selection</b> (Alt+C) - Reset your word</li>
+                        <li><b>New Game</b> (Alt+N) - Start a fresh game</li>
+                    </ul>
+                </li>
+                <li>After placing a word:
+                    <ul>
+                        <li>Points are added to your score</li>
+                        <li>Used tiles are replaced automatically</li>
+                        <li>The word stays on the board</li>
+                    </ul>
+                </li>
+            </ol>
         </div>
-        <nav class="scrabble-controls" aria-label="Game Controls">
-            <button @onclick="OnShuffleTiles" accesskey="s" aria-label="Shuffle Tiles (Alt+S)">Shuffle Tiles (Alt+S)</button>
-            <button @onclick="OnPlayWord" accesskey="w" aria-label="Play Word (Alt+W)">Play Word (Alt+W)</button>
-            <button @onclick="OnClearSelection" accesskey="c" aria-label="Clear Selection (Alt+C)">Clear Selection (Alt+C)</button>
-        </nav>
-    </main>
+    </section>
 </div>
 
 @code {
-    private static readonly string ScrabbleLetters = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ";
     private List<char> tileRack = new();
     private List<int> selectedTileIndices = new();
-    private char[,] board = new char[5,5];
-    private Random rng = new();
+    private char[] board = new char[15];
+    private bool centerLetterSelected;
+    private int? centerLetterPosition;
+    private readonly Random rng = new();
+    private int currentScore;
+    private int lastWordScore;
 
     protected override void OnInitialized()
     {
-        ShuffleTiles();
-        ClearBoard();
+        StartNewGame();
+    }
+
+    private void SelectTile(int index)
+    {
+        if (index >= 0 && index < tileRack.Count && !selectedTileIndices.Contains(index))
+        {
+            selectedTileIndices.Add(index);
+            StateHasChanged();
+        }
+    }
+
+    private void OnCellClick(int col)
+    {
+        if (col == 7 && !centerLetterSelected)
+        {
+            centerLetterSelected = true;
+            centerLetterPosition = selectedTileIndices.Count;
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveLetter(char letter, bool isCenter)
+    {
+        if (isCenter)
+        {
+            centerLetterSelected = false;
+            centerLetterPosition = null;
+        }
+        else
+        {
+            var index = selectedTileIndices.FindIndex(i => tileRack[i] == letter);
+            if (index != -1)
+            {
+                selectedTileIndices.RemoveAt(index);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void PlayWord()
+    {
+        var word = GetSelectedWord();
+        if (!word.Any() || !word.Any(w => w.isCenter)) return;
+
+        var wordStr = string.Join("", word.Select(w => w.letter));
+        var centerIndex = word.FindIndex(w => w.isCenter);
+        var startCol = 7 - centerIndex;
+
+        // Clear the board except center
+        for (int i = 0; i < board.Length; i++)
+        {
+            if (i != 7) board[i] = '.';
+        }
+
+        // Place the word
+        for (int i = 0; i < wordStr.Length; i++)
+        {
+            if ((startCol + i) >= 0 && (startCol + i) < board.Length)
+            {
+                board[startCol + i] = wordStr[i];
+            }
+        }
+
+        // Score and cleanup
+        lastWordScore = wordStr.Sum(c => letterScores[c]);
+        currentScore += lastWordScore;
+
+        // Replace used tiles
+        foreach (var index in selectedTileIndices.OrderByDescending(i => i))
+        {
+            tileRack[index] = ScrabbleLetters[rng.Next(ScrabbleLetters.Length)];
+        }
+
+        ClearSelection();
+    }
+
+    private void ClearSelection()
+    {
+        selectedTileIndices.Clear();
+        centerLetterSelected = false;
+        centerLetterPosition = null;
+        StateHasChanged();
+    }
+
+    private void StartNewGame()
+    {
+        ClearSelection();
+        currentScore = 0;
+        lastWordScore = 0;
+        
+        for (int i = 0; i < board.Length; i++)
+        {
+            board[i] = i == 7 ? ScrabbleLetters[rng.Next(ScrabbleLetters.Length)] : '.';
+        }
+
+        tileRack = Enumerable.Range(0, 7)
+            .Select(_ => ScrabbleLetters[rng.Next(ScrabbleLetters.Length)])
+            .ToList();
+
+        StateHasChanged();
     }
 
     private void ShuffleTiles()
     {
+        ClearSelection();
         tileRack = Enumerable.Range(0, 7)
             .Select(_ => ScrabbleLetters[rng.Next(ScrabbleLetters.Length)])
             .ToList();
-        selectedTileIndices.Clear();
         StateHasChanged();
     }
 
-    private void ClearBoard()
-    {
-        for (int r = 0; r < 5; r++)
-            for (int c = 0; c < 5; c++)
-                board[r, c] = '.';
-    }
+    private string GetBoardCell(int col) => board[col] == '.' ? "" : board[col].ToString();
 
-    private void OnShuffleTiles()
+    private List<(char letter, bool isCenter)> GetSelectedWord()
     {
-        ShuffleTiles();
-        StateHasChanged();
-    }    private void OnSelectTile(int index)
-    {
-        Console.WriteLine($"OnSelectTile called with index {index}");
-        if (index < 0 || index >= tileRack.Count)
+        var word = new List<(char letter, bool isCenter)>();
+        
+        for (int i = 0; i < Math.Max(selectedTileIndices.Count, centerLetterPosition.GetValueOrDefault(-1) + 1); i++)
         {
-            Console.WriteLine($"Invalid index: {index}, tileRack has {tileRack.Count} items");
-            return;
+            if (i == centerLetterPosition && centerLetterSelected)
+            {
+                word.Add((board[7], true));
+            }
+            else if (i < selectedTileIndices.Count)
+            {
+                word.Add((tileRack[selectedTileIndices[i]], false));
+            }
         }
         
-        if (!selectedTileIndices.Contains(index))
-        {
-            selectedTileIndices.Add(index);
-            Console.WriteLine($"Added index {index}, selectedTileIndices now has {selectedTileIndices.Count} items");
-            StateHasChanged();
-        }
+        return word;
     }
-    private void OnClearSelection()
+
+    private bool HasSelectedLetters => selectedTileIndices.Any() || centerLetterSelected;
+
+    // Constants
+    private static readonly string ScrabbleLetters = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ";
+    private readonly Dictionary<char, int> letterScores = new()
     {
-        selectedTileIndices.Clear();
-        StateHasChanged();
-    }
-
-    private void OnPlayWord()
-    {
-        // Place the selected word horizontally in the center row
-        if (selectedTileIndices.Count == 0) return;
-        int row = 2;
-        int startCol = (5 - selectedTileIndices.Count) / 2;
-        for (int i = 0; i < selectedTileIndices.Count && (startCol + i) < 5; i++)
-        {
-            board[row, startCol + i] = tileRack[selectedTileIndices[i]];
-        }
-        selectedTileIndices.Clear();
-    }
-
-    private string GetBoardCell(int row, int col)
-    {
-        var ch = board[row, col];
-        return ch == '.' ? "" : ch.ToString();
-    }
-
-    private void OnDeselectTile(int index)
-    {
-        if (IsValidIndex(index)) {
-            selectedTileIndices.Remove(index);
-        }
-        StateHasChanged();
-    }
-
-
-    private string SelectedWord => string.Join("", selectedTileIndices
-        .Where(IsValidIndex)
-        .Select(i => tileRack[i]));
-
-    private bool IsValidIndex(int index) => index >= 0 && index < tileRack.Count+1;
-
-    private string? IsSelected(int index) => selectedTileIndices.Contains(index) ? "selected" : null;
-
-    private string GetTileAccessKey(int i)
-    {
-        // Use 1-7 for access keys
-        return (i + 1).ToString();
-    }
+        {'A', 1}, {'B', 3}, {'C', 3}, {'D', 2}, {'E', 1},
+        {'F', 4}, {'G', 2}, {'H', 4}, {'I', 1}, {'J', 8},
+        {'K', 5}, {'L', 1}, {'M', 3}, {'N', 1}, {'O', 1},
+        {'P', 3}, {'Q', 10}, {'R', 1}, {'S', 1}, {'T', 1},
+        {'U', 1}, {'V', 4}, {'W', 4}, {'X', 8}, {'Y', 4},
+        {'Z', 10}
+    };
 }
 
 <style>
 .scrabble-layout {
     display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    justify-content: center;
-    min-height: 80vh;
-    width: 100vw;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 1rem;
+    gap: 2rem;
 }
-.scrabble-instructions {
-    flex: 1 1 0;
-    max-width: 400px;
-    background: #f8f9fa;
-    padding: 2rem 1rem;
-    margin: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 0 8px #e0e0e0;
-    font-size: 1.1rem;
-    color: #333;
-    height: fit-content;
-}
-.scrabble-board {
-    flex: 2 1 0;
-    margin: 1rem 0;
-    min-width: 400px;
-    min-height: 400px;
+
+.game-section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    border: 2px solid #333;
-    background: #fafafa;
-    box-shadow: 0 0 10px #bbb;
-    padding: 1rem;
+    width: 100%;
+    max-width: 1200px;
 }
+
+.score-display {
+    background: #f8f9fa;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.score-display h3 {
+    color: #2c5282;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.score-display h4 {
+    color: #4a5568;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.scrabble-board {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    min-width: 800px;
+}
+
 .board-table {
     border-collapse: collapse;
     margin-bottom: 1rem;
+    background: #fafafa;
+    padding: 1rem;
+    border-radius: 8px;
 }
+
 .board-cell {
-    width: 40px;
-    height: 40px;
+    width: 60px;
+    height: 60px;
     border: 1px solid #888;
     text-align: center;
-    font-size: 1.5rem;
+    font-size: 2rem;
+    font-weight: bold;
     background: #fff;
+    transition: all 0.3s ease;
+    cursor: default;
 }
+
+.board-cell.center-cell {
+    background: #ffd700;
+    color: #4a3305;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+.board-cell.center-cell:hover:not(:empty) {
+    background: #ffed4a;
+    transform: scale(1.05);
+}
+
 .tile-rack {
     margin: 1rem 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
 }
+
 .tile-btn {
-    width: 45px;
-    height: 45px;
-    font-size: 1.4rem;
+    width: 55px;
+    height: 55px;
+    font-size: 1.6rem;
     font-weight: bold;
     border: none;
     border-radius: 4px;
@@ -228,8 +363,17 @@
     text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
     transition: all 0.2s ease;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+.letter-score {
+    font-size: 0.8rem;
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    color: #666;
 }
 
 .tile-btn::before {
@@ -265,27 +409,19 @@
         inset 0 1px 1px rgba(255,255,255,0.7);
 }
 
-.tile-btn:disabled {
-    background: linear-gradient(135deg, #e0e0e0 0%, #cccccc 100%);
-    color: #888;
-    cursor: not-allowed;
-    box-shadow: 
-        0 1px 2px rgba(0,0,0,0.1),
-        inset 0 1px 1px rgba(255,255,255,0.3);
-    transform: none;
-}
 .selected-word {
     margin: 1.5rem 0;
-    padding: 1rem;
+    padding: 1.5rem;
     font-size: 1.3rem;
     text-align: center;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
     gap: 1rem;
     background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 12px;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    min-width: 400px;
 }
 
 .selected-word-label {
@@ -295,152 +431,96 @@
     font-size: 1.2rem;
 }
 
-.selected-word-value {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    font-size: 1.4rem;
-    letter-spacing: 0.1em;
-    color: #222;
-    display: inline-flex;
-    gap: 0.75rem;
-    align-items: center;
-    min-height: 55px;
-    background: rgba(255,255,255,0.8);
-    padding: 0.75rem;
-    border-radius: 8px;
-    border: 2px dashed #cbd5e0;
-    box-shadow: 
-        0 2px 4px rgba(0,0,0,0.05),
-        inset 0 2px 4px rgba(255,255,255,0.8);
-    transition: all 0.3s ease;
-}
-
-.selected-word-value:hover {
-    border-color: #93afd7;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 
-        0 4px 6px rgba(0,0,0,0.05),
-        inset 0 2px 4px rgba(255,255,255,0.8);
-}
-
-.placeholder {
-    color: #94a3b8;
-    font-style: italic;
-    font-size: 1.1rem;
-    text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
-}
-
 .built-word-tile {
-    margin: 0 4px;
-    background: linear-gradient(135deg, #ffe88f 0%, #ffc123 100%) !important;
-    border: none !important;
-    color: #5a3f00 !important;
-    font-weight: bold;
-    cursor: pointer;
-    width: 45px;
-    height: 45px;
+    padding: 0.5rem;
     font-size: 1.4rem;
+    font-weight: bold;
+    background: #f9ecd1;
+    border: none;
     border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    box-shadow: 
-        0 3px 6px rgba(255,179,0,0.3),
-        inset 0 1px 1px rgba(255,255,255,0.7) !important;
-    text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+    margin: 0 2px;
+    cursor: pointer;
     transition: all 0.2s ease;
-}
-
-.built-word-tile::before {
-    content: '';
-    position: absolute;
-    inset: 1px;
-    border-radius: 3px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 100%);
-    pointer-events: none;
+    min-width: 40px;
 }
 
 .built-word-tile:hover {
+    background: #ffed4a;
     transform: translateY(-2px);
-    box-shadow: 
-        0 4px 8px rgba(255,179,0,0.4),
-        inset 0 1px 1px rgba(255,255,255,0.7) !important;
 }
 
-.built-word-tile:active {
-    transform: translateY(1px);
-    box-shadow: 
-        0 1px 2px rgba(255,179,0,0.3),
-        inset 0 1px 1px rgba(255,255,255,0.7) !important;
+.built-word-tile.center-letter {
+    background: #ffd700;
+    color: #4a3305;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.placeholder {
-    color: #aaa;
-    font-style: italic;
-}
 .scrabble-controls {
     display: flex;
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
     justify-content: center;
 }
 
 .scrabble-controls button {
-    min-width: 140px;
-    height: 50px;
-    font-size: 1.1rem;
-    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
     border: none;
-    border-radius: 6px;
-    background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);
+    border-radius: 4px;
+    background: #4a5568;
     color: white;
     cursor: pointer;
-    position: relative;
-    box-shadow: 
-        0 3px 6px rgba(102, 51, 153, 0.3),
-        inset 0 1px 1px rgba(255,255,255,0.3);
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 1.5rem;
-}
-
-.scrabble-controls button::before {
-    content: '';
-    position: absolute;
-    inset: 1px;
-    border-radius: 5px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-    pointer-events: none;
 }
 
 .scrabble-controls button:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-        0 4px 12px rgba(102, 51, 153, 0.4),
-        inset 0 1px 1px rgba(255,255,255,0.3);
-    background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+    background: #2d3748;
+    transform: translateY(-1px);
 }
 
-.scrabble-controls button:active {
-    transform: translateY(1px);
-    box-shadow: 
-        0 2px 4px rgba(102, 51, 153, 0.3),
-        inset 0 1px 1px rgba(255,255,255,0.2);
+.instructions-section {
+    width: 100%;
+    max-width: 1000px;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 1rem;
 }
 
-.scrabble-controls button[accesskey]::after {
-    content: attr(accesskey);
-    position: absolute;
-    bottom: -6px;
-    right: -6px;
-    background: #4a5568;
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+.instructions-section h2 {
+    color: #2c5282;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+.instructions-content {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #4a5568;
+}
+
+.instructions-content ol {
+    padding-left: 1.5rem;
+}
+
+.instructions-content ul {
+    padding-left: 2rem;
+    margin: 0.5rem 0;
+}
+
+.instructions-content li {
+    margin-bottom: 1rem;
+}
+
+.instructions-content b {
+    color: #2c5282;
+}
+
+.placeholder {
+    color: #718096;
+    font-style: italic;
 }
 </style>
