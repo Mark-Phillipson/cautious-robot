@@ -1,5 +1,4 @@
-﻿
-@page "/scrabblegame"
+﻿@page "/scrabblegame"
 
 @* ScrabbleGame.razor *@
 <div class="scrabble-layout">
@@ -28,16 +27,15 @@
             }
         </table>
         <div class="tile-rack" aria-label="Your Tiles">
-            <span>Tiles:</span>
-            @for (int i = 0; i < tileRack.Count; i++)
+            <span>Tiles:</span>            @for (int i = 0; i < tileRack.Count; i++)
             {
-                var tile = tileRack[i];
-                <button class="tile-btn @(IsSelected(i))" @onclick="() => OnSelectTile(i)" accesskey="@GetTileAccessKey(i)" aria-label="Select tile @tile (Alt+@GetTileAccessKey(i))">@tile</button>
+                var index = i;  // Capture the index in a local variable
+                var tile = tileRack[index];
+                <button class="tile-btn @(IsSelected(index))" @onclick="() => OnSelectTile(index)" accesskey="@GetTileAccessKey(index)" aria-label="Select tile @tile (Alt+@GetTileAccessKey(index))">@tile</button>
             }
-        </div>
-        <div class="selected-word" aria-label="Selected Word">
-            <span class="selected-word-label">Word you are building:</span>
-            <span class="selected-word-value">
+        </div>        <div class="selected-word" aria-label="Selected Word">
+            <div class="selected-word-label">Word you are building:</div>
+            <div class="selected-word-value" role="group" aria-label="Selected letters">
                 @if (selectedTileIndices.Count == 0)
                 {
                     <span class="placeholder">(Click tiles above to build a word)</span>
@@ -48,11 +46,11 @@
                     {
                         @if (IsValidIndex(idx))
                         {
-                            <button class="tile-btn selected built-word-tile" @onclick="() => OnDeselectTile(idx)" title="Remove letter">@tileRack[idx]</button>
+                            <button type="button" class="built-word-tile" @onclick="() => OnDeselectTile(idx)" title="Remove letter @tileRack[idx]">@tileRack[idx]</button>
                         }
                     }
                 }
-            </span>
+            </div>
         </div>
         <nav class="scrabble-controls" aria-label="Game Controls">
             <button @onclick="OnShuffleTiles" accesskey="s" aria-label="Shuffle Tiles (Alt+S)">Shuffle Tiles (Alt+S)</button>
@@ -95,19 +93,26 @@
     {
         ShuffleTiles();
         StateHasChanged();
-    }
-
-    private void OnSelectTile(int index)
+    }    private void OnSelectTile(int index)
     {
-        if (IsValidIndex(index) && !selectedTileIndices.Contains(index)) {
+        Console.WriteLine($"OnSelectTile called with index {index}");
+        if (index < 0 || index >= tileRack.Count)
+        {
+            Console.WriteLine($"Invalid index: {index}, tileRack has {tileRack.Count} items");
+            return;
+        }
+        
+        if (!selectedTileIndices.Contains(index))
+        {
             selectedTileIndices.Add(index);
+            Console.WriteLine($"Added index {index}, selectedTileIndices now has {selectedTileIndices.Count} items");
             StateHasChanged();
         }
     }
-
     private void OnClearSelection()
     {
         selectedTileIndices.Clear();
+        StateHasChanged();
     }
 
     private void OnPlayWord()
@@ -142,9 +147,9 @@
         .Where(IsValidIndex)
         .Select(i => tileRack[i]));
 
-    private bool IsValidIndex(int index) => index >= 0 && index < tileRack.Count;
+    private bool IsValidIndex(int index) => index >= 0 && index < tileRack.Count+1;
 
-    private string IsSelected(int index) => selectedTileIndices.Contains(index) ? "selected" : null;
+    private string? IsSelected(int index) => selectedTileIndices.Contains(index) ? "selected" : null;
 
     private string GetTileAccessKey(int i)
     {
@@ -234,38 +239,49 @@
     margin-top: 0.5rem;
     font-size: 1.3rem;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 .selected-word-label {
     font-weight: bold;
-    margin-right: 0.5rem;
     color: #0078d4;
 }
-.selected-word-value {
 .selected-word-value {
     font-family: 'Consolas', 'Courier New', monospace;
     font-size: 1.4rem;
     letter-spacing: 0.1em;
     color: #222;
-    display: flex;
-    gap: 0.25rem;
+    display: inline-flex;
+    gap: 0.5rem;
     align-items: center;
     min-height: 48px;
+    background: #ffffff;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px dashed #ccc;
+}
+
 .built-word-tile {
     margin: 0 2px;
-    background: #ffe066;
-    border: 2px solid #ffb300;
-    color: #333;
+    background: #ffe066 !important;
+    border: 2px solid #ffb300 !important;
+    color: #333 !important;
     font-weight: bold;
     cursor: pointer;
-    min-width: 40px;
-    min-height: 40px;
+    width: 40px;
+    height: 40px;
     font-size: 1.2rem;
     border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
 .placeholder {
     color: #aaa;
     font-style: italic;
-}
 }
 .scrabble-controls {
     display: flex;
