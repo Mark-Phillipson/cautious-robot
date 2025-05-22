@@ -212,71 +212,166 @@
     gap: 0.5rem;
 }
 .tile-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-    border: 2px solid #0078d4;
-    border-radius: 6px;
-    background: #e6f0fa;
-    cursor: pointer;
-    cursor: pointer;
-}
-.tile-btn.selected {
-    background-color: #ffe066;
-    border-color: #ffb300;
-    color: #333;
+    width: 45px;
+    height: 45px;
+    font-size: 1.4rem;
     font-weight: bold;
-    transform: scale(1.05);
+    border: none;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #f9ecd1 0%, #e6d5b0 100%);
+    color: #4a3305;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 
+        0 2px 4px rgba(0,0,0,0.2),
+        inset 0 1px 1px rgba(255,255,255,0.7);
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.tile-btn::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.tile-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 4px 8px rgba(0,0,0,0.2),
+        inset 0 1px 1px rgba(255,255,255,0.7);
+    background: linear-gradient(135deg, #faf0db 0%, #eadcbb 100%);
+}
+
+.tile-btn:active {
+    transform: translateY(1px);
+    box-shadow: 
+        0 1px 2px rgba(0,0,0,0.2),
+        inset 0 1px 1px rgba(255,255,255,0.7);
+}
+
+.tile-btn.selected {
+    background: linear-gradient(135deg, #ffe88f 0%, #ffc123 100%);
+    color: #5a3f00;
+    transform: scale(1.05);
+    box-shadow: 
+        0 3px 6px rgba(255,179,0,0.3),
+        inset 0 1px 1px rgba(255,255,255,0.7);
+}
+
 .tile-btn:disabled {
-    background: #ccc;
+    background: linear-gradient(135deg, #e0e0e0 0%, #cccccc 100%);
     color: #888;
     cursor: not-allowed;
+    box-shadow: 
+        0 1px 2px rgba(0,0,0,0.1),
+        inset 0 1px 1px rgba(255,255,255,0.3);
+    transform: none;
 }
 .selected-word {
-    margin-bottom: 1rem;
-    margin-top: 0.5rem;
+    margin: 1.5rem 0;
+    padding: 1rem;
     font-size: 1.3rem;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 1rem;
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }
+
 .selected-word-label {
     font-weight: bold;
-    color: #0078d4;
+    color: #2c5282;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+    font-size: 1.2rem;
 }
+
 .selected-word-value {
-    font-family: 'Consolas', 'Courier New', monospace;
+    font-family: 'Segoe UI', system-ui, sans-serif;
     font-size: 1.4rem;
     letter-spacing: 0.1em;
     color: #222;
     display: inline-flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
     align-items: center;
-    min-height: 48px;
-    background: #ffffff;
-    padding: 0.5rem;
+    min-height: 55px;
+    background: rgba(255,255,255,0.8);
+    padding: 0.75rem;
     border-radius: 8px;
-    border: 1px dashed #ccc;
+    border: 2px dashed #cbd5e0;
+    box-shadow: 
+        0 2px 4px rgba(0,0,0,0.05),
+        inset 0 2px 4px rgba(255,255,255,0.8);
+    transition: all 0.3s ease;
+}
+
+.selected-word-value:hover {
+    border-color: #93afd7;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 
+        0 4px 6px rgba(0,0,0,0.05),
+        inset 0 2px 4px rgba(255,255,255,0.8);
+}
+
+.placeholder {
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
 }
 
 .built-word-tile {
-    margin: 0 2px;
-    background: #ffe066 !important;
-    border: 2px solid #ffb300 !important;
-    color: #333 !important;
+    margin: 0 4px;
+    background: linear-gradient(135deg, #ffe88f 0%, #ffc123 100%) !important;
+    border: none !important;
+    color: #5a3f00 !important;
     font-weight: bold;
     cursor: pointer;
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-    border-radius: 6px;
+    width: 45px;
+    height: 45px;
+    font-size: 1.4rem;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    box-shadow: 
+        0 3px 6px rgba(255,179,0,0.3),
+        inset 0 1px 1px rgba(255,255,255,0.7) !important;
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+    transition: all 0.2s ease;
+}
+
+.built-word-tile::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.built-word-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 4px 8px rgba(255,179,0,0.4),
+        inset 0 1px 1px rgba(255,255,255,0.7) !important;
+}
+
+.built-word-tile:active {
+    transform: translateY(1px);
+    box-shadow: 
+        0 1px 2px rgba(255,179,0,0.3),
+        inset 0 1px 1px rgba(255,255,255,0.7) !important;
 }
 
 .placeholder {
@@ -285,12 +380,67 @@
 }
 .scrabble-controls {
     display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
     justify-content: center;
 }
-button[accesskey] {
-    outline: 2px solid #0078d4;
-    outline-offset: 2px;
+
+.scrabble-controls button {
+    min-width: 140px;
+    height: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);
+    color: white;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 
+        0 3px 6px rgba(102, 51, 153, 0.3),
+        inset 0 1px 1px rgba(255,255,255,0.3);
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1.5rem;
+}
+
+.scrabble-controls button::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.scrabble-controls button:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 4px 12px rgba(102, 51, 153, 0.4),
+        inset 0 1px 1px rgba(255,255,255,0.3);
+    background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+}
+
+.scrabble-controls button:active {
+    transform: translateY(1px);
+    box-shadow: 
+        0 2px 4px rgba(102, 51, 153, 0.3),
+        inset 0 1px 1px rgba(255,255,255,0.2);
+}
+
+.scrabble-controls button[accesskey]::after {
+    content: attr(accesskey);
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    background: #4a5568;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 </style>
