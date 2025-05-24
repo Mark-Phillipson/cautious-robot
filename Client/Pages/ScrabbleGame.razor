@@ -22,16 +22,21 @@
 
             <div class="tile-rack" aria-label="Your Tiles">
                 <span>Tiles:</span>
-                @for (int i = 0; i < tileRack.Count; i++)
-                {
-                    var index = i;
-                    var tile = tileRack[i];
-                    <button class="tile-btn @(selectedTileIndices.Contains(index) ? "selected" : "")"
-                            @onclick="() => SelectTile(index)"
-                            type="button">
-                        @tile
-                        <span class="letter-score">@letterScores[tile]</span>
-                    </button>
+                @{
+                    for (int i = 0; i < tileRack.Count; i++)
+                    {
+                        var index = i;
+                        var tile = tileRack[i];
+                        <button class="tile-btn @(selectedTileIndices.Contains(index) ? "selected" : "")"
+                                @key="@($"tile_{index}_{tile}")"
+                                @onclick="@(e => SelectTile(index))"
+                                @onclick:preventDefault="true"
+                                @onclick:stopPropagation="true"
+                                type="button">
+                            @tile
+                            <span class="letter-score">@letterScores[tile]</span>
+                        </button>
+                    }
                 }
             </div>
 
@@ -93,8 +98,7 @@
     </section>
 </div>
 
-@code {
-    private List<char> tileRack = new();
+@code {    private List<char> tileRack = new();
     private List<int> selectedTileIndices = new();
     private char[] board = new char[15];
     private bool centerLetterSelected;
@@ -102,27 +106,64 @@
     private readonly Random rng = new();
     private int currentScore;
     private int lastWordScore;
+    private bool isProcessingClick = false;  // Add lock for click processing
 
     protected override void OnInitialized()
     {
         StartNewGame();
-    }
-
-    private void SelectTile(int index)
+    }    private void SelectTile(int index)
     {
-        if (index >= 0 && index < tileRack.Count && !selectedTileIndices.Contains(index))
+        Console.WriteLine($"SelectTile called with index: {index}");
+        Console.WriteLine($"Current tile rack: [{string.Join(", ", tileRack)}]");
+        Console.WriteLine($"Current selected indices: [{string.Join(", ", selectedTileIndices)}]");
+        Console.WriteLine($"Center letter selected: {centerLetterSelected}, position: {centerLetterPosition}");
+
+        try
         {
-            selectedTileIndices.Add(index);
+            if (index < 0 || index >= tileRack.Count)
+            {
+                Console.WriteLine($"Invalid index: {index}");
+                return;
+            }
+
+            char selectedTile = tileRack[index];
+            Console.WriteLine($"Attempting to select tile '{selectedTile}' at index {index}");
+
+            if (!selectedTileIndices.Contains(index))
+            {
+                var newIndices = new List<int>(selectedTileIndices);
+                newIndices.Add(index);
+                selectedTileIndices = newIndices;
+                
+                // If center letter hasn't been selected yet, increment its future position
+                if (!centerLetterSelected)
+                {
+                    centerLetterPosition = selectedTileIndices.Count;
+                }
+                
+                Console.WriteLine($"Added index {index} to selection. Selected indices now: [{string.Join(", ", selectedTileIndices)}]");
+                Console.WriteLine($"Center letter position is now: {centerLetterPosition}");
+            }
+            else
+            {
+                Console.WriteLine($"Index {index} was already selected");
+            }
+            
             StateHasChanged();
         }
-    }
-
-    private void OnCellClick(int col)
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in SelectTile: {ex.Message}");
+        }
+    }private void OnCellClick(int col)
     {
+        Console.WriteLine($"OnCellClick: col={col}, centerLetterSelected={centerLetterSelected}");
         if (col == 7 && !centerLetterSelected)
         {
             centerLetterSelected = true;
-            centerLetterPosition = selectedTileIndices.Count;
+            // If no tiles selected yet, position will be 0
+            centerLetterPosition = 0;
+            Console.WriteLine("Center letter selected, position set to 0");
             StateHasChanged();
         }
     }
@@ -188,24 +229,36 @@
         centerLetterSelected = false;
         centerLetterPosition = null;
         StateHasChanged();
-    }
-
-    private void StartNewGame()
+    }    private void StartNewGame()
     {
-        ClearSelection();
-        currentScore = 0;
-        lastWordScore = 0;
-        
-        for (int i = 0; i < board.Length; i++)
+        try
         {
-            board[i] = i == 7 ? ScrabbleLetters[rng.Next(ScrabbleLetters.Length)] : '.';
+            Console.WriteLine("Starting new game");
+            ClearSelection();
+            currentScore = 0;
+            lastWordScore = 0;
+            
+            // Reset the board
+            for (int i = 0; i < board.Length; i++)
+            {
+                board[i] = i == 7 ? ScrabbleLetters[rng.Next(ScrabbleLetters.Length)] : '.';
+            }
+
+            // Generate new tile rack
+            var newTiles = new List<char>();
+            for (int i = 0; i < 7; i++)
+            {
+                newTiles.Add(ScrabbleLetters[rng.Next(ScrabbleLetters.Length)]);
+            }
+            tileRack = newTiles;
+
+            Console.WriteLine($"New tile rack: [{string.Join(", ", tileRack)}]");
+            StateHasChanged();
         }
-
-        tileRack = Enumerable.Range(0, 7)
-            .Select(_ => ScrabbleLetters[rng.Next(ScrabbleLetters.Length)])
-            .ToList();
-
-        StateHasChanged();
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in StartNewGame: {ex.Message}");
+        }
     }
 
     private void ShuffleTiles()
@@ -217,24 +270,38 @@
         StateHasChanged();
     }
 
-    private string GetBoardCell(int col) => board[col] == '.' ? "" : board[col].ToString();
-
-    private List<(char letter, bool isCenter)> GetSelectedWord()
+    private string GetBoardCell(int col) => board[col] == '.' ? "" : board[col].ToString();    private List<(char letter, bool isCenter)> GetSelectedWord()
     {
         var word = new List<(char letter, bool isCenter)>();
         
-        for (int i = 0; i < Math.Max(selectedTileIndices.Count, centerLetterPosition.GetValueOrDefault(-1) + 1); i++)
+        // If center letter is selected and position is valid
+        if (centerLetterSelected && centerLetterPosition.HasValue)
         {
-            if (i == centerLetterPosition && centerLetterSelected)
+            // Add tiles before center letter
+            for (int i = 0; i < centerLetterPosition.Value && i < selectedTileIndices.Count; i++)
             {
-                word.Add((board[7], true));
+                word.Add((tileRack[selectedTileIndices[i]], false));
             }
-            else if (i < selectedTileIndices.Count)
+            
+            // Add center letter
+            word.Add((board[7], true));
+            
+            // Add remaining tiles
+            for (int i = centerLetterPosition.Value; i < selectedTileIndices.Count; i++)
             {
                 word.Add((tileRack[selectedTileIndices[i]], false));
             }
         }
+        else
+        {
+            // If no center letter selected, just add all selected tiles
+            foreach (var index in selectedTileIndices)
+            {
+                word.Add((tileRack[index], false));
+            }
+        }
         
+        Console.WriteLine($"Built word: {string.Join("", word.Select(w => w.letter))}");
         return word;
     }
 
@@ -524,3 +591,5 @@
     font-style: italic;
 }
 </style>
+
+
