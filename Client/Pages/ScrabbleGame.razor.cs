@@ -7,11 +7,9 @@ using System.Threading.Tasks;
 using BlazorApp.Client.Helper;
 
 namespace BlazorApp.Client.Pages
-{
-    public partial class ScrabbleGame : ComponentBase
+{    public partial class ScrabbleGame : ComponentBase
     {
         [Inject] private HttpClient HttpClient { get; set; } = default!;
-        [Inject] private IConfiguration Configuration { get; set; } = default!;
         
         protected List<char> tileRack = new();
         protected List<(int index, bool isCenter)> selectedLetters = new();
@@ -20,7 +18,10 @@ namespace BlazorApp.Client.Pages
         protected int currentScore;
         protected int lastWordScore;
         protected string? validationMessage;
-        protected bool isValidatingWord;// Constants
+        protected bool isValidatingWord;
+        protected string userApiKey = "";
+        protected bool gameStarted = false;
+        protected string apiKeyValidationMessage = "";// Constants
         protected static readonly string ScrabbleLetters = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ";
         protected readonly Dictionary<char, int> letterScores = new()
         {
@@ -118,17 +119,16 @@ namespace BlazorApp.Client.Pages
             isValidatingWord = true;
             StateHasChanged();            try
             {
-                // Validate the word using the Words API
-                var apiKey = Configuration["WordsApiKey"];
-                if (string.IsNullOrEmpty(apiKey))
+                // Validate the word using the user's Words API
+                if (string.IsNullOrEmpty(userApiKey))
                 {
-                    validationMessage = "API key not configured. Cannot validate words.";
+                    validationMessage = "API key not provided. Please enter your Words API key to validate words.";
                     isValidatingWord = false;
                     StateHasChanged();
                     return;
                 }
 
-                bool isValid = await WordsHelper.IsValidWord(apiKey, wordStr);
+                bool isValid = await WordsHelper.IsValidWord(userApiKey, wordStr);
                 
                 if (!isValid)
                 {
@@ -249,5 +249,53 @@ namespace BlazorApp.Client.Pages
         }
 
         protected bool HasSelectedLetters => selectedLetters.Any();
+        protected async Task ValidateApiKeyAndStartGame()
+        {
+            if (string.IsNullOrWhiteSpace(userApiKey))
+            {
+                apiKeyValidationMessage = "Please enter your Words API key.";
+                StateHasChanged();
+                return;
+            }
+
+            apiKeyValidationMessage = "Validating API key...";
+            StateHasChanged();
+
+            try
+            {
+                // Test the API key by validating a simple word
+                bool isValid = await WordsHelper.IsValidWord(userApiKey, "test");
+                
+                if (isValid || userApiKey.Length > 10) // Accept if test word validates or if key looks valid
+                {
+                    gameStarted = true;
+                    apiKeyValidationMessage = "";
+                    StartNewGame();
+                }
+                else
+                {
+                    apiKeyValidationMessage = "Invalid API key. Please check your key and try again.";
+                    StateHasChanged();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error validating API key: {ex.Message}");
+                apiKeyValidationMessage = "Error validating API key. Please check your key and internet connection.";
+                StateHasChanged();
+            }
+        }
+
+        protected void ResetGame()
+        {
+            gameStarted = false;
+            userApiKey = "";
+            apiKeyValidationMessage = "";
+            currentScore = 0;
+            lastWordScore = 0;
+            validationMessage = null;
+            ClearSelection();
+            StateHasChanged();
+        }
     }
 }

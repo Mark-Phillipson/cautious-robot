@@ -2,11 +2,64 @@
 @using System.Linq
 
 <div class="scrabble-layout">
-    <div class="game-section">
-        <div class="score-display">
-            <h3>Current Score: @currentScore</h3>
-            <h4>Last Word Score: @lastWordScore</h4>
+    @if (!gameStarted)
+    {
+        <div class="api-key-setup">
+            <div class="setup-card">
+                <h2>Welcome to Scrabble Practice Game</h2>
+                <div class="setup-content">
+                    <p>To validate words against a real English dictionary, you'll need your own Words API key.</p>
+                    
+                    <div class="api-key-info">
+                        <h3>How to get your free API key:</h3>
+                        <ol>
+                            <li>Visit <a href="https://www.wordsapi.com/" target="_blank" rel="noopener">WordsAPI.com</a></li>
+                            <li>Sign up for a free account (500 requests per day)</li>
+                            <li>Go to your dashboard and copy your API key</li>
+                            <li>Paste it below to start playing</li>
+                        </ol>
+                    </div>
+
+                    <div class="api-key-input-section">
+                        <label for="apiKeyInput" class="api-key-label">Enter your Words API key:</label>
+                        <div class="input-group">
+                            <input type="password" 
+                                   id="apiKeyInput"
+                                   @bind="userApiKey" 
+                                   @onkeypress="@(async (e) => { if (e.Key == "Enter") await ValidateApiKeyAndStartGame(); })"
+                                   placeholder="Your Words API key here..." 
+                                   class="api-key-input" />
+                            <button @onclick="ValidateApiKeyAndStartGame" 
+                                    type="button" 
+                                    class="start-game-btn"
+                                    disabled="@(string.IsNullOrWhiteSpace(userApiKey))">
+                                Start Game
+                            </button>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(apiKeyValidationMessage))
+                        {
+                            <div class="api-validation-message @(apiKeyValidationMessage.Contains("Validating") ? "validating" : "error")">
+                                @apiKeyValidationMessage
+                            </div>
+                        }
+                    </div>
+
+                    <div class="privacy-note">
+                        <small>🔒 Your API key is stored locally in your browser session only and is never saved or shared.</small>
+                    </div>
+                </div>
+            </div>
         </div>
+    }
+    else
+    {
+        <div class="game-section">
+            <div class="score-display">
+                <h3>Current Score: @currentScore</h3>
+                <h4>Last Word Score: @lastWordScore</h4>
+                <button @onclick="ResetGame" type="button" class="reset-game-btn">Change API Key</button>
+            </div>
         <main class="scrabble-board" tabindex="0" aria-label="Scrabble Board" role="region">
             <table class="board-table" aria-label="Scrabble Board Preview">
                 <tr>
@@ -111,8 +164,8 @@
                         <li>The word stays on the board</li>
                     </ul>
                 </li>
-            </ol>
-        </div>
+            </ol>        </div>
     </section>
+    }
 </div>
 
