@@ -2,17 +2,25 @@ using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+using BlazorApp.Client.Helper;
 
 namespace BlazorApp.Client.Pages
 {
     public partial class ScrabbleGame : ComponentBase
     {
+        [Inject] private HttpClient HttpClient { get; set; } = default!;
+        [Inject] private IConfiguration Configuration { get; set; } = default!;
+        
         protected List<char> tileRack = new();
         protected List<(int index, bool isCenter)> selectedLetters = new();
         protected char[] board = new char[15];
         private readonly Random rng = new();
         protected int currentScore;
-        protected int lastWordScore;        // Constants
+        protected int lastWordScore;
+        protected string? validationMessage;
+        protected bool isValidatingWord;// Constants
         protected static readonly string ScrabbleLetters = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ";
         protected readonly Dictionary<char, int> letterScores = new()
         {
@@ -86,48 +94,96 @@ namespace BlazorApp.Client.Pages
                 }
             }
             StateHasChanged();
-        }
-
-        protected void PlayWord()
+        }        protected async Task PlayWord()
         {
             var word = GetSelectedWord();
-            if (!word.Any() || !word.Any(w => w.isCenter)) return;
+            if (!word.Any() || !word.Any(w => w.isCenter))
+            {
+                validationMessage = "You must include the center letter in your word!";
+                StateHasChanged();
+                return;
+            }
 
             var wordStr = string.Join("", word.Select(w => w.letter));
-            var centerIndex = word.FindIndex(w => w.isCenter);
-            var startCol = 7 - centerIndex;
-
-            // Clear the board except center
-            for (int i = 0; i < board.Length; i++)
+            
+            if (wordStr.Length < 2)
             {
-                if (i != 7) board[i] = '.';
+                validationMessage = "Word must be at least 2 letters long!";
+                StateHasChanged();
+                return;
             }
 
-            // Place the word
-            for (int i = 0; i < wordStr.Length; i++)
+            // Clear any previous validation message and show loading
+            validationMessage = null;
+            isValidatingWord = true;
+            StateHasChanged();            try
             {
-                if ((startCol + i) >= 0 && (startCol + i) < board.Length)
+                // Validate the word using the Words API
+                var apiKey = Configuration["WordsApiKey"];
+                if (string.IsNullOrEmpty(apiKey))
                 {
-                    board[startCol + i] = wordStr[i];
+                    validationMessage = "API key not configured. Cannot validate words.";
+                    isValidatingWord = false;
+                    StateHasChanged();
+                    return;
                 }
+
+                bool isValid = await WordsHelper.IsValidWord(apiKey, wordStr);
+                
+                if (!isValid)
+                {
+                    validationMessage = $"'{wordStr}' is not a valid English word. Try a different combination!";
+                    isValidatingWord = false;
+                    StateHasChanged();
+                    return;
+                }
+
+                // Word is valid, proceed with placing it on the board
+                var centerIndex = word.FindIndex(w => w.isCenter);
+                var startCol = 7 - centerIndex;
+
+                // Clear the board except center
+                for (int i = 0; i < board.Length; i++)
+                {
+                    if (i != 7) board[i] = '.';
+                }
+
+                // Place the word
+                for (int i = 0; i < wordStr.Length; i++)
+                {
+                    if ((startCol + i) >= 0 && (startCol + i) < board.Length)
+                    {
+                        board[startCol + i] = wordStr[i];
+                    }
+                }
+
+                // Score and cleanup
+                lastWordScore = wordStr.Sum(c => letterScores[c]);
+                currentScore += lastWordScore;
+
+                // Replace used tiles
+                foreach (var letter in selectedLetters.Where(l => !l.isCenter))
+                {
+                    tileRack[letter.index] = ScrabbleLetters[rng.Next(ScrabbleLetters.Length)];
+                }
+
+                validationMessage = $"Great! '{wordStr}' is a valid word worth {lastWordScore} points!";
+                ClearSelection();
             }
-
-            // Score and cleanup
-            lastWordScore = wordStr.Sum(c => letterScores[c]);
-            currentScore += lastWordScore;
-
-            // Replace used tiles
-            foreach (var letter in selectedLetters.Where(l => !l.isCenter))
+            catch (Exception ex)
             {
-                tileRack[letter.index] = ScrabbleLetters[rng.Next(ScrabbleLetters.Length)];
+                Console.WriteLine($"Error validating word: {ex.Message}");
+                validationMessage = "Unable to validate word. Please try again.";
             }
-
-            ClearSelection();
-        }
-
-        protected void ClearSelection()
+            finally
+            {
+                isValidatingWord = false;
+                StateHasChanged();
+            }
+        }        protected void ClearSelection()
         {
             selectedLetters.Clear();
+            validationMessage = null;
             StateHasChanged();
         }        protected void StartNewGame()
         {
@@ -137,6 +193,7 @@ namespace BlazorApp.Client.Pages
                 ClearSelection();
                 currentScore = 0;
                 lastWordScore = 0;
+                validationMessage = null;
                 
                 // Reset the board
                 for (int i = 0; i < board.Length; i++)
@@ -159,7 +216,7 @@ namespace BlazorApp.Client.Pages
             {
                 Console.WriteLine($"Error in StartNewGame: {ex.Message}");
             }
-        }        protected void ShuffleTiles()
+        }protected void ShuffleTiles()
         {
             ClearSelection();
             tileRack = Enumerable.Range(0, 7)

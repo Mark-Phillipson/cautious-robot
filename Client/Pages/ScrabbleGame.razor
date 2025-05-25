@@ -37,9 +37,7 @@
                         <span class="letter-score">@letterScores[tile]</span>
                     </button>
                 }
-            </div>
-
-            <div class="selected-word" aria-label="Selected Word">
+            </div>            <div class="selected-word" aria-label="Selected Word">
                 <div class="selected-word-label">Word you are building:</div>
                 <div class="selected-word-value" role="group" aria-label="Selected letters">
                     @if (!HasSelectedLetters)
@@ -58,11 +56,32 @@
                         }
                     }
                 </div>
-            </div>
-
-            <nav class="scrabble-controls" aria-label="Game Controls">
+                
+                @if (!string.IsNullOrEmpty(validationMessage))
+                {
+                    <div class="validation-message @(validationMessage.Contains("Great!") ? "success" : "error")">
+                        @validationMessage
+                    </div>
+                }
+                
+                @if (isValidatingWord)
+                {
+                    <div class="validation-loading">
+                        <span>Checking if word exists...</span>
+                    </div>
+                }
+            </div>            <nav class="scrabble-controls" aria-label="Game Controls">
                 <button @onclick="ShuffleTiles" type="button">Shuffle Tiles</button>
-                <button @onclick="PlayWord" type="button">Play Word</button>
+                <button @onclick="PlayWord" type="button" disabled="@isValidatingWord">
+                    @if (isValidatingWord)
+                    {
+                        <span>Validating...</span>
+                    }
+                    else
+                    {
+                        <span>Play Word</span>
+                    }
+                </button>
                 <button @onclick="ClearSelection" type="button">Clear Selection</button>
                 <button @onclick="StartNewGame" type="button">New Game</button>
             </nav>
@@ -70,22 +89,22 @@
     </div>
     
     <section class="instructions-section" aria-label="How to Play">
-        <h2>How to Play Scrabble Practice Game</h2>
-        <div class="instructions-content">
+        <h2>How to Play Scrabble Practice Game</h2>        <div class="instructions-content">
             <ol>
                 <li>Practice making Scrabble words using the center letter on the board (highlighted in gold).</li>
                 <li>Your tile rack shows 7 letters. Each tile displays its Scrabble point value in the corner.</li>
                 <li>Click the center letter and your own tiles to create a word (up to 7 letters total).</li>
                 <li>The center letter can be used at any position in your word.</li>
+                <li><strong>All words are validated against a real English dictionary!</strong> Invalid words will be rejected.</li>
                 <li>Controls:
                     <ul>
-                        <li><b>Play Word</b> (Alt+W) - Place your word if it uses the center letter</li>
+                        <li><b>Play Word</b> (Alt+W) - Validates and places your word if it uses the center letter</li>
                         <li><b>Shuffle Tiles</b> (Alt+S) - Get new random letters</li>
                         <li><b>Clear Selection</b> (Alt+C) - Reset your word</li>
                         <li><b>New Game</b> (Alt+N) - Start a fresh game</li>
                     </ul>
                 </li>
-                <li>After placing a word:
+                <li>After placing a valid word:
                     <ul>
                         <li>Points are added to your score</li>
                         <li>Used tiles are replaced automatically</li>
