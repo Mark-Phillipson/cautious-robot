@@ -3,23 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Client.Pages
+namespace BlazorApp.Client.Pages
 {
     public partial class ScrabbleGame : ComponentBase
     {
-        private List<char> tileRack = new();
-        private List<int> selectedTileIndices = new();
-        private char[] board = new char[15];
-        private bool centerLetterSelected;
-        private int? centerLetterPosition;
+        protected List<char> tileRack = new();
+        protected List<(int index, bool isCenter)> selectedLetters = new();
+        protected char[] board = new char[15];
         private readonly Random rng = new();
-        private int currentScore;
-        private int lastWordScore;
-        private bool isProcessingClick = false;
-
-        // Constants
-        private static readonly string ScrabbleLetters = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ";
-        private readonly Dictionary<char, int> letterScores = new()
+        protected int currentScore;
+        protected int lastWordScore;        // Constants
+        protected static readonly string ScrabbleLetters = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ";
+        protected readonly Dictionary<char, int> letterScores = new()
         {
             {'A', 1}, {'B', 3}, {'C', 3}, {'D', 2}, {'E', 1},
             {'F', 4}, {'G', 2}, {'H', 4}, {'I', 1}, {'J', 8},
@@ -31,15 +26,17 @@ namespace Client.Pages
 
         protected override void OnInitialized()
         {
+            Console.WriteLine("ScrabbleGame: OnInitialized called");
             StartNewGame();
         }
 
-        private void SelectTile(int index)
+        protected void SelectTile(int index)
         {
+            Console.WriteLine("=== SelectTile Debug Info ===");
             Console.WriteLine($"SelectTile called with index: {index}");
             Console.WriteLine($"Current tile rack: [{string.Join(", ", tileRack)}]");
-            Console.WriteLine($"Current selected indices: [{string.Join(", ", selectedTileIndices)}]");
-            Console.WriteLine($"Center letter selected: {centerLetterSelected}, position: {centerLetterPosition}");
+            Console.WriteLine($"Current selected letters: [{string.Join(", ", selectedLetters.Select(l => l.isCenter ? "Center" : tileRack[l.index].ToString()))}]");
+            Console.WriteLine($"Tile rack count: {tileRack.Count}");
 
             try
             {
@@ -49,29 +46,12 @@ namespace Client.Pages
                     return;
                 }
 
-                char selectedTile = tileRack[index];
-                Console.WriteLine($"Attempting to select tile '{selectedTile}' at index {index}");
+                if (!selectedLetters.Any(l => l.index == index && !l.isCenter))
+                {
+                    selectedLetters.Add((index, false));
+                    Console.WriteLine($"Added tile '{tileRack[index]}' to selection");
+                }
 
-                if (!selectedTileIndices.Contains(index))
-                {
-                    var newIndices = new List<int>(selectedTileIndices);
-                    newIndices.Add(index);
-                    selectedTileIndices = newIndices;
-                    
-                    // If center letter hasn't been selected yet, increment its future position
-                    if (!centerLetterSelected)
-                    {
-                        centerLetterPosition = selectedTileIndices.Count;
-                    }
-                    
-                    Console.WriteLine($"Added index {index} to selection. Selected indices now: [{string.Join(", ", selectedTileIndices)}]");
-                    Console.WriteLine($"Center letter position is now: {centerLetterPosition}");
-                }
-                else
-                {
-                    Console.WriteLine($"Index {index} was already selected");
-                }
-                
                 StateHasChanged();
             }
             catch (Exception ex)
@@ -80,38 +60,35 @@ namespace Client.Pages
             }
         }
 
-        private void OnCellClick(int col)
+        protected void OnCellClick(int col)
         {
-            Console.WriteLine($"OnCellClick: col={col}, centerLetterSelected={centerLetterSelected}");
-            if (col == 7 && !centerLetterSelected)
+            Console.WriteLine($"OnCellClick: col={col}");
+            if (col == 7 && !selectedLetters.Any(l => l.isCenter))
             {
-                centerLetterSelected = true;
-                // If no tiles selected yet, position will be 0
-                centerLetterPosition = 0;
-                Console.WriteLine("Center letter selected, position set to 0");
+                selectedLetters.Add((-1, true));  // Use -1 to indicate center letter
+                Console.WriteLine($"Added center letter '{board[7]}' to selection");
                 StateHasChanged();
             }
         }
 
-        private void RemoveLetter(char letter, bool isCenter)
+        protected void RemoveLetter(char letter, bool isCenter)
         {
             if (isCenter)
             {
-                centerLetterSelected = false;
-                centerLetterPosition = null;
+                selectedLetters.RemoveAll(l => l.isCenter);
             }
             else
             {
-                var index = selectedTileIndices.FindIndex(i => tileRack[i] == letter);
-                if (index != -1)
+                var letterEntry = selectedLetters.FindIndex(l => !l.isCenter && tileRack[l.index] == letter);
+                if (letterEntry != -1)
                 {
-                    selectedTileIndices.RemoveAt(index);
+                    selectedLetters.RemoveAt(letterEntry);
                 }
             }
             StateHasChanged();
         }
 
-        private void PlayWord()
+        protected void PlayWord()
         {
             var word = GetSelectedWord();
             if (!word.Any() || !word.Any(w => w.isCenter)) return;
@@ -140,23 +117,19 @@ namespace Client.Pages
             currentScore += lastWordScore;
 
             // Replace used tiles
-            foreach (var index in selectedTileIndices.OrderByDescending(i => i))
+            foreach (var letter in selectedLetters.Where(l => !l.isCenter))
             {
-                tileRack[index] = ScrabbleLetters[rng.Next(ScrabbleLetters.Length)];
+                tileRack[letter.index] = ScrabbleLetters[rng.Next(ScrabbleLetters.Length)];
             }
 
             ClearSelection();
         }
 
-        private void ClearSelection()
+        protected void ClearSelection()
         {
-            selectedTileIndices.Clear();
-            centerLetterSelected = false;
-            centerLetterPosition = null;
+            selectedLetters.Clear();
             StateHasChanged();
-        }
-
-        private void StartNewGame()
+        }        protected void StartNewGame()
         {
             try
             {
@@ -186,9 +159,7 @@ namespace Client.Pages
             {
                 Console.WriteLine($"Error in StartNewGame: {ex.Message}");
             }
-        }
-
-        private void ShuffleTiles()
+        }        protected void ShuffleTiles()
         {
             ClearSelection();
             tileRack = Enumerable.Range(0, 7)
@@ -197,43 +168,29 @@ namespace Client.Pages
             StateHasChanged();
         }
 
-        private string GetBoardCell(int col) => board[col] == '.' ? "" : board[col].ToString();
-
-        private List<(char letter, bool isCenter)> GetSelectedWord()
+        protected string GetBoardCell(int col) => board[col] == '.' ? "" : board[col].ToString();        protected List<(char letter, bool isCenter)> GetSelectedWord()
         {
             var word = new List<(char letter, bool isCenter)>();
             
-            // If center letter is selected and position is valid
-            if (centerLetterSelected && centerLetterPosition.HasValue)
+            foreach (var letter in selectedLetters)
             {
-                // Add tiles before center letter
-                for (int i = 0; i < centerLetterPosition.Value && i < selectedTileIndices.Count; i++)
+                if (letter.isCenter)
                 {
-                    word.Add((tileRack[selectedTileIndices[i]], false));
+                    word.Add((board[7], true));
+                    Console.WriteLine($"Added center letter: {board[7]}");
                 }
-                
-                // Add center letter
-                word.Add((board[7], true));
-                
-                // Add remaining tiles
-                for (int i = centerLetterPosition.Value; i < selectedTileIndices.Count; i++)
+                else
                 {
-                    word.Add((tileRack[selectedTileIndices[i]], false));
-                }
-            }
-            else
-            {
-                // If no center letter selected, just add all selected tiles
-                foreach (var index in selectedTileIndices)
-                {
-                    word.Add((tileRack[index], false));
+                    word.Add((tileRack[letter.index], false));
+                    Console.WriteLine($"Added tile: {tileRack[letter.index]}");
                 }
             }
             
-            Console.WriteLine($"Built word: {string.Join("", word.Select(w => w.letter))}");
+            var finalWord = string.Join("", word.Select(w => w.letter));
+            Console.WriteLine($"Final word built: {finalWord}");
             return word;
         }
 
-        private bool HasSelectedLetters => selectedTileIndices.Any() || centerLetterSelected;
+        protected bool HasSelectedLetters => selectedLetters.Any();
     }
 }
