@@ -23,7 +23,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0'
+          dotnet-version: '9.0.x'
 
       - name: Restore dependencies
         run: dotnet restore Client/Client.csproj
@@ -48,7 +48,7 @@ jobs:
           app_location: "Client"
           api_location: ""
           output_location: "bin/publish/wwwroot"
-          skip_app_build: true
+          app_build_command: "dotnet publish Client/Client.csproj -c Release -o Client/bin/publish"
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
