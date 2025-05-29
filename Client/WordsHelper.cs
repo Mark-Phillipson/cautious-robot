@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using BlazorApp.Client.Models;
+using System.Linq;
 
 namespace BlazorApp.Client.Helper;
 
@@ -88,9 +89,7 @@ public class WordsHelper
         {
             throw new Exception("Load word results variable is unexpectedly empty!");
         }
-    }
-
-    public async static Task<bool> IsValidWord(string apiKey, string word)
+    }    public async static Task<bool> IsValidWord(string apiKey, string word)
     {
         if (string.IsNullOrWhiteSpace(word))
             return false;
@@ -122,6 +121,54 @@ public class WordsHelper
         {
             Console.WriteLine($"Error validating word '{word}': {ex.Message}");
             return false;
+        }
+    }
+
+    public async static Task<(bool isValid, string? definition)> IsValidWordWithDefinition(string apiKey, string word)
+    {
+        if (string.IsNullOrWhiteSpace(word))
+            return (false, null);
+
+        var client = new HttpClient();
+        string uri = $"https://wordsapiv1.p.rapidapi.com/words/{word.ToLower()}";
+        
+        var request = new HttpRequestMessage
+        {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(uri),
+            Headers =
+            {
+                { "x-rapidapi-key", apiKey },
+                { "x-rapidapi-host", "wordsapiv1.p.rapidapi.com" },
+            },
+        };
+
+        try
+        {
+            using (var response = await client.SendAsync(request))
+            {
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    try
+                    {
+                        var wordResult = JsonConvert.DeserializeObject<WordResult>(content);
+                        var definition = wordResult?.results?.FirstOrDefault()?.definition;
+                        return (true, definition);
+                    }
+                    catch (Exception parseEx)
+                    {
+                        Console.WriteLine($"Error parsing word definition: {parseEx.Message}");
+                        return (true, null); // Word is valid but couldn't parse definition
+                    }
+                }
+                return (false, null);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error validating word '{word}': {ex.Message}");
+            return (false, null);
         }
     }
 }

@@ -54,10 +54,24 @@
     }
     else
     {
-        <div class="game-section">
-            <div class="score-display">
-                <h3>Current Score: @currentScore</h3>
-                <h4>Last Word Score: @lastWordScore</h4>
+        <div class="game-section">            <div class="score-display">
+                <div class="score-info">
+                    <h3>Current Score: @currentScore</h3>
+                    <h4>Last Word Score: @lastWordScore</h4>
+                </div>
+                @if (!string.IsNullOrEmpty(currentWordDefinition))
+                {
+                    <div class="word-definition">
+                        <h4>Definition:</h4>
+                        <p>@currentWordDefinition</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="word-definition-placeholder">
+                        <span>Click "Play Word" to see the definition</span>
+                    </div>
+                }
                 <button @onclick="ResetGame" type="button" class="reset-game-btn">Change API Key</button>
             </div>
         <main class="scrabble-board" tabindex="0" aria-label="Scrabble Board" role="region">

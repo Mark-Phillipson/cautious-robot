@@ -7,17 +7,18 @@ using System.Threading.Tasks;
 using BlazorApp.Client.Helper;
 
 namespace BlazorApp.Client.Pages
-{    public partial class ScrabbleGame : ComponentBase
+{
+    public partial class ScrabbleGame : ComponentBase
     {
         [Inject] private HttpClient HttpClient { get; set; } = default!;
-        
+
         protected List<char> tileRack = new();
         protected List<(int index, bool isCenter)> selectedLetters = new();
         protected char[] board = new char[15];
-        private readonly Random rng = new();
-        protected int currentScore;
+        private readonly Random rng = new();        protected int currentScore;
         protected int lastWordScore;
         protected string? validationMessage;
+        protected string? currentWordDefinition;
         protected bool isValidatingWord;
         protected string userApiKey = "";
         protected bool gameStarted = false;
@@ -95,7 +96,8 @@ namespace BlazorApp.Client.Pages
                 }
             }
             StateHasChanged();
-        }        protected async Task PlayWord()
+        }
+        protected async Task PlayWord()
         {
             var word = GetSelectedWord();
             if (!word.Any() || !word.Any(w => w.isCenter))
@@ -106,7 +108,7 @@ namespace BlazorApp.Client.Pages
             }
 
             var wordStr = string.Join("", word.Select(w => w.letter));
-            
+
             if (wordStr.Length < 2)
             {
                 validationMessage = "Word must be at least 2 letters long!";
@@ -128,15 +130,19 @@ namespace BlazorApp.Client.Pages
                     return;
                 }
 
-                bool isValid = await WordsHelper.IsValidWord(userApiKey, wordStr);
-                
+                var (isValid, definition) = await WordsHelper.IsValidWordWithDefinition(userApiKey, wordStr);
+
                 if (!isValid)
                 {
                     validationMessage = $"'{wordStr}' is not a valid English word. Try a different combination!";
+                    currentWordDefinition = null;
                     isValidatingWord = false;
                     StateHasChanged();
                     return;
                 }
+
+                // Store the definition for display
+                currentWordDefinition = definition;
 
                 // Word is valid, proceed with placing it on the board
                 var centerIndex = word.FindIndex(w => w.isCenter);
@@ -184,17 +190,19 @@ namespace BlazorApp.Client.Pages
         {
             selectedLetters.Clear();
             validationMessage = null;
+            //currentWordDefinition = null;
             StateHasChanged();
-        }        protected void StartNewGame()
-        {
-            try
+        }
+        protected void StartNewGame()
+        {            try
             {
                 Console.WriteLine("Starting new game");
                 ClearSelection();
                 currentScore = 0;
                 lastWordScore = 0;
                 validationMessage = null;
-                
+                currentWordDefinition = null;
+
                 // Reset the board
                 for (int i = 0; i < board.Length; i++)
                 {
@@ -216,7 +224,8 @@ namespace BlazorApp.Client.Pages
             {
                 Console.WriteLine($"Error in StartNewGame: {ex.Message}");
             }
-        }protected void ShuffleTiles()
+        }
+        protected void ShuffleTiles()
         {
             ClearSelection();
             tileRack = Enumerable.Range(0, 7)
@@ -225,10 +234,10 @@ namespace BlazorApp.Client.Pages
             StateHasChanged();
         }
 
-        protected string GetBoardCell(int col) => board[col] == '.' ? "" : board[col].ToString();        protected List<(char letter, bool isCenter)> GetSelectedWord()
+        protected string GetBoardCell(int col) => board[col] == '.' ? "" : board[col].ToString(); protected List<(char letter, bool isCenter)> GetSelectedWord()
         {
             var word = new List<(char letter, bool isCenter)>();
-            
+
             foreach (var letter in selectedLetters)
             {
                 if (letter.isCenter)
@@ -242,7 +251,7 @@ namespace BlazorApp.Client.Pages
                     Console.WriteLine($"Added tile: {tileRack[letter.index]}");
                 }
             }
-            
+
             var finalWord = string.Join("", word.Select(w => w.letter));
             Console.WriteLine($"Final word built: {finalWord}");
             return word;
@@ -265,7 +274,7 @@ namespace BlazorApp.Client.Pages
             {
                 // Test the API key by validating a simple word
                 bool isValid = await WordsHelper.IsValidWord(userApiKey, "test");
-                
+
                 if (isValid || userApiKey.Length > 10) // Accept if test word validates or if key looks valid
                 {
                     gameStarted = true;
@@ -290,10 +299,10 @@ namespace BlazorApp.Client.Pages
         {
             gameStarted = false;
             userApiKey = "";
-            apiKeyValidationMessage = "";
-            currentScore = 0;
+            apiKeyValidationMessage = "";            currentScore = 0;
             lastWordScore = 0;
             validationMessage = null;
+            currentWordDefinition = null;
             ClearSelection();
             StateHasChanged();
         }
