@@ -1,3 +1,23 @@
+/* Ensure Bootstrap display utilities are not overridden */
+.d-none {
+	display: none !important;
+}
+.d-lg-block {
+	display: none !important;
+}
+@media (min-width: 992px) {
+	.d-lg-block {
+		display: block !important;
+	}
+	.d-lg-none {
+		display: none !important;
+	}
+}
+@media (max-width: 991.98px) {
+	.d-lg-none {
+		display: block !important;
+	}
+}
 .custom-layout {
 	display: flex !important;
 	align-content: center;

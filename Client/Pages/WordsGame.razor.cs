@@ -147,7 +147,7 @@ namespace BlazorApp.Client.Pages
 			if (ApiKeyAvailable)
 			{
 				GameOptions.APIKey = apiKey;
-				wordsHelper = new WordsHelper(apiKey);
+				wordsHelper = new WordsHelper(apiKey ?? "TBC");
 				await LoadWordAsync();
 			}
 		}

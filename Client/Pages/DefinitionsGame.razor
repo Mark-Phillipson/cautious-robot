@@ -1,11 +1,12 @@
 ﻿@page "/definitions"
+
 <div class="background">
 <div class="row align-items-center g-2">
-    @if (!HideKey)
+    @if (!ApiKeyAvailable)
     {
         <div class="col-auto">
-            <label class="visually-hidden">API Key</label>
-            <input class="form-control" placeholder="API Key" type="password" style="width:200px" @bind="@GameOptions.APIKey" />
+            <ApiKeyEntry OnApiKeySaved="OnApiKeySaved" />
+            <div class="alert alert-info mt-3">Please enter your Words API key to play.</div>
         </div>
     }
     <div class="col-auto">
@@ -15,7 +16,7 @@
         <label>Level: <span class="badge bg-warning">@(wordsToLoad-1)</span> </label>
     </div>
     <div class="col-auto">
-        <button class="btn btn-success" type="button" @onclick="@( ( ) => ShowOptions() )">Options >></button>
+        <button class="btn btn-success" type="button" @onclick="ShowOptions">Options >></button>
     </div>
 
     @if ((GameOptions?.ShowOptions ?? false))
@@ -24,20 +25,20 @@
             <div class="col-auto">
                 <label class="d-none d-lg-block col-form-label-lg">Maximum Word Length</label>
                 <div class='d-none d-lg-block'>
-                    <input required min="2" max="60" step="1" class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="@GameOptions.MaximumWordLength" />
+                    <input required min="2" max="60" step="1" class="form-control" placeholder="Max Length" type="number" style="width:150px" @bind="GameOptions.MaximumWordLength" />
 
                 </div>
                 <div class='d-lg-none'>
-                    <input class="form-control" placeholder="Max Len." style="width:min-content" type="number" @bind="@GameOptions.MaximumWordLength" />
+                    <input class="form-control" placeholder="Max Len." style="width:min-content" type="number" @bind="GameOptions.MaximumWordLength" />
                 </div>
             </div>
             <div class="col-auto">
                 <label class="d-none d-lg-block col-form-label-lg">Begins With</label>
                 <div class='d-none d-lg-block'>
-                    <input class="form-control" maxlength="@GameOptions.MaximumWordLength" placeholder="Begins With" type="text" style="width:138px" @bind="@GameOptions.BeginsWith" />
+                    <input class="form-control" maxlength="@GameOptions.MaximumWordLength" placeholder="Begins With" type="text" style="width:138px" @bind="GameOptions.BeginsWith" />
                 </div>
                 <div class='d-lg-none'>
-                    <input class="form-control" placeholder="Begins With" style="width:min-content" type="text" @bind="@GameOptions.BeginsWith" />
+                    <input class="form-control" placeholder="Begins With" style="width:min-content" type="text" @bind="GameOptions.BeginsWith" />
                 </div>
             </div>
         </form>
@@ -59,7 +60,7 @@
 }
 @if (LoadWordResults?.WordResults != null)
 {
-    Index = 0;
+    @* Index is reset in code-behind before rendering *@
     @if (ShowWord == true)
     {
         @if (LoadWordResults?.WordResults != null && ShowWord == true)
@@ -80,60 +81,37 @@
         <div class="d-none d-lg-block">Select the definition that matches the word above:</div>
     }
     <div style="display:block;" class="">
-       @{counter=0 ;}
-       @if (LoadWordResults!= null  && LoadWordResults?.WordResults != null) {
-       @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
+        @if (AnswerOptions != null && AnswerOptions.Count > 0)
         {
-           counter++;
-            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word) && wordResultLoop?.results?.Count() > 0)
+            @for (int i = 0; i < AnswerOptions.Count; i++)
             {
-                var indexPosition1 = Index;
-                <div style="display:inline;" class="">
-                    <button  accesskey="@(counter<10 ? counter.ToString():"")" @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word, indexPosition1))" style="margin:3px"
-                class="btn @ButtonClass[Index] btn-lg d-none d-lg-block">
-                     <u>@(counter<10?counter.ToString():"")</u>    @wordResultLoop?.results[0].definition
-                        @if (!string.IsNullOrWhiteSpace(@wordResultLoop?.results[0].partOfSpeech))
+                var option = AnswerOptions[i];
+                <div style="display:inline;" class="d-none d-lg-block">
+                    <button accesskey="@((i+1)<10 ? (i+1).ToString():"")" @onclick="@(() => CheckAnswerAsync(option.Word, i))" style="margin:3px"
+                            class="btn @option.ButtonClass btn-lg">
+                        <u>@((i+1)<10?(i+1).ToString():"")</u>    @option.Definition
+                        @if (!string.IsNullOrWhiteSpace(option.PartOfSpeech))
                         {
                             <text> (</text>
-
-                            @wordResultLoop?.results[0].partOfSpeech <text>)</text>
+                            @option.PartOfSpeech <text>)</text>
                         }
                     </button>
                 </div>
-                Index = Index + 1;
-                @* <a target="_blank" href="https://en.wikipedia.org/wiki/@wordResult?.word">Look Up @wordResult?.word</a> *@
-            }
-        }
-        }
-        @if (true)
-        {
-            Index = 0;
-         counter=0;
-      }
-@if (LoadWordResults?.WordResults!=null) { 
-        @foreach (var wordResultLoop in LoadWordResults.WordResults.OrderBy(x => x.RandomOrder))
-        {
-           counter++;
-            @if (ShowWord && !string.IsNullOrWhiteSpace(wordResultLoop?.word) && wordResultLoop?.results?.Count() > 0)
-            {
-                var indexPosition2 = Index;
-                <div class="d-flex custom-layout d-lg-none">
-                    <button accesskey="@(counter<10?counter.ToString():"")" @onclick="@(() => CheckAnswerAsync(@wordResultLoop?.word,indexPosition2))" style="margin:3px"
-                class="btn @ButtonClass[Index] btn-sm d-lg-none">
-                        <u>@(counter<10?counter.ToString():"")</u> @wordResultLoop?.results[0].definition
-                        @if (!string.IsNullOrWhiteSpace(@wordResultLoop?.results[0].partOfSpeech))
+                @*<div class="d-flex custom-layout d-lg-none">
+                    <button accesskey="@((i+1)<10 ? (i+1).ToString():"")" @onclick="@(() => CheckAnswerAsync(option.Word, i))" style="margin:3px"
+                            class="btn @option.ButtonClass btn-sm">
+                        <u>@((i+1)<10?(i+1).ToString():"")</u> @option.Definition
+                        @if (!string.IsNullOrWhiteSpace(option.PartOfSpeech))
                         {
                             <text> (</text>
-                            @wordResultLoop?.results[0].partOfSpeech <text>)</text>
+                            @option.PartOfSpeech <text>)</text>
                         }
                     </button>
-                </div>
-                Index = Index + 1;
+                </div>*@
             }
-        }
         }
     </div>
-    @if (@Message != null)
+    @if (Message != null)
     {
         <hr />
         <h1 class="text-danger">Unexpected Error Please load another word.</h1>
@@ -164,7 +142,6 @@ else
     <hr>
     <div class="text-danger">@Message</div>
 }
-
 
 @if (AnswerState && PlayAudio)
 {

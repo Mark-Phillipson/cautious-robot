@@ -1,25 +1,41 @@
 ﻿using Microsoft.AspNetCore.Components;
 using BlazorApp.Client.Models;
 using BlazorApp.Client.Helper;
+using BlazorApp.Client.Shared;
+using BlazorApp.Client.Pages;
 
-namespace BlazorApp.Client.Pages
-{
+namespace BlazorApp.Client.Pages;
+
 	public partial class DefinitionsGame
 	{
+		[Inject] public required BlazorApp.Client.Shared.IApiKeyService ApiKeyService { get; set; }
+		private string? apiKey = null;
+		public bool ApiKeyAvailable => !string.IsNullOrWhiteSpace(apiKey);
+		public async Task OnApiKeySaved()
+		{
+			apiKey = await ApiKeyService.GetApiKeyAsync();
+			GameOptions.APIKey = apiKey;
+			HideKey = true;
+			await LoadWordAsync();
+			// StateHasChanged();
+		}
 		private int currentQuestionNumber = 0;
 		ElementReference LoadWordsButton;
-		private string? response;
-		string? result = "";
-		WordsHelper? wordsHelper;
-		private int questionsAnswered = 0;
-		private int questionsCorrect = 0;
-		private int counter = 0;
-		private async Task CheckAnswerAsync(string? guessedWord, int indexPosition)
+		public string? response;
+		public string? result = "";
+		public WordsHelper? wordsHelper;
+		public int questionsAnswered = 0;
+		public int questionsCorrect = 0;
+		public int counter = 0;
+		public async Task CheckAnswerAsync(string? guessedWord, int indexPosition)
 		{
 			PlayAudio = true;
 			if (guessedWord == LoadWordResults?.WordResults?[currentQuestionNumber].word)
 			{
-				ButtonClass[indexPosition] = "btn-success";
+			   if (indexPosition >= 0 && indexPosition < ButtonClass.Count)
+			   {
+				   ButtonClass[indexPosition] = "btn-success";
+			   }
 				questionsAnswered++;
 				questionsCorrect++;
 				dynamicClass = "";
@@ -31,7 +47,10 @@ namespace BlazorApp.Client.Pages
 					await Task.Delay(1000);
 					WordResult = LoadWordResults?.WordResults?[currentQuestionNumber];
 					dynamicClass = "animate__animated animate__backInUp";
-					ButtonClass[indexPosition] = "btn-info";
+				   if (indexPosition >= 0 && indexPosition < ButtonClass.Count)
+				   {
+					   ButtonClass[indexPosition] = "btn-info";
+				   }
 				}
 				else
 				{
@@ -41,7 +60,10 @@ namespace BlazorApp.Client.Pages
 					await Task.Delay(1000);
 					try
 					{
-						ButtonClass[indexPosition] = "btn-info";
+					   if (indexPosition >= 0 && indexPosition < ButtonClass.Count)
+					   {
+						   ButtonClass[indexPosition] = "btn-info";
+					   }
 					}
 					catch (Exception exception)
 					{
@@ -56,10 +78,16 @@ namespace BlazorApp.Client.Pages
 			else
 			{
 				questionsCorrect--;
-				ButtonClass[indexPosition] = "btn-danger";
+			   if (indexPosition >= 0 && indexPosition < ButtonClass.Count)
+			   {
+				   ButtonClass[indexPosition] = "btn-danger";
+			   }
 				AnswerState = false;
 				await Task.Delay(1000);
-				ButtonClass[indexPosition] = "btn-info";
+			   if (indexPosition >= 0 && indexPosition < ButtonClass.Count)
+			   {
+				   ButtonClass[indexPosition] = "btn-info";
+			   }
 			}
 			await LoadWordsButton.FocusAsync();
 			PlayAudio = false;
@@ -85,18 +113,25 @@ namespace BlazorApp.Client.Pages
 			dynamicClass = "";
 			currentQuestionNumber = 0;
 			ShowWord = true;
-			ReloadButtonClass();
-			// Try to get the API key from the text box in the user interface
-			if (GameOptions.APIKey != null && GameOptions.APIKey != "TBC")
+			// Use API key from service if available
+			if (apiKey == null)
 			{
+				apiKey = await ApiKeyService.GetApiKeyAsync();
+			}
+			if (!string.IsNullOrWhiteSpace(apiKey))
+			{
+				GameOptions.APIKey = apiKey;
 				HideKey = true;
-				wordsHelper = new WordsHelper(GameOptions.APIKey);
+				wordsHelper = new WordsHelper(apiKey);
 			}
 			if (wordsHelper != null)
 			{
 				LoadWordResults =
 					await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower(), null);
 			}
+			// Ensure ButtonClass matches the number of answer options
+			int optionCount = LoadWordResults?.WordResults?.Count ?? 0;
+			ButtonClass = Enumerable.Repeat("btn-info", optionCount).ToList();
 			Message = LoadWordResults?.Message;
 			result = LoadWordResults?.Result;
 			if (LoadWordResults?.WordResults?.Count > 0)
@@ -112,49 +147,51 @@ namespace BlazorApp.Client.Pages
 				ButtonClass.Add("btn-info");
 			}
 		}
-		private int wordsToLoad = 2;
+		public int wordsToLoad = 2;
 
 		public GameOptions GameOptions { get; set; } = new GameOptions();
 		public bool AnswerState { get; set; } = false;
 		public bool PlayAudio { get; set; } = false;
 		[Inject] IConfiguration? Configuration { get; set; }
-		private string dynamicClass = "";
-		private int Index { get; set; } = 0;
-		LoadWordResults? LoadWordResults { get; set; }
-		WordResult? WordResult { get; set; }
+		public string dynamicClass = "";
+		public int Index { get; set; } = 0;
+		// Expose ordered answer options for rendering
+		public List<AnswerOption> AnswerOptions
+		{
+			get
+			{
+				var options = new List<AnswerOption>();
+				if (LoadWordResults?.WordResults != null)
+				{
+					var ordered = LoadWordResults.WordResults.OrderBy(x => x.RandomOrder).ToList();
+					for (int i = 0; i < ordered.Count; i++)
+					{
+						var wr = ordered[i];
+						// wr.results is Result[]? (nullable array)
+						var resultsArr = wr?.results;
+						if (ShowWord && !string.IsNullOrWhiteSpace(wr?.word) && resultsArr != null && resultsArr.Length > 0)
+						{
+							var word = wr.word ?? string.Empty;
+							var firstResult = resultsArr[0];
+							var definition = firstResult?.definition ?? string.Empty;
+							var partOfSpeech = firstResult?.partOfSpeech;
+							options.Add(new AnswerOption
+							{
+								Word = word,
+								Definition = definition,
+								PartOfSpeech = partOfSpeech,
+								ButtonClass = (ButtonClass.Count > i) ? ButtonClass[i] : "btn-info"
+							});
+						}
+					}
+				}
+				return options;
+			}
+		}
+		public LoadWordResults? LoadWordResults { get; set; }
+		public WordResult? WordResult { get; set; }
 
-		protected override async Task OnAfterRenderAsync(bool firstRender)
-		{
-			if (firstRender)
-			{
-				await LoadWordsButton.FocusAsync();
-			}
-		}
-		protected override async Task OnInitializedAsync()
-		{
-			if (Configuration != null)
-			{
-				var apiKey = "TBC";
-				if (apiKey == null || apiKey == "TBC")
-				{
-					apiKey = Environment.GetEnvironmentVariable("WORDSAPIKEY");
-				}
-				if (apiKey == null || apiKey == "TBC")
-				{
-					apiKey = Configuration["WordsApiKey"];
-				}
-				if (apiKey != null && apiKey != "" && apiKey != "TBC")
-				{
-					wordsHelper = new WordsHelper(apiKey);
-					await LoadWordAsync();
-					GameOptions = new GameOptions();
-				}
-				else
-				{
-					Message = "API key not found";
-				}
-			}
-		}
+		// Lifecycle methods removed for code-behind partial class
 		private void ShowOptions()
 		{
 			if (GameOptions != null)
@@ -167,4 +204,3 @@ namespace BlazorApp.Client.Pages
 		public string? Message { get; set; }
 		public bool ShowWord { get; set; } = true;
 	}
-}
