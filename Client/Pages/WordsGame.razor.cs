@@ -6,6 +6,17 @@ namespace BlazorApp.Client.Pages
 {
 	public partial class WordsGame
 	{
+		[Inject] public required BlazorApp.Client.Shared.IApiKeyService ApiKeyService { get; set; }
+		private string? apiKey = null;
+		private bool ApiKeyAvailable => !string.IsNullOrWhiteSpace(apiKey);
+		private async Task OnApiKeySaved()
+		{
+			apiKey = await ApiKeyService.GetApiKeyAsync();
+			GameOptions.APIKey = apiKey;
+			HideKey = true;
+			await LoadWordAsync();
+			StateHasChanged();
+		}
 		private int currentQuestionNumber = 0;
 		ElementReference LoadWordsButton;
 		private string? response;
@@ -132,28 +143,12 @@ namespace BlazorApp.Client.Pages
 		}
 		protected override async Task OnInitializedAsync()
 		{
-			if (Configuration != null)
+			apiKey = await ApiKeyService.GetApiKeyAsync();
+			if (ApiKeyAvailable)
 			{
-				var apiKey = "TBC";
-				if (apiKey == null || apiKey == "TBC")
-				{
-					apiKey = Environment.GetEnvironmentVariable("WORDSAPIKEY");
-				}
-				if (apiKey == null || apiKey == "TBC")
-				{
-					apiKey = Configuration["WordsApiKey"];
-				}
-				if (apiKey != null && apiKey != "" && apiKey != "TBC")
-				{
-					wordsHelper = new WordsHelper(apiKey);
-					await LoadWordAsync();
-					GameOptions = new GameOptions();
-					//Authentication = new("f921b96c-ab1c-4de7-93c7-011dc6104df2");
-				}
-				else
-				{
-					Message = "API key not found";
-				}
+				GameOptions.APIKey = apiKey;
+				wordsHelper = new WordsHelper(apiKey);
+				await LoadWordAsync();
 			}
 		}
 		private void ShowOptions()
