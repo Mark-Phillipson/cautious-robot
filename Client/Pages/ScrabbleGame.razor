@@ -139,24 +139,25 @@
                 }
             </div>            <nav class="scrabble-controls" aria-label="Game Controls">
                 <button @onclick="ShuffleTiles" type="button">Shuffle Tiles</button>
-                <button @onclick="PlayWord" type="button" disabled="@isValidatingWord">
+                <button @onclick="ShuffleTiles" type="button" accesskey="s">Shuffle Tiles (S)</button>
+                <button @onclick="PlayWord" type="button" disabled="@isValidatingWord" accesskey="w">
                     @if (isValidatingWord)
                     {
                         <span>Validating...</span>
                     }
                     else
                     {
-                        <span>Play Word</span>
+                        <span>Play Word (W)</span>
                     }
                 </button>
-                <button @onclick="ClearSelection" type="button">Clear Selection</button>
-                <button @onclick="StartNewGame" type="button">New Game</button>
+                <button @onclick="ClearSelection" type="button" accesskey="c">Clear Selection (C)</button>
+                <button @onclick="StartNewGame" type="button" accesskey="n">New Game (N)</button>
             </nav>
         </main>
     </div>
     
     <section class="instructions-section" aria-label="How to Play">
-        <h2>How to Play Scrabble Practice Game</h2>        <div class="instructions-content">
+        <h2>Scrabble Practice Game Instructions</h2>        <div class="instructions-content">
             <ol>
                 <li>Practice making Scrabble words using the center letter on the board (highlighted in gold).</li>
                 <li>Your tile rack shows 7 letters. Each tile displays its Scrabble point value in the corner.</li>
