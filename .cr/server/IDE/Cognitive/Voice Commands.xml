@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Root Type="DevExpress.CodeRush.Foundation.VoiceCommands.Options.VoiceCommandsOptions">
+  <Options Language="Neutral">
+    <RootFolder>
+      <SubFolders>
+        <Item Id="{f706f7c7-0cdb-4852-9da2-5050a89b342d}" />
+        <Item Id="{481547b3-4a0d-482f-9ec4-daf74e5c99ba}" />
+        <Item Id="{4e41644c-9d6f-4e73-8b09-08a8deed8ae0}" />
+        <Item Id="{122c7bc6-8b68-4212-8d55-0fb37d55ab05}" />
+        <Item Id="{5fe511d7-3d3a-45d7-ac6e-c0529d78795c}">
+          <VoiceCommands>
+            <Item Id="{1ca58fbc-98df-474b-90fe-61a92f48d039}" />
+            <Item Id="{de08a281-0668-4a01-937e-a5bf1aa2c454}" />
+            <Item Id="{127b94b9-aabb-4153-a2eb-8eafa4e8b01c}">
+              <AllowSemanticEquivalents>False</AllowSemanticEquivalents>
+            </Item>
+          </VoiceCommands>
+        </Item>
+        <Item Id="{42952b6c-d370-4ca6-b522-7b44dc3dadf8}" />
+        <Item Id="{7216de22-c9ea-4024-a30a-8b4be6d2325f}" />
+        <Item Id="{0d1f6612-ad20-45dc-a88b-7138a318edeb}" />
+      </SubFolders>
+    </RootFolder>
+  </Options>
+</Root>
