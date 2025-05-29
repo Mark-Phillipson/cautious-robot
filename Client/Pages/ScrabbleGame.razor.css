@@ -156,14 +156,14 @@
     font-weight: bold;
     border: none;
     border-radius: 8px;
-    background: linear-gradient(135deg, #333 0%, #444 100%);
-    color: #ffd700;
+    background: linear-gradient(135deg, #fffbe6 0%, #ffe066 100%);
+    color: #23272a;
     cursor: pointer;
     position: relative;
     box-shadow: 
         0 4px 12px rgba(0,0,0,0.5),
         inset 0 1px 1px rgba(255,255,255,0.1);
-    text-shadow: 1px 1px 2px #000;
+    text-shadow: 0 1px 2px #fff8;
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
@@ -240,15 +240,15 @@
     padding: 0.5rem;
     font-size: 1.4rem;
     font-weight: bold;
-    background: #333;
-    color: #ffd700;
+    background: #fffbe6;
+    color: #23272a;
     border: none;
     border-radius: 4px;
     margin: 0 2px;
     cursor: pointer;
     transition: all 0.2s ease;
     min-width: 40px;
-    text-shadow: 0 1px 2px #000a;
+    text-shadow: 0 1px 2px #fff8;
 }
 
 .built-word-tile:hover {
@@ -339,12 +339,13 @@
 }
 
 .placeholder {
-    color: #ffd700;
+    color: #23272a;
+    background: #fffbe6;
     font-style: italic;
     font-weight: bold;
-    text-shadow: 0 2px 6px #000c, 0 1px 2px #000a;
-    color: #ffd700;
-    text-shadow: 0 1px 2px #000a;
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    text-shadow: none;
     text-decoration: underline;
 }
 
