@@ -1,3 +1,4 @@
+
 using BlazorApp.Client.Helper;
 using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Components;
@@ -9,9 +10,10 @@ namespace BlazorApp.Client.Pages
         [Inject] public required IJSRuntime JSRuntime { get; set; }
         private DotNetObjectReference<Hangman>? objRef;
         private WordsHelper? wordsHelper;
-        private bool HideKey = false;
+        [Inject] public required BlazorApp.Client.Shared.IApiKeyService ApiKeyService { get; set; }
         private bool loading = false;
-        private string apiKey = "";
+        private string? apiKey = null;
+        private bool ApiKeyAvailable => !string.IsNullOrWhiteSpace(apiKey);
 
         [Inject] public required IConfiguration Configuration { get; set; }
         private Dictionary<string, string> Words = new Dictionary<string, string>
@@ -70,13 +72,17 @@ namespace BlazorApp.Client.Pages
             { "Z", "Zip" }, { "X", "pleX" }, { "C", "Cat" }, { "V", "Vest" }, { "B", "Bat" },
             { "N", "Near" }, { "M", "Mike" }
         };
+        protected override async Task OnInitializedAsync()
+        {
+            apiKey = await ApiKeyService.GetApiKeyAsync();
+        }
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
                 objRef = DotNetObjectReference.Create(this);
                 await JSRuntime.InvokeVoidAsync("registerKeyPress", objRef);
-
             }
         }
         [JSInvokable]
@@ -97,40 +103,24 @@ namespace BlazorApp.Client.Pages
         private async Task StartNewGame()
         {
             loading = true;
-            // Try to get the API key from the text box in the user interface
-            if (apiKey != null && apiKey != "TBC")
+            apiKey = await ApiKeyService.GetApiKeyAsync();
+            if (!ApiKeyAvailable)
             {
-                HideKey = true;
-                wordsHelper = new WordsHelper(apiKey);
+                loading = false;
+                return;
             }
-            if (apiKey != null && apiKey != "" && apiKey != "TBC")
+            wordsHelper = new WordsHelper(apiKey!);
+            LoadWordResults loadWordResults;
+            do
             {
-                wordsHelper = new WordsHelper(apiKey);
-                LoadWordResults loadWordResults;
-                do
-                {
-                    loadWordResults = await wordsHelper.LoadWord(1, 30, null, null);
-                    CurrentWord = loadWordResults?.WordResults?[0].word ?? "Testing";
-                } while (CurrentWord.Any(char.IsDigit) || CurrentWord.Contains("-") || CurrentWord.Contains(".")); // If the word contains a hyphen, a period, or a number, get another word
-                WordDescription = loadWordResults?.WordResults?[0].results?[0].definition ?? "The word is testing";
-            }
+                loadWordResults = await wordsHelper.LoadWord(1, 30, null, null);
+                CurrentWord = loadWordResults?.WordResults?[0].word ?? "Testing";
+            } while (CurrentWord.Any(char.IsDigit) || CurrentWord.Contains("-") || CurrentWord.Contains("."));
+            WordDescription = loadWordResults?.WordResults?[0].results?[0].definition ?? "The word is testing";
             CurrentWord = CurrentWord.ToUpper();
             CorrectGuesses.Clear();
             IncorrectGuesses.Clear();
             loading = false;
-            if (CurrentWord != null)
-            {
-                return;
-            }
-            // Create a new instance of Random
-            Random rand = new Random();
-            // Generate a random index less than the size of the dictionary
-            int index = rand.Next(Words.Count);
-
-            // Select the item at the random index
-            KeyValuePair<string, string> randomItem = Words.ElementAt(index);
-            CurrentWord = randomItem.Key;
-            WordDescription = randomItem.Value;
         }
 
         private void MakeGuess(char letter)
@@ -148,6 +138,12 @@ namespace BlazorApp.Client.Pages
         public void Dispose()
         {
             objRef?.Dispose();
+        }
+
+        private async Task OnApiKeySaved()
+        {
+            apiKey = await ApiKeyService.GetApiKeyAsync();
+            StateHasChanged();
         }
 
     }

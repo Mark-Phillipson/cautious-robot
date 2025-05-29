@@ -1,0 +1,75 @@
+@inject BlazorApp.Client.Shared.IApiKeyService ApiKeyService
+@inject NavigationManager Navigation
+
+<div class="api-key-setup">
+    <div class="setup-card">
+        <h2>Enter Your Words API Key</h2>
+        <div class="setup-content">
+            <p>To validate words against a real English dictionary, you'll need your own Words API key.</p>
+            <div class="api-key-info">
+                <h3>How to get your free API key:</h3>
+                <ol>
+                    <li>Visit <a href="https://www.wordsapi.com/" target="_blank" rel="noopener">WordsAPI.com</a></li>
+                    <li>Sign up for a free account (500 requests per day)</li>
+                    <li>Go to your dashboard and copy your API key</li>
+                    <li>Paste it below to start playing</li>
+                </ol>
+            </div>
+            <div class="api-key-input-section">
+                <label for="apiKeyInput" class="api-key-label">Enter your Words API key:</label>
+                <div class="input-group">
+                    <input type="password"
+                           id="apiKeyInput"
+                           @bind="userApiKey"
+                           @onkeypress="@(async (e) => { if (e.Key == "Enter") await SaveApiKey(); })"
+                           placeholder="Your Words API key here..."
+                           class="api-key-input" />
+                    <button @onclick="SaveApiKey"
+                            type="button"
+                            class="start-game-btn"
+                            disabled="@(string.IsNullOrWhiteSpace(userApiKey))">
+                        Save Key
+                    </button>
+                </div>
+                @if (!string.IsNullOrEmpty(apiKeyValidationMessage))
+                {
+                    <div class="api-validation-message @(apiKeyValidationMessage.Contains("Validating") ? "validating" : "error")">
+                        @apiKeyValidationMessage
+                    </div>
+                }
+            </div>
+            <div class="privacy-note">
+                <small>🔒 Your API key is stored locally in your browser session only and is never saved or shared.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnApiKeySaved { get; set; }
+    private string userApiKey = string.Empty;
+    private string? apiKeyValidationMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userApiKey = await ApiKeyService.GetApiKeyAsync() ?? string.Empty;
+    }
+
+    private async Task SaveApiKey()
+    {
+        if (string.IsNullOrWhiteSpace(userApiKey))
+        {
+            apiKeyValidationMessage = "Please enter your Words API key.";
+            return;
+        }
+        apiKeyValidationMessage = "Validating API key...";
+        StateHasChanged();
+        await ApiKeyService.SetApiKeyAsync(userApiKey);
+        apiKeyValidationMessage = "API key saved!";
+        StateHasChanged();
+        if (OnApiKeySaved.HasDelegate)
+        {
+            await OnApiKeySaved.InvokeAsync();
+        }
+    }
+}
