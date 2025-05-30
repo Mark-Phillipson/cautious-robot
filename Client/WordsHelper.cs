@@ -122,9 +122,7 @@ public class WordsHelper
             Console.WriteLine($"Error validating word '{word}': {ex.Message}");
             return false;
         }
-    }
-
-    public async static Task<(bool isValid, string? definitionOrSynonyms)> IsValidWordWithDefinition(string apiKey, string word)
+    }    public async static Task<(bool isValid, string? definitionAndSynonyms)> IsValidWordWithDefinition(string apiKey, string word)
     {
         if (string.IsNullOrWhiteSpace(word))
             return (false, null);
@@ -154,18 +152,37 @@ public class WordsHelper
                     {
                         var wordResult = JsonConvert.DeserializeObject<WordResult>(content);
                         var definition = wordResult?.results?.FirstOrDefault()?.definition;
+                        var synonyms = wordResult?.results?.SelectMany(r => r.synonyms ?? Enumerable.Empty<string>()).Distinct().ToList();
+                        
+                        var result = "";
+                        
+                        // Add definition if available
                         if (!string.IsNullOrWhiteSpace(definition))
                         {
-                            return (true, definition);
+                            result = definition;
                         }
-                        // If no definition, check for synonyms
-                        var synonyms = wordResult?.results?.SelectMany(r => r.synonyms ?? Enumerable.Empty<string>()).Distinct().ToList();
+                        
+                        // Add synonyms if available
                         if (synonyms != null && synonyms.Count > 0)
                         {
-                            return (true, $"No definition found. Synonyms: {string.Join(", ", synonyms)}");
+                            var synonymsText = $"Synonyms: {string.Join(", ", synonyms)}";
+                            if (!string.IsNullOrWhiteSpace(result))
+                            {
+                                result += $"\n\n{synonymsText}";
+                            }
+                            else
+                            {
+                                result = synonymsText;
+                            }
                         }
-                        // No definition or synonyms
-                        return (true, "No definition or synonyms found in the dictionary.");
+                        
+                        // If neither definition nor synonyms found
+                        if (string.IsNullOrWhiteSpace(result))
+                        {
+                            result = "No definition or synonyms found in the dictionary.";
+                        }
+                        
+                        return (true, result);
                     }
                     catch (Exception parseEx)
                     {

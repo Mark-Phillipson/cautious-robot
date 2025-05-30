@@ -58,18 +58,16 @@
                 <div class="score-info">
                     <h3>Current Score: @currentScore</h3>
                     <h4>Last Word Score: @lastWordScore</h4>
-                </div>
-                @if (!string.IsNullOrEmpty(currentWordDefinition))
+                </div>                @if (!string.IsNullOrEmpty(currentWordDefinition))
                 {
                     <div class="word-definition">
-                        <h4>Definition:</h4>
+                        <h4>Definition & Synonyms:</h4>
                         <p>@currentWordDefinition</p>
                     </div>
-                }
-                else
+                }                else
                 {
                     <div class="word-definition-placeholder">
-                        <span>Click "Play Word" to see the definition</span>
+                        <span>Click "Play Word" to see the definition and synonyms</span>
                     </div>
                 }
                 <button @onclick="ResetGame" type="button" class="reset-game-btn">Change API Key</button>
