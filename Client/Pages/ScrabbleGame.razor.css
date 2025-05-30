@@ -347,6 +347,7 @@
     border-radius: 4px;
     text-shadow: none;
     text-decoration: underline;
+    cursor: default;
 }
 
 .validation-message {

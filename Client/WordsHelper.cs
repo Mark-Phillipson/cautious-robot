@@ -124,7 +124,7 @@ public class WordsHelper
         }
     }
 
-    public async static Task<(bool isValid, string? definition)> IsValidWordWithDefinition(string apiKey, string word)
+    public async static Task<(bool isValid, string? definitionOrSynonyms)> IsValidWordWithDefinition(string apiKey, string word)
     {
         if (string.IsNullOrWhiteSpace(word))
             return (false, null);
@@ -154,7 +154,18 @@ public class WordsHelper
                     {
                         var wordResult = JsonConvert.DeserializeObject<WordResult>(content);
                         var definition = wordResult?.results?.FirstOrDefault()?.definition;
-                        return (true, definition);
+                        if (!string.IsNullOrWhiteSpace(definition))
+                        {
+                            return (true, definition);
+                        }
+                        // If no definition, check for synonyms
+                        var synonyms = wordResult?.results?.SelectMany(r => r.synonyms ?? Enumerable.Empty<string>()).Distinct().ToList();
+                        if (synonyms != null && synonyms.Count > 0)
+                        {
+                            return (true, $"No definition found. Synonyms: {string.Join(", ", synonyms)}");
+                        }
+                        // No definition or synonyms
+                        return (true, "No definition or synonyms found in the dictionary.");
                     }
                     catch (Exception parseEx)
                     {
