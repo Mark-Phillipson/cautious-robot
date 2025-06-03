@@ -19,7 +19,8 @@ namespace BlazorApp.Client.Pages
         protected int lastWordScore;
         protected string? validationMessage;
         protected string? currentWordDefinition;
-        protected bool isValidatingWord;
+        protected bool isValidatingWord= false ;
+         protected  int soundToPlay = 0; // 0: none, 1: valid word, 2: invalid word 
         protected string userApiKey = "";
         protected bool gameStarted = false;
         protected string apiKeyValidationMessage = "";// Constants
@@ -119,7 +120,9 @@ namespace BlazorApp.Client.Pages
             // Clear any previous validation message and show loading
             validationMessage = null;
             isValidatingWord = true;
-            StateHasChanged();            try
+            soundToPlay = 0;
+            StateHasChanged();
+            try
             {
                 // Validate the word using the user's Words API
                 if (string.IsNullOrEmpty(userApiKey))
@@ -137,10 +140,11 @@ namespace BlazorApp.Client.Pages
                     validationMessage = $"'{wordStr}' is not a valid English word. Try a different combination!";
                     currentWordDefinition = null;
                     isValidatingWord = false;
+                    soundToPlay = 2; // Invalid word sound
                     StateHasChanged();
                     return;
                 }
-
+                soundToPlay = 1; // Valid word sound
                 // Store the definition for display
                 currentWordDefinition = definition;
 

@@ -129,7 +129,7 @@
                     </div>
                 }
                 
-                @if (soundToPlay==1)
+                @if (isValidatingWord)
                 {
                     <div class="validation-loading">
                         <span>Checking if word exists...</span>
@@ -179,5 +179,17 @@
             </ol>        </div>
     </section>
     }
+@if (soundToPlay==1)
+{
+    <PlaySound AnswerState=true Play=true />
+}
+else if (soundToPlay==2)
+{
+    <PlaySound AnswerState=false Play=true />
+}
+else
+{
+    <PlaySound AnswerState=false Play=false />
+}
 </div>
 
