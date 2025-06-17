@@ -65,3 +65,39 @@
     padding: 0.5rem 1rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.7);
 }
+
+.api-key-saved {
+    background: rgba(72, 187, 120, 0.1);
+    border: 2px solid #48bb78;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.saved-message {
+    color: #48bb78;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.saved-details {
+    color: #a0a0a0;
+    margin-bottom: 1rem;
+}
+
+.change-key-btn {
+    background: transparent;
+    border: 1px solid #48bb78;
+    color: #48bb78;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.change-key-btn:hover {
+    background: #48bb78;
+    color: #23272a;
+}

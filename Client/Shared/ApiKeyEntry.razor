@@ -1,36 +1,51 @@
 @inject BlazorApp.Client.Shared.IApiKeyService ApiKeyService
 @inject NavigationManager Navigation
 
-<div class="api-key-setup">
-    <div class="setup-card">
-        <h2>Enter Your Words API Key</h2>
+<div class="api-key-setup">    <div class="setup-card">
+        <h2>Enter Your OpenAI API Key</h2>
         <div class="setup-content">
-            <p>To validate words against a real English dictionary, you'll need your own Words API key.</p>
+            <p>To get AI-generated content, you'll need your own OpenAI API key.</p>
             <div class="api-key-info">
                 <h3>How to get your free API key:</h3>
                 <ol>
-                    <li>Visit <a href="https://www.wordsapi.com/" target="_blank" rel="noopener">WordsAPI.com</a></li>
-                    <li>Sign up for a free account (500 requests per day)</li>
+                    <li>Visit <a href="https://platform.openai.com/" target="_blank" rel="noopener">OpenAI Platform</a></li>
+                    <li>Sign up for a free account (includes free credits)</li>
                     <li>Go to your dashboard and copy your API key</li>
                     <li>Paste it below to start playing</li>
                 </ol>
-            </div>
-            <div class="api-key-input-section">
-                <label for="apiKeyInput" class="api-key-label">Enter your Words API key:</label>
-                <div class="input-group">
-                    <input type="password"
-                           id="apiKeyInput"
-                           @bind="userApiKey"
-                           @onkeypress="@(async (e) => { if (e.Key == "Enter") await SaveApiKey(); })"
-                           placeholder="Your Words API key here..."
-                           class="api-key-input" />
-                    <button @onclick="SaveApiKey"
-                            type="button"
-                            class="start-game-btn"
-                            disabled="@(string.IsNullOrWhiteSpace(userApiKey))">
-                        Save Key
-                    </button>
-                </div>
+            </div>            <div class="api-key-input-section">
+                @if (!isApiKeySaved)
+                {
+                    <label for="apiKeyInput" class="api-key-label">Enter your OpenAI API key:</label>
+                    <div class="input-group">
+                        <input type="password"
+                               id="apiKeyInput"
+                               @bind="userApiKey"
+                               @onkeypress="@(async (e) => { if (e.Key == "Enter") await SaveApiKey(); })"
+                               placeholder="sk-..."
+                               class="api-key-input" />
+                        <button @onclick="SaveApiKey"
+                                type="button"
+                                class="start-game-btn"
+                                disabled="@(string.IsNullOrWhiteSpace(userApiKey))">
+                            Save Key
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="api-key-saved">
+                        <div class="saved-message">
+                            ✅ <strong>OpenAI API Key Saved!</strong>
+                        </div>
+                        <div class="saved-details">
+                            <small>Key: ••••••••••••••••••••••••••••••••••••••••••••••••••••••</small>
+                        </div>
+                        <button @onclick="ChangeApiKey" class="change-key-btn">
+                            Change Key
+                        </button>
+                    </div>
+                }
                 @if (!string.IsNullOrEmpty(apiKeyValidationMessage))
                 {
                     <div class="api-validation-message @(apiKeyValidationMessage.Contains("Validating") ? "validating" : "error")">
@@ -49,27 +64,49 @@
     [Parameter] public EventCallback OnApiKeySaved { get; set; }
     private string userApiKey = string.Empty;
     private string? apiKeyValidationMessage;
+    private bool isApiKeySaved = false;
 
     protected override async Task OnInitializedAsync()
     {
         userApiKey = await ApiKeyService.GetApiKeyAsync() ?? string.Empty;
-    }
-
-    private async Task SaveApiKey()
+        isApiKeySaved = !string.IsNullOrEmpty(userApiKey);
+    }private async Task SaveApiKey()
     {
         if (string.IsNullOrWhiteSpace(userApiKey))
         {
-            apiKeyValidationMessage = "Please enter your Words API key.";
+            apiKeyValidationMessage = "Please enter your OpenAI API key.";
             return;
         }
-        apiKeyValidationMessage = "Validating API key...";
+        
+        if (!userApiKey.StartsWith("sk-"))
+        {
+            apiKeyValidationMessage = "OpenAI API keys start with 'sk-'. Please check your key.";
+            return;
+        }
+        
+        apiKeyValidationMessage = "Saving API key...";
         StateHasChanged();
-        await ApiKeyService.SetApiKeyAsync(userApiKey);
+          await ApiKeyService.SetApiKeyAsync(userApiKey);
         apiKeyValidationMessage = "API key saved!";
+        isApiKeySaved = true;
         StateHasChanged();
+        
+        // Clear the success message after a delay
+        await Task.Delay(2000);
+        apiKeyValidationMessage = "";
+        StateHasChanged();
+        
         if (OnApiKeySaved.HasDelegate)
         {
             await OnApiKeySaved.InvokeAsync();
         }
+    }
+
+    private void ChangeApiKey()
+    {
+        isApiKeySaved = false;
+        userApiKey = "";
+        apiKeyValidationMessage = "";
+        StateHasChanged();
     }
 }

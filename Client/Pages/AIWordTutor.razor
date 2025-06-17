@@ -1,0 +1,416 @@
+@page "/aiwordtutor"
+@using BlazorApp.Client.Shared
+
+<div class="ai-tutor-layout">
+    @if (!gameStarted)
+    {
+        <div class="welcome-section">
+            <div class="welcome-card">
+                <h1>🤖 AI Word Tutor</h1>
+                <p class="welcome-description">
+                    Learn English words through interactive AI-powered conversations, stories, and personalized teaching!
+                </p>
+                
+                <!-- API Key Section -->
+                <div class="api-key-section">
+                    <ApiKeyEntry />
+                    <div class="api-info">
+                        <small>💡 <strong>OpenAI API Key required</strong> for AI-generated content. Your key is stored locally and never shared.</small>
+                    </div>
+                </div>
+                
+                <div class="game-modes">
+                    <h3>Choose Your Learning Adventure:</h3>
+                    <div class="mode-grid">
+                        <button @onclick="() => StartGame(GameMode.StoryAdventure)" class="mode-button story">
+                            📚 Story Adventure
+                            <small>Learn words through immersive stories</small>
+                        </button>
+                        <button @onclick="() => StartGame(GameMode.ConversationPractice)" class="mode-button conversation">
+                            💬 Conversation Practice
+                            <small>Practice with an AI conversation partner</small>
+                        </button>
+                        <button @onclick="() => StartGame(GameMode.ContextualLearning)" class="mode-button contextual">
+                            🎯 Contextual Learning
+                            <small>Learn words in real-world contexts</small>
+                        </button>
+                        <button @onclick="() => StartGame(GameMode.PersonalizedQuiz)" class="mode-button quiz">
+                            🧠 Smart Quiz
+                            <small>AI adapts questions to your level</small>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="difficulty-section">
+                    <h4>Difficulty Level:</h4>
+                    <div class="difficulty-buttons">
+                        <button @onclick="() => SetDifficulty(DifficultyLevel.Beginner)" 
+                                class="difficulty-btn @(difficulty == DifficultyLevel.Beginner ? "active" : "")">
+                            🌱 Beginner
+                        </button>
+                        <button @onclick="() => SetDifficulty(DifficultyLevel.Intermediate)" 
+                                class="difficulty-btn @(difficulty == DifficultyLevel.Intermediate ? "active" : "")">
+                            🌿 Intermediate
+                        </button>
+                        <button @onclick="() => SetDifficulty(DifficultyLevel.Advanced)" 
+                                class="difficulty-btn @(difficulty == DifficultyLevel.Advanced ? "active" : "")">
+                            🌳 Advanced
+                        </button>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="error-message">
+                        ⚠️ @errorMessage
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="game-section">
+            <div class="game-header">
+                <h2>@GetGameModeTitle(currentGameMode)</h2>
+                <div class="progress-info">
+                    <span class="score">Score: @score</span>
+                    <span class="streak">Streak: @streak</span>
+                    <span class="level">Level: @GetDifficultyName(difficulty)</span>
+                </div>
+                <button @onclick="ExitGame" class="exit-btn">Exit Game</button>
+            </div>
+
+            <div class="game-content">
+                @if (isLoading)
+                {
+                    <div class="loading-section">
+                        <div class="loading-spinner"></div>
+                        <p>🤖 AI is thinking...</p>
+                    </div>
+                }
+                else
+                {                    @if (currentGameMode == GameMode.StoryAdventure)
+                    {
+                        <div class="story-section">
+                            <div class="story-content">
+                                <h3>📖 Your Story</h3>
+                                <p class="story-text">@currentContent</p>
+                            </div>
+                            @RenderCurrentChallenge()
+                              <!-- Debug Info -->
+                            <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px; font-size: 0.9em;">
+                                <strong>Debug:</strong> Question @(currentChallengeIndex + 1) of @currentChallenges.Count
+                                @if (currentChallengeIndex < currentChallenges.Count)
+                                {
+                                    var challenge = currentChallenges[currentChallengeIndex];
+                                    <br />
+                                    <text>Type: @challenge.Type, IsOpenEnded: @challenge.IsOpenEnded, Options: @(challenge.Options?.Count ?? 0)</text>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else if (currentGameMode == GameMode.ConversationPractice)
+                    {
+                        <div class="conversation-section">
+                            <div class="chat-history">
+                                @foreach (var (message, index) in conversationHistory.Select((msg, i) => (msg, i)))
+                                {
+                                    <div class="chat-message @(index % 2 == 0 ? "ai" : "user")">
+                                        @message
+                                    </div>
+                                }
+                            </div>
+                            <div class="chat-input-section">
+                                <input type="text" @bind="userInput" @onkeypress="HandleKeyPress" 
+                                       placeholder="Type your response..." class="chat-input" />
+                                <button @onclick="SendMessage" class="send-btn">Send</button>
+                            </div>
+                        </div>
+                    }
+                    else if (currentGameMode == GameMode.ContextualLearning)
+                    {
+                        <div class="contextual-section">
+                            <h3>🎯 Real-World Practice</h3>
+                            @RenderCurrentChallenge()
+                        </div>
+                    }
+                    else if (currentGameMode == GameMode.PersonalizedQuiz)
+                    {
+                        <div class="quiz-section">
+                            <h3>🧠 Smart Quiz</h3>
+                            @RenderCurrentChallenge()
+                        </div>
+                    }
+                }
+            </div>
+
+            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
+            {
+                <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
+                    <div class="feedback-content">
+                        <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
+                        <p>@feedbackMessage</p>
+                        @if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
+                        {
+                            <p><strong>Correct answer:</strong> @correctAnswer</p>
+                        }
+                        <button @onclick="ContinueLearning" class="continue-btn">Continue Learning</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@{
+    RenderFragment RenderCurrentChallenge() => builder =>
+    {
+        if (currentChallengeIndex >= currentChallenges.Count) 
+        {
+            builder.AddMarkupContent(0, "<p>Loading next challenge...</p>");
+            return;
+        }
+
+        var challenge = currentChallenges[currentChallengeIndex];
+          if (challenge.IsOpenEnded)
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "challenge-section");
+            
+            builder.OpenElement(2, "h4");
+            builder.AddContent(3, challenge.Question);
+            builder.CloseElement();
+            
+            // Add a container for the text input and button
+            builder.OpenElement(4, "div");
+            builder.AddAttribute(5, "class", "text-input-container");
+            
+            builder.OpenElement(6, "textarea");
+            builder.AddAttribute(7, "class", "answer-textarea");
+            builder.AddAttribute(8, "placeholder", "Write your answer here...");
+            builder.AddAttribute(9, "value", userInput);
+            builder.AddAttribute(10, "onchange", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.ChangeEventArgs>(this, (e) => userInput = e.Value?.ToString() ?? ""));
+            builder.CloseElement();
+            
+            builder.OpenElement(11, "button");
+            builder.AddAttribute(12, "class", "submit-btn");
+            builder.AddAttribute(13, "onclick", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(userInput)));
+            builder.AddContent(14, "Submit Answer");
+            builder.CloseElement();
+            
+            builder.CloseElement(); // Close text-input-container
+            builder.CloseElement(); // Close challenge-section
+        }
+        else
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "challenge-section");
+            
+            builder.OpenElement(2, "h4");
+            builder.AddContent(3, challenge.Question);
+            builder.CloseElement();
+              builder.OpenElement(4, "div");
+            builder.AddAttribute(5, "class", "options-grid");
+            builder.AddAttribute(6, "style", 
+                "display: grid; " +
+                "grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); " +
+                "gap: 15px; " +
+                "margin-top: 1.5rem; " +
+                "margin-bottom: 1rem;");
+              if (challenge.Options != null)
+            {
+                var optionIndex = 7; // Start from 7 since we added style attribute
+                foreach (var option in challenge.Options)
+                {
+                    builder.OpenElement(optionIndex++, "button");
+                    builder.AddAttribute(optionIndex++, "class", "option-btn");
+                    builder.AddAttribute(optionIndex++, "style", 
+                        "background: linear-gradient(135deg, #f8f9fa, #ffffff); " +
+                        "border: 2px solid #dee2e6; " +
+                        "border-radius: 15px; " +
+                        "padding: 18px 20px; " +
+                        "cursor: pointer; " +
+                        "transition: all 0.3s ease; " +
+                        "text-align: center; " +
+                        "font-size: 1.1rem; " +
+                        "font-weight: 500; " +
+                        "color: #495057; " +
+                        "box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); " +
+                        "font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; " +
+                        "min-height: 60px; " +
+                        "width: 100%; " +
+                        "display: flex; " +
+                        "align-items: center; " +
+                        "justify-content: center;");
+                    builder.AddAttribute(optionIndex++, "onclick", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(option)));
+                    builder.AddContent(optionIndex++, option);
+                    builder.CloseElement();
+                }
+            }
+            
+            builder.CloseElement(); // Close options-grid
+            builder.CloseElement(); // Close challenge-section
+        }
+    };
+}
+
+<div class="ai-tutor-layout">
+    @if (!gameStarted)
+    {
+        <div class="welcome-section">
+            <div class="welcome-card">
+                <h1>🤖 AI Word Tutor</h1>
+                <p class="welcome-description">
+                    Learn English words through interactive AI-powered conversations, stories, and personalized teaching!
+                </p>
+                
+                <!-- API Key Section -->
+                <div class="api-key-section">
+                    <ApiKeyEntry />
+                    <div class="api-info">
+                        <small>💡 <strong>OpenAI API Key required</strong> for AI-generated content. Your key is stored locally and never shared.</small>
+                    </div>
+                </div>
+                
+                <div class="game-modes">
+                    <h3>Choose Your Learning Adventure:</h3>
+                    <div class="mode-grid">
+                        <button @onclick="() => StartGame(GameMode.StoryAdventure)" class="mode-button story">
+                            📚 Story Adventure
+                            <small>Learn words through immersive stories</small>
+                        </button>
+                        <button @onclick="() => StartGame(GameMode.ConversationPractice)" class="mode-button conversation">
+                            💬 Conversation Practice
+                            <small>Practice with an AI conversation partner</small>
+                        </button>
+                        <button @onclick="() => StartGame(GameMode.ContextualLearning)" class="mode-button contextual">
+                            🎯 Contextual Learning
+                            <small>Learn words in real-world contexts</small>
+                        </button>
+                        <button @onclick="() => StartGame(GameMode.PersonalizedQuiz)" class="mode-button quiz">
+                            🧠 Smart Quiz
+                            <small>AI adapts questions to your level</small>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="difficulty-section">
+                    <h4>Difficulty Level:</h4>
+                    <div class="difficulty-buttons">
+                        <button @onclick="() => SetDifficulty(DifficultyLevel.Beginner)" 
+                                class="difficulty-btn @(difficulty == DifficultyLevel.Beginner ? "active" : "")">
+                            🌱 Beginner
+                        </button>
+                        <button @onclick="() => SetDifficulty(DifficultyLevel.Intermediate)" 
+                                class="difficulty-btn @(difficulty == DifficultyLevel.Intermediate ? "active" : "")">
+                            🌿 Intermediate
+                        </button>
+                        <button @onclick="() => SetDifficulty(DifficultyLevel.Advanced)" 
+                                class="difficulty-btn @(difficulty == DifficultyLevel.Advanced ? "active" : "")">
+                            🌳 Advanced
+                        </button>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="error-message">
+                        ⚠️ @errorMessage
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="game-section">
+            <div class="game-header">
+                <h2>@GetGameModeTitle(currentGameMode)</h2>
+                <div class="progress-info">
+                    <span class="score">Score: @score</span>
+                    <span class="streak">Streak: @streak</span>
+                    <span class="level">Level: @GetDifficultyName(difficulty)</span>
+                </div>
+                <button @onclick="ExitGame" class="exit-btn">Exit Game</button>
+            </div>
+
+            <div class="game-content">
+                @if (isLoading)
+                {
+                    <div class="loading-section">
+                        <div class="loading-spinner"></div>
+                        <p>🤖 AI is thinking...</p>
+                    </div>
+                }
+                else
+                {                    @switch (currentGameMode)
+                    {
+                        case GameMode.StoryAdventure:
+                            <div class="story-section">
+                                <div class="story-content">
+                                    <h3>📖 Your Story</h3>
+                                    <p class="story-text">@currentContent</p>
+                                </div>
+                                @RenderCurrentChallenge()
+                            </div>
+                            break;
+                        case GameMode.ConversationPractice:
+                            <div class="conversation-section">
+                                <div class="chat-history">
+                                    @foreach (var (message, index) in conversationHistory.Select((msg, i) => (msg, i)))
+                                    {
+                                        <div class="chat-message @(index % 2 == 0 ? "ai" : "user")">
+                                            @message
+                                        </div>
+                                    }
+                                </div>
+                                <div class="chat-input-section">
+                                    <input type="text" @bind="userInput" @onkeypress="HandleKeyPress" 
+                                           placeholder="Type your response..." class="chat-input" />
+                                    <button @onclick="SendMessage" class="send-btn">Send</button>
+                                </div>
+                            </div>
+                            break;
+                        case GameMode.ContextualLearning:
+                            <div class="contextual-section">
+                                <h3>🎯 Real-World Practice</h3>
+                                @RenderCurrentChallenge()
+                            </div>
+                            break;
+                        case GameMode.PersonalizedQuiz:
+                            <div class="quiz-section">
+                                <h3>🧠 Smart Quiz</h3>
+                                @RenderCurrentChallenge()
+                            </div>
+                            break;
+                    }
+                }
+            </div>
+
+            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
+            {
+                <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
+                    <div class="feedback-content">
+                        <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
+                        <p>@feedbackMessage</p>
+                        @if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
+                        {
+                            <p><strong>Correct answer:</strong> @correctAnswer</p>
+                        }
+                        <button @onclick="ContinueLearning" class="continue-btn">Continue Learning</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (PlayAudio)
+{
+    <PlaySound AnswerState="lastAnswerCorrect" Play="true" />
+}
+else
+{
+    <PlaySound AnswerState="false" Play="false" />
+}
