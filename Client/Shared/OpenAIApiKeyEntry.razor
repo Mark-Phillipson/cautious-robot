@@ -1,7 +1,7 @@
 @inject BlazorApp.Client.Shared.IOpenAIApiKeyService OpenAIApiKeyService
 @inject NavigationManager Navigation
 
-<div class="api-key-setup">
+<div class="openai-api-key-setup api-key-setup">
     <div class="setup-card">
         <h2>Enter Your OpenAI API Key</h2>
         <div class="setup-content">
@@ -16,21 +16,21 @@
                 </ol>
             </div>
             
-            <div class="api-key-input-section">
-                @if (!isApiKeySaved)
+            <div class="api-key-input-section">                @if (!isOpenaiApiKeySaved)
                 {
                     <label for="openaiApiKeyInput" class="api-key-label">Enter your OpenAI API key:</label>
                     <div class="input-group">
                         <input type="password"
                                id="openaiApiKeyInput"
-                               @bind="userApiKey"
+                               name="openaiApiKey"
+                               @bind="openaiUserApiKey"
                                @onkeypress="@(async (e) => { if (e.Key == "Enter") await SaveApiKey(); })"
                                placeholder="sk-..."
                                class="api-key-input" />
                         <button @onclick="SaveApiKey"
                                 type="button"
                                 class="start-game-btn"
-                                disabled="@(string.IsNullOrWhiteSpace(userApiKey))">
+                                disabled="@(string.IsNullOrWhiteSpace(openaiUserApiKey))">
                             Save Key
                         </button>
                     </div>
@@ -49,10 +49,9 @@
                         </button>
                     </div>
                 }
-                @if (!string.IsNullOrEmpty(apiKeyValidationMessage))
-                {
-                    <div class="api-validation-message @(apiKeyValidationMessage.Contains("Validating") ? "validating" : "error")">
-                        @apiKeyValidationMessage
+                @if (!string.IsNullOrEmpty(openaiApiKeyValidationMessage))
+                {                    <div class="api-validation-message @(openaiApiKeyValidationMessage.Contains("Validating") ? "validating" : "error")">
+                        @openaiApiKeyValidationMessage
                     </div>
                 }
             </div>
@@ -65,54 +64,50 @@
 
 @code {
     [Parameter] public EventCallback OnApiKeySaved { get; set; }
-    private string userApiKey = string.Empty;
-    private string? apiKeyValidationMessage;
-    private bool isApiKeySaved = false;
+    private string openaiUserApiKey = string.Empty;
+    private string? openaiApiKeyValidationMessage;
+    private bool isOpenaiApiKeySaved = false;
 
     protected override async Task OnInitializedAsync()
     {
-        userApiKey = await OpenAIApiKeyService.GetApiKeyAsync() ?? string.Empty;
-        isApiKeySaved = !string.IsNullOrEmpty(userApiKey);
-    }
-
-    private async Task SaveApiKey()
+        openaiUserApiKey = await OpenAIApiKeyService.GetApiKeyAsync() ?? string.Empty;
+        isOpenaiApiKeySaved = !string.IsNullOrEmpty(openaiUserApiKey);
+    }    private async Task SaveApiKey()
     {
-        if (string.IsNullOrWhiteSpace(userApiKey))
+        if (string.IsNullOrWhiteSpace(openaiUserApiKey))
         {
-            apiKeyValidationMessage = "Please enter your OpenAI API key.";
+            openaiApiKeyValidationMessage = "Please enter your OpenAI API key.";
             return;
         }
         
-        if (!userApiKey.StartsWith("sk-"))
+        if (!openaiUserApiKey.StartsWith("sk-"))
         {
-            apiKeyValidationMessage = "OpenAI API keys start with 'sk-'. Please check your key.";
+            openaiApiKeyValidationMessage = "OpenAI API keys start with 'sk-'. Please check your key.";
             return;
         }
         
-        apiKeyValidationMessage = "Saving API key...";
+        openaiApiKeyValidationMessage = "Saving API key...";
         StateHasChanged();
         
-        await OpenAIApiKeyService.SetApiKeyAsync(userApiKey);
-        apiKeyValidationMessage = "API key saved!";
-        isApiKeySaved = true;
+        await OpenAIApiKeyService.SetApiKeyAsync(openaiUserApiKey);
+        openaiApiKeyValidationMessage = "API key saved!";
+        isOpenaiApiKeySaved = true;
         StateHasChanged();
         
         // Clear the success message after a delay
         await Task.Delay(2000);
-        apiKeyValidationMessage = "";
+        openaiApiKeyValidationMessage = "";
         StateHasChanged();
         
         if (OnApiKeySaved.HasDelegate)
         {
             await OnApiKeySaved.InvokeAsync();
         }
-    }
-
-    private void ChangeApiKey()
+    }    private void ChangeApiKey()
     {
-        isApiKeySaved = false;
-        userApiKey = "";
-        apiKeyValidationMessage = "";
+        isOpenaiApiKeySaved = false;
+        openaiUserApiKey = "";
+        openaiApiKeyValidationMessage = "";
         StateHasChanged();
     }
 }

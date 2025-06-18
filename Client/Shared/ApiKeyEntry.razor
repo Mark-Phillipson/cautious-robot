@@ -1,7 +1,8 @@
 @inject BlazorApp.Client.Shared.IWordsApiKeyService WordsApiKeyService
 @inject NavigationManager Navigation
 
-<div class="api-key-setup">    <div class="setup-card">
+<div class="words-api-key-setup api-key-setup">    
+    <div class="setup-card">
         <h2>Enter Your Words API Key</h2>
         <div class="setup-content">
             <p>To get word definitions and data, you'll need a Words API key from RapidAPI.</p>
@@ -13,21 +14,21 @@
                     <li>Subscribe to the Basic plan (free)</li>
                     <li>Copy your API key and paste it below</li>
                 </ol>
-            </div>            <div class="api-key-input-section">
-                @if (!isApiKeySaved)
+            </div>            <div class="api-key-input-section">                @if (!isWordsApiKeySaved)
                 {
                     <label for="wordsApiKeyInput" class="api-key-label">Enter your Words API key:</label>
                     <div class="input-group">
                         <input type="password"
                                id="wordsApiKeyInput"
-                               @bind="userApiKey"
+                               name="wordsApiKey"
+                               @bind="wordsUserApiKey"
                                @onkeypress="@(async (e) => { if (e.Key == "Enter") await SaveApiKey(); })"
                                placeholder="Your RapidAPI key..."
                                class="api-key-input" />
                         <button @onclick="SaveApiKey"
                                 type="button"
                                 class="start-game-btn"
-                                disabled="@(string.IsNullOrWhiteSpace(userApiKey))">
+                                disabled="@(string.IsNullOrWhiteSpace(wordsUserApiKey))">
                             Save Key
                         </button>
                     </div>
@@ -46,10 +47,9 @@
                         </button>
                     </div>
                 }
-                @if (!string.IsNullOrEmpty(apiKeyValidationMessage))
-                {
-                    <div class="api-validation-message @(apiKeyValidationMessage.Contains("Validating") ? "validating" : "error")">
-                        @apiKeyValidationMessage
+                @if (!string.IsNullOrEmpty(wordsApiKeyValidationMessage))
+                {                    <div class="api-validation-message @(wordsApiKeyValidationMessage.Contains("Validating") ? "validating" : "error")">
+                        @wordsApiKeyValidationMessage
                     </div>
                 }
             </div>            <div class="privacy-note">
@@ -61,48 +61,44 @@
 
 @code {
     [Parameter] public EventCallback OnApiKeySaved { get; set; }
-    private string userApiKey = string.Empty;
-    private string? apiKeyValidationMessage;
-    private bool isApiKeySaved = false;
+    private string wordsUserApiKey = string.Empty;
+    private string? wordsApiKeyValidationMessage;
+    private bool isWordsApiKeySaved = false;
 
     protected override async Task OnInitializedAsync()
     {
-        userApiKey = await WordsApiKeyService.GetApiKeyAsync() ?? string.Empty;
-        isApiKeySaved = !string.IsNullOrEmpty(userApiKey);
-    }
-
-    private async Task SaveApiKey()
+        wordsUserApiKey = await WordsApiKeyService.GetApiKeyAsync() ?? string.Empty;
+        isWordsApiKeySaved = !string.IsNullOrEmpty(wordsUserApiKey);
+    }    private async Task SaveApiKey()
     {
-        if (string.IsNullOrWhiteSpace(userApiKey))
+        if (string.IsNullOrWhiteSpace(wordsUserApiKey))
         {
-            apiKeyValidationMessage = "Please enter your Words API key.";
+            wordsApiKeyValidationMessage = "Please enter your Words API key.";
             return;
         }
         
-        apiKeyValidationMessage = "Saving API key...";
+        wordsApiKeyValidationMessage = "Saving API key...";
         StateHasChanged();
         
-        await WordsApiKeyService.SetApiKeyAsync(userApiKey);
-        apiKeyValidationMessage = "API key saved!";
-        isApiKeySaved = true;
+        await WordsApiKeyService.SetApiKeyAsync(wordsUserApiKey);
+        wordsApiKeyValidationMessage = "API key saved!";
+        isWordsApiKeySaved = true;
         StateHasChanged();
         
         // Clear the success message after a delay
         await Task.Delay(2000);
-        apiKeyValidationMessage = "";
+        wordsApiKeyValidationMessage = "";
         StateHasChanged();
         
         if (OnApiKeySaved.HasDelegate)
         {
             await OnApiKeySaved.InvokeAsync();
         }
-    }
-
-    private void ChangeApiKey()
+    }    private void ChangeApiKey()
     {
-        isApiKeySaved = false;
-        userApiKey = "";
-        apiKeyValidationMessage = "";
+        isWordsApiKeySaved = false;
+        wordsUserApiKey = "";
+        wordsApiKeyValidationMessage = "";
         StateHasChanged();
     }
 }

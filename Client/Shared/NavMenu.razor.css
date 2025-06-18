@@ -11,15 +11,25 @@
     font-size: 1.1rem;
 }
 
-.oi {
-    width: 2rem;
+.nav-icon {
+    width: 2.2rem;
+    height: 1.2rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    line-height: 1;
+}
+
+.nav-text {
     font-size: 1.1rem;
-    vertical-align: text-top;
-    top: -2px;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .nav-item {
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     padding-bottom: 0.5rem;
 }
 
@@ -34,20 +44,69 @@
 .nav-item ::deep a {
     color: #d7d7d7;
     border-radius: 4px;
-    height: 3rem;
+    height: 3.2rem;
     display: flex;
     align-items: center;
-    line-height: 3rem;
+    justify-content: flex-start;
+    line-height: normal;
+    padding: 0.4rem 1rem;
+    transition: all 0.2s ease-in-out;
 }
 
 .nav-item ::deep a.active {
     background-color: rgba(255, 255, 255, 0.25);
     color: white;
+    font-weight: 600;
 }
 
 .nav-item ::deep a:hover {
     background-color: rgba(255, 255, 255, 0.1);
     color: white;
+    transform: translateX(4px);
+}
+
+.nav-item ::deep a:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Icon container alignment */
+.nav-item ::deep a {
+    align-items: center !important;
+}
+
+.nav-item ::deep .nav-icon {
+    min-width: 2.2rem;
+    max-width: 2.2rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+/* Ensure consistent baseline alignment for all icons */
+.nav-item ::deep svg.nav-icon {
+    vertical-align: baseline;
+}
+
+/* Keyboard shortcut styling */
+.nav-text u {
+    text-decoration: underline;
+    text-decoration-color: #007bff;
+    text-decoration-thickness: 2px;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .nav-text {
+        font-size: 1rem;
+    }
+    
+    .nav-icon {
+        width: 1.8rem;
+        min-width: 1.8rem;
+        max-width: 1.8rem;
+        height: 1rem;
+        margin-right: 0.5rem;
+    }
 }
 
 @media (min-width: 1000px) {
@@ -58,6 +117,18 @@
     .collapse {
         /* Never collapse the sidebar for wide screens */
         display: block;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .nav-item ::deep a {
+        border: 1px solid transparent;
+    }
+    
+    .nav-item ::deep a:focus {
+        border-color: white;
+        outline: none;
     }
 }
 
