@@ -10,7 +10,11 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<BlazorApp.Client.Shared.IApiKeyService, BlazorApp.Client.Shared.ApiKeyService>();
+
+// Register API key services
+builder.Services.AddScoped<BlazorApp.Client.Shared.IWordsApiKeyService, BlazorApp.Client.Shared.WordsApiKeyService>();
+builder.Services.AddScoped<BlazorApp.Client.Shared.IApiKeyService, BlazorApp.Client.Shared.WordsApiKeyService>();
+builder.Services.AddScoped<BlazorApp.Client.Shared.IOpenAIApiKeyService, BlazorApp.Client.Shared.OpenAIApiKeyService>();
 builder.Services.AddScoped<BlazorApp.Client.Shared.IOpenAIService, BlazorApp.Client.Shared.OpenAIService>();
 
 await builder.Build().RunAsync();

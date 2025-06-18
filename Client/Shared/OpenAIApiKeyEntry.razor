@@ -1,28 +1,31 @@
-@inject BlazorApp.Client.Shared.IWordsApiKeyService WordsApiKeyService
+@inject BlazorApp.Client.Shared.IOpenAIApiKeyService OpenAIApiKeyService
 @inject NavigationManager Navigation
 
-<div class="api-key-setup">    <div class="setup-card">
-        <h2>Enter Your Words API Key</h2>
+<div class="api-key-setup">
+    <div class="setup-card">
+        <h2>Enter Your OpenAI API Key</h2>
         <div class="setup-content">
-            <p>To get word definitions and data, you'll need a Words API key from RapidAPI.</p>
+            <p>To get AI-generated content, you'll need your own OpenAI API key.</p>
             <div class="api-key-info">
                 <h3>How to get your free API key:</h3>
                 <ol>
-                    <li>Visit <a href="https://rapidapi.com/dpventures/api/wordsapi/" target="_blank" rel="noopener">Words API on RapidAPI</a></li>
-                    <li>Sign up for a free account (includes 500 free requests/day)</li>
-                    <li>Subscribe to the Basic plan (free)</li>
-                    <li>Copy your API key and paste it below</li>
+                    <li>Visit <a href="https://platform.openai.com/" target="_blank" rel="noopener">OpenAI Platform</a></li>
+                    <li>Sign up for a free account (includes free credits)</li>
+                    <li>Go to your dashboard and copy your API key</li>
+                    <li>Paste it below to start playing</li>
                 </ol>
-            </div>            <div class="api-key-input-section">
+            </div>
+            
+            <div class="api-key-input-section">
                 @if (!isApiKeySaved)
                 {
-                    <label for="wordsApiKeyInput" class="api-key-label">Enter your Words API key:</label>
+                    <label for="openaiApiKeyInput" class="api-key-label">Enter your OpenAI API key:</label>
                     <div class="input-group">
                         <input type="password"
-                               id="wordsApiKeyInput"
+                               id="openaiApiKeyInput"
                                @bind="userApiKey"
                                @onkeypress="@(async (e) => { if (e.Key == "Enter") await SaveApiKey(); })"
-                               placeholder="Your RapidAPI key..."
+                               placeholder="sk-..."
                                class="api-key-input" />
                         <button @onclick="SaveApiKey"
                                 type="button"
@@ -36,7 +39,7 @@
                 {
                     <div class="api-key-saved">
                         <div class="saved-message">
-                            ✅ <strong>Words API Key Saved!</strong>
+                            ✅ <strong>OpenAI API Key Saved!</strong>
                         </div>
                         <div class="saved-details">
                             <small>Key: ••••••••••••••••••••••••••••••••••••••••••••••••••••••</small>
@@ -52,8 +55,9 @@
                         @apiKeyValidationMessage
                     </div>
                 }
-            </div>            <div class="privacy-note">
-                <small>🔒 Your Words API key is stored locally in your browser session only and is never saved or shared.</small>
+            </div>
+            <div class="privacy-note">
+                <small>🔒 Your OpenAI API key is stored locally in your browser session only and is never saved or shared.</small>
             </div>
         </div>
     </div>
@@ -67,7 +71,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        userApiKey = await WordsApiKeyService.GetApiKeyAsync() ?? string.Empty;
+        userApiKey = await OpenAIApiKeyService.GetApiKeyAsync() ?? string.Empty;
         isApiKeySaved = !string.IsNullOrEmpty(userApiKey);
     }
 
@@ -75,14 +79,20 @@
     {
         if (string.IsNullOrWhiteSpace(userApiKey))
         {
-            apiKeyValidationMessage = "Please enter your Words API key.";
+            apiKeyValidationMessage = "Please enter your OpenAI API key.";
+            return;
+        }
+        
+        if (!userApiKey.StartsWith("sk-"))
+        {
+            apiKeyValidationMessage = "OpenAI API keys start with 'sk-'. Please check your key.";
             return;
         }
         
         apiKeyValidationMessage = "Saving API key...";
         StateHasChanged();
         
-        await WordsApiKeyService.SetApiKeyAsync(userApiKey);
+        await OpenAIApiKeyService.SetApiKeyAsync(userApiKey);
         apiKeyValidationMessage = "API key saved!";
         isApiKeySaved = true;
         StateHasChanged();

@@ -1,15 +1,19 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using System.Text.Json;
 using System.Text;
 using BlazorApp.Client.Shared;
 
 namespace BlazorApp.Client.Pages
-{
-    public partial class AIWordTutor : ComponentBase
+{    public partial class AIWordTutor : ComponentBase
     {
         [Inject] private HttpClient HttpClient { get; set; } = default!;
-        [Inject] public required IApiKeyService ApiKeyService { get; set; }
+        [Inject] public required IOpenAIApiKeyService OpenAIApiKeyService { get; set; }
         [Inject] public required IOpenAIService OpenAIService { get; set; }
+        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+
+        // UI references
+        private ElementReference chatHistoryContainer;
 
         // Game state
         private bool gameStarted = false;
@@ -71,7 +75,7 @@ namespace BlazorApp.Client.Pages
         };        protected override async Task OnInitializedAsync()
         {
             // Check if API key already exists
-            var apiKey = await ApiKeyService.GetApiKeyAsync();
+            var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
             hasApiKey = !string.IsNullOrEmpty(apiKey);
         }
 
@@ -89,12 +93,10 @@ namespace BlazorApp.Client.Pages
             await Task.Delay(3000);
             apiKeyStatus = "";
             StateHasChanged();
-        }
-
-        private async Task StartGame(GameMode mode)
+        }        private async Task StartGame(GameMode mode)
         {
             // Check if API key exists before starting
-            var apiKey = await ApiKeyService.GetApiKeyAsync();
+            var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
             if (string.IsNullOrEmpty(apiKey))
             {
                 apiKeyStatus = "missing";
@@ -451,9 +453,7 @@ CRITICAL:
             }
             
             return Task.CompletedTask;
-        }
-
-        private async Task GenerateConversationStarter(List<string> words)
+        }        private async Task GenerateConversationStarter(List<string> words)
         {
             var wordsText = string.Join(", ", words);
             var difficultyText = difficulty.ToString().ToLower();
@@ -468,7 +468,11 @@ Keep it conversational, warm, and encouraging. Limit to 2-3 sentences.";
             var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
             currentContent = aiResponse;
             conversationHistory.Add(currentContent);
-        }        private async Task GenerateContextualChallenges(List<string> words)
+            
+            // Ensure the initial conversation is visible
+            StateHasChanged();
+            await ScrollChatToBottom();
+        }private async Task GenerateContextualChallenges(List<string> words)
         {
             currentChallenges = new List<WordChallenge>();
             
@@ -737,6 +741,9 @@ CORRECT: [Letter of correct answer]";
             
             userInput = "";
             StateHasChanged();
+            
+            // Scroll chat to bottom to show latest messages
+            await ScrollChatToBottom();
         }
 
         private async Task<string> GenerateAIResponse(string userMessage)
@@ -934,10 +941,23 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                 $"Perfect! Your understanding of '{word}' is spot on.",
                 $"Great job! You've mastered the word '{word}'.",
                 $"Wonderful! '{word}' is now part of your vocabulary.",
-                $"Outstanding! You used '{word}' like a native speaker would."
-            };
+                $"Outstanding! You used '{word}' like a native speaker would."            };
 
             var random = new Random();            return feedback[random.Next(feedback.Count)];
+        }        // Helper method to scroll chat to bottom
+        private async Task ScrollChatToBottom()
+        {
+            try
+            {
+                // Small delay to ensure DOM has been updated
+                await Task.Delay(50);
+                await JSRuntime.InvokeVoidAsync("scrollToBottom", chatHistoryContainer);
+            }
+            catch (Exception ex)
+            {
+                // Silently handle JS interop errors - not critical functionality
+                Console.WriteLine($"Chat scroll error: {ex.Message}");
+            }
         }
     }
 
@@ -981,16 +1001,12 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
         public bool PrefersVisualLearning { get; set; }
         public bool PrefersAudioFeedback { get; set; } = true;
         public List<string> InterestTopics { get; set; } = new();
-    }
-
-    public class WordChallenge
+    }    public class WordChallenge
     {
         public ChallengeType Type { get; set; }
-        public string TargetWord { get; set; } = "";
-        public string Question { get; set; } = "";
+        public string TargetWord { get; set; } = "";        public string Question { get; set; } = "";
         public List<string>? Options { get; set; }
-        public string? CorrectAnswer { get; set; }
-        public bool IsOpenEnded { get; set; }
+        public string? CorrectAnswer { get; set; }        public bool IsOpenEnded { get; set; }
         public string? Context { get; set; }
     }
 }

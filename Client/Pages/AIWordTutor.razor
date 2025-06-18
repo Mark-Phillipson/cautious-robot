@@ -1,5 +1,6 @@
 @page "/aiwordtutor"
 @using BlazorApp.Client.Shared
+@using BlazorApp.Client.Pages
 
 <div class="ai-tutor-layout">
     @if (!gameStarted)
@@ -12,12 +13,15 @@
                 </p>
                 
                 <!-- API Key Section -->
-                <div class="api-key-section">
-                    <ApiKeyEntry />
-                    <div class="api-info">
-                        <small>💡 <strong>OpenAI API Key required</strong> for AI-generated content. Your key is stored locally and never shared.</small>
+                @if (!hasApiKey)
+                {
+                    <div class="api-key-section">
+                        <OpenAIApiKeyEntry OnApiKeySaved="OnApiKeySaved" />
+                        <div class="api-info">
+                            <small>💡 <strong>OpenAI API Key required</strong> for AI-generated content. Your key is stored locally and never shared.</small>
+                        </div>
                     </div>
-                </div>
+                }
                 
                 <div class="game-modes">
                     <h3>Choose Your Learning Adventure:</h3>
@@ -111,9 +115,8 @@
                         </div>
                     }
                     else if (currentGameMode == GameMode.ConversationPractice)
-                    {
-                        <div class="conversation-section">
-                            <div class="chat-history">
+                    {                        <div class="conversation-section">
+                            <div class="chat-history" @ref="chatHistoryContainer">
                                 @foreach (var (message, index) in conversationHistory.Select((msg, i) => (msg, i)))
                                 {
                                     <div class="chat-message @(index % 2 == 0 ? "ai" : "user")">
@@ -240,177 +243,42 @@
                         "font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; " +
                         "min-height: 60px; " +
                         "width: 100%; " +
-                        "display: flex; " +
-                        "align-items: center; " +
+                        "display: flex; " +                        "align-items: center; " +
                         "justify-content: center;");
                     builder.AddAttribute(optionIndex++, "onclick", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(option)));
                     builder.AddContent(optionIndex++, option);
                     builder.CloseElement();
                 }
+                
+                builder.CloseElement(); // Close options-grid
             }
             
-            builder.CloseElement(); // Close options-grid
             builder.CloseElement(); // Close challenge-section
         }
     };
 }
+}
 
-<div class="ai-tutor-layout">
-    @if (!gameStarted)
-    {
-        <div class="welcome-section">
-            <div class="welcome-card">
-                <h1>🤖 AI Word Tutor</h1>
-                <p class="welcome-description">
-                    Learn English words through interactive AI-powered conversations, stories, and personalized teaching!
-                </p>
-                
-                <!-- API Key Section -->
-                <div class="api-key-section">
-                    <ApiKeyEntry />
-                    <div class="api-info">
-                        <small>💡 <strong>OpenAI API Key required</strong> for AI-generated content. Your key is stored locally and never shared.</small>
-                    </div>
-                </div>
-                
-                <div class="game-modes">
-                    <h3>Choose Your Learning Adventure:</h3>
-                    <div class="mode-grid">
-                        <button @onclick="() => StartGame(GameMode.StoryAdventure)" class="mode-button story">
-                            📚 Story Adventure
-                            <small>Learn words through immersive stories</small>
-                        </button>
-                        <button @onclick="() => StartGame(GameMode.ConversationPractice)" class="mode-button conversation">
-                            💬 Conversation Practice
-                            <small>Practice with an AI conversation partner</small>
-                        </button>
-                        <button @onclick="() => StartGame(GameMode.ContextualLearning)" class="mode-button contextual">
-                            🎯 Contextual Learning
-                            <small>Learn words in real-world contexts</small>
-                        </button>
-                        <button @onclick="() => StartGame(GameMode.PersonalizedQuiz)" class="mode-button quiz">
-                            🧠 Smart Quiz
-                            <small>AI adapts questions to your level</small>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="difficulty-section">
-                    <h4>Difficulty Level:</h4>
-                    <div class="difficulty-buttons">
-                        <button @onclick="() => SetDifficulty(DifficultyLevel.Beginner)" 
-                                class="difficulty-btn @(difficulty == DifficultyLevel.Beginner ? "active" : "")">
-                            🌱 Beginner
-                        </button>
-                        <button @onclick="() => SetDifficulty(DifficultyLevel.Intermediate)" 
-                                class="difficulty-btn @(difficulty == DifficultyLevel.Intermediate ? "active" : "")">
-                            🌿 Intermediate
-                        </button>
-                        <button @onclick="() => SetDifficulty(DifficultyLevel.Advanced)" 
-                                class="difficulty-btn @(difficulty == DifficultyLevel.Advanced ? "active" : "")">
-                            🌳 Advanced
-                        </button>
-                    </div>
-                </div>
-
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="error-message">
-                        ⚠️ @errorMessage
-                    </div>
-                }
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="game-section">
-            <div class="game-header">
-                <h2>@GetGameModeTitle(currentGameMode)</h2>
-                <div class="progress-info">
-                    <span class="score">Score: @score</span>
-                    <span class="streak">Streak: @streak</span>
-                    <span class="level">Level: @GetDifficultyName(difficulty)</span>
-                </div>
-                <button @onclick="ExitGame" class="exit-btn">Exit Game</button>
-            </div>
-
-            <div class="game-content">
-                @if (isLoading)
-                {
-                    <div class="loading-section">
-                        <div class="loading-spinner"></div>
-                        <p>🤖 AI is thinking...</p>
-                    </div>
-                }
-                else
-                {                    @switch (currentGameMode)
-                    {
-                        case GameMode.StoryAdventure:
-                            <div class="story-section">
-                                <div class="story-content">
-                                    <h3>📖 Your Story</h3>
-                                    <p class="story-text">@currentContent</p>
-                                </div>
-                                @RenderCurrentChallenge()
-                            </div>
-                            break;
-                        case GameMode.ConversationPractice:
-                            <div class="conversation-section">
-                                <div class="chat-history">
-                                    @foreach (var (message, index) in conversationHistory.Select((msg, i) => (msg, i)))
-                                    {
-                                        <div class="chat-message @(index % 2 == 0 ? "ai" : "user")">
-                                            @message
-                                        </div>
-                                    }
-                                </div>
-                                <div class="chat-input-section">
-                                    <input type="text" @bind="userInput" @onkeypress="HandleKeyPress" 
-                                           placeholder="Type your response..." class="chat-input" />
-                                    <button @onclick="SendMessage" class="send-btn">Send</button>
-                                </div>
-                            </div>
-                            break;
-                        case GameMode.ContextualLearning:
-                            <div class="contextual-section">
-                                <h3>🎯 Real-World Practice</h3>
-                                @RenderCurrentChallenge()
-                            </div>
-                            break;
-                        case GameMode.PersonalizedQuiz:
-                            <div class="quiz-section">
-                                <h3>🧠 Smart Quiz</h3>
-                                @RenderCurrentChallenge()
-                            </div>
-                            break;
-                    }
-                }
-            </div>
-
-            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
+@if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
+{
+    <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
+        <div class="feedback-content">
+            <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
+            <p>@feedbackMessage</p>
+            @if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
             {
-                <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
-                    <div class="feedback-content">
-                        <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
-                        <p>@feedbackMessage</p>
-                        @if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
-                        {
-                            <p><strong>Correct answer:</strong> @correctAnswer</p>
-                        }
-                        <button @onclick="ContinueLearning" class="continue-btn">Continue Learning</button>
-                    </div>
-                </div>
+                <p><strong>Correct answer:</strong> @correctAnswer</p>
             }
+            <button @onclick="ContinueLearning" class="continue-btn">Continue Learning</button>
         </div>
-    }
-</div>
+    </div>
+}
 
 @if (PlayAudio)
 {
-    <PlaySound AnswerState="lastAnswerCorrect" Play="true" />
+    <BlazorApp.Client.Pages.PlaySound AnswerState="lastAnswerCorrect" Play="true" />
 }
 else
 {
-    <PlaySound AnswerState="false" Play="false" />
+    <BlazorApp.Client.Pages.PlaySound AnswerState="false" Play="false" />
 }
