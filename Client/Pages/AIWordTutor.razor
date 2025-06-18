@@ -113,9 +113,29 @@
                                 }
                             </div>
                         </div>
-                    }
-                    else if (currentGameMode == GameMode.ConversationPractice)
+                    }                    else if (currentGameMode == GameMode.ConversationPractice)
                     {                        <div class="conversation-section">
+                            <!-- Target Words Display -->
+                            @if (conversationTargetWords.Count > 0)
+                            {
+                                <div class="target-words-panel">
+                                    <h4>🎯 Try to use these words naturally in conversation:</h4>
+                                    <div class="target-words-grid">
+                                        @foreach (var word in conversationTargetWords)
+                                        {
+                                            <span class="target-word @(usedTargetWords.Contains(word) ? "used" : "")">
+                                                @word
+                                                @if (usedTargetWords.Contains(word))
+                                                {
+                                                    <span class="checkmark">✓</span>
+                                                }
+                                            </span>
+                                        }
+                                    </div>
+                                    <small class="words-progress">Words used correctly: @wordsUsedCorrectly / @conversationTargetWords.Count</small>
+                                </div>
+                            }
+                            
                             <div class="chat-history" @ref="chatHistoryContainer">
                                 @foreach (var (message, index) in conversationHistory.Select((msg, i) => (msg, i)))
                                 {
@@ -123,9 +143,8 @@
                                         @message
                                     </div>
                                 }
-                            </div>
-                            <div class="chat-input-section">
-                                <input type="text" @bind="userInput" @onkeypress="HandleKeyPress" 
+                            </div><div class="chat-input-section">
+                                <input type="text" @bind="userInput" @onkeydown="HandleKeyPress" 
                                        placeholder="Type your response..." class="chat-input" />
                                 <button @onclick="SendMessage" class="send-btn">Send</button>
                             </div>
@@ -188,18 +207,17 @@
             // Add a container for the text input and button
             builder.OpenElement(4, "div");
             builder.AddAttribute(5, "class", "text-input-container");
-            
-            builder.OpenElement(6, "textarea");
+              builder.OpenElement(6, "textarea");
             builder.AddAttribute(7, "class", "answer-textarea");
             builder.AddAttribute(8, "placeholder", "Write your answer here...");
             builder.AddAttribute(9, "value", userInput);
             builder.AddAttribute(10, "onchange", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.ChangeEventArgs>(this, (e) => userInput = e.Value?.ToString() ?? ""));
+            builder.AddAttribute(11, "onkeydown", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.KeyboardEventArgs>(this, HandleKeyPressForTextarea));
             builder.CloseElement();
-            
-            builder.OpenElement(11, "button");
-            builder.AddAttribute(12, "class", "submit-btn");
-            builder.AddAttribute(13, "onclick", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(userInput)));
-            builder.AddContent(14, "Submit Answer");
+              builder.OpenElement(12, "button");
+            builder.AddAttribute(13, "class", "submit-btn");
+            builder.AddAttribute(14, "onclick", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(userInput)));
+            builder.AddContent(15, "Submit Answer");
             builder.CloseElement();
             
             builder.CloseElement(); // Close text-input-container
@@ -257,21 +275,6 @@
         }
     };
 }
-}
-
-@if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
-{
-    <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
-        <div class="feedback-content">
-            <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
-            <p>@feedbackMessage</p>
-            @if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
-            {
-                <p><strong>Correct answer:</strong> @correctAnswer</p>
-            }
-            <button @onclick="ContinueLearning" class="continue-btn">Continue Learning</button>
-        </div>
-    </div>
 }
 
 @if (PlayAudio)

@@ -32,13 +32,16 @@ namespace BlazorApp.Client.Pages
         private List<WordChallenge> currentChallenges = new();        private int currentChallengeIndex = 0;
         private bool PlayAudio = false;
         private string apiKeyStatus = "";
-        private bool hasApiKey = false;
-
-        // Feedback system
+        private bool hasApiKey = false;        // Feedback system
         private bool showFeedback = false;
         private string feedbackMessage = "";
         private bool lastAnswerCorrect = false;
         private string correctAnswer = "";
+
+        // Conversation practice scoring
+        private List<string> conversationTargetWords = new();
+        private HashSet<string> usedTargetWords = new();
+        private int wordsUsedCorrectly = 0;
 
         // Sample words organized by difficulty
         private readonly Dictionary<DifficultyLevel, List<string>> wordLibrary = new()
@@ -458,6 +461,11 @@ CRITICAL:
             var wordsText = string.Join(", ", words);
             var difficultyText = difficulty.ToString().ToLower();
             
+            // Set up conversation practice scoring
+            conversationTargetWords = new List<string>(words);
+            usedTargetWords = new HashSet<string>();
+            wordsUsedCorrectly = 0;
+            
             var prompt = $@"Start a friendly, engaging conversation for {difficultyText}-level English learners. 
 Naturally incorporate these vocabulary words: {wordsText}
 Ask thoughtful questions that encourage the learner to use these words in their responses.
@@ -699,17 +707,31 @@ CORRECT: [Letter of correct answer]";
             userInput = "";
             feedbackMessage = "";
             errorMessage = "";
+            
+            // Reset conversation practice scoring
+            conversationTargetWords.Clear();
+            usedTargetWords.Clear();
+            wordsUsedCorrectly = 0;
+            score = 0;
+            streak = 0;
+            
             StateHasChanged();
             return Task.CompletedTask;
-        }
-
-        private async Task HandleKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+        }private async Task HandleKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
         {
             if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(userInput))
             {
+                // Prevent the default behavior to avoid form submission
                 await SendMessage();
             }
-        }        private async Task ContinueLearning()
+        }private async Task HandleKeyPressForTextarea(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter" && !e.ShiftKey && !string.IsNullOrWhiteSpace(userInput))
+            {
+                // Enter without Shift submits the answer, Shift+Enter adds new line
+                await ProcessAnswer(userInput);
+            }
+        }private async Task ContinueLearning()
         {
             if (currentChallengeIndex < currentChallenges.Count - 1)
             {
@@ -735,6 +757,12 @@ CORRECT: [Letter of correct answer]";
 
             conversationHistory.Add(userInput);
             
+            // Check for vocabulary usage in conversation practice mode
+            if (currentGameMode == GameMode.ConversationPractice)
+            {
+                await EvaluateVocabularyUsage(userInput);
+            }
+            
             // Generate AI response using OpenAI
             var aiResponse = await GenerateAIResponse(userInput);
             conversationHistory.Add(aiResponse);
@@ -744,15 +772,50 @@ CORRECT: [Letter of correct answer]";
             
             // Scroll chat to bottom to show latest messages
             await ScrollChatToBottom();
-        }
-
-        private async Task<string> GenerateAIResponse(string userMessage)
+        }        private async Task<string> GenerateAIResponse(string userMessage)
         {
             var conversationContext = string.Join("\n", conversationHistory.TakeLast(6));
             var targetWords = currentSession?.WordsLearned ?? new List<string>();
             var wordsText = targetWords.Count > 0 ? string.Join(", ", targetWords) : "";
             
-            var prompt = $@"Continue this English learning conversation. The student just said: '{userMessage}'
+            // For conversation practice, use the target words from the conversation
+            if (currentGameMode == GameMode.ConversationPractice && conversationTargetWords.Count > 0)
+            {
+                var remainingWords = conversationTargetWords.Where(w => !usedTargetWords.Contains(w)).ToList();
+                var remainingWordsText = remainingWords.Count > 0 ? string.Join(", ", remainingWords) : "";
+                
+                var prompt = $@"Continue this English learning conversation. The student just said: '{userMessage}'
+
+Previous conversation context:
+{conversationContext}
+
+Target vocabulary words the student should try to use: {string.Join(", ", conversationTargetWords)}
+Words already used correctly: {string.Join(", ", usedTargetWords)}
+{(remainingWords.Count > 0 ? $"Words still to use: {remainingWordsText}" : "All words have been used!")}
+
+Please provide an encouraging, natural response that:
+1. Responds thoughtfully to what they said
+2. {(remainingWords.Count > 0 ? $"Gently encourages use of remaining vocabulary words: {remainingWordsText}" : "Congratulates them on using all target words")}
+3. Asks a follow-up question to keep the conversation flowing
+4. Stays appropriate for {difficulty.ToString().ToLower()}-level learners
+
+Keep it conversational and supportive (1-2 sentences).";
+
+                var systemMessage = "You are a patient, encouraging English conversation partner helping students practice vocabulary naturally.";
+                
+                try
+                {
+                    return await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error generating AI response: {ex.Message}");
+                    return "That's interesting! Can you tell me more about that? I'd love to hear your thoughts.";
+                }
+            }
+            
+            // Default behavior for other modes
+            var defaultPrompt = $@"Continue this English learning conversation. The student just said: '{userMessage}'
 
 Previous conversation context:
 {conversationContext}
@@ -765,11 +828,11 @@ Please provide an encouraging, natural response that:
 
 Keep it conversational and supportive (1-2 sentences).";
 
-            var systemMessage = "You are a patient, encouraging English conversation partner helping students practice vocabulary naturally.";
+            var defaultSystemMessage = "You are a patient, encouraging English conversation partner helping students practice vocabulary naturally.";
             
             try
             {
-                return await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+                return await OpenAIService.GenerateContentAsync(defaultPrompt, defaultSystemMessage);
             }
             catch (Exception ex)
             {
@@ -959,6 +1022,79 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                 Console.WriteLine($"Chat scroll error: {ex.Message}");
             }
         }
+
+        private async Task EvaluateVocabularyUsage(string userMessage)
+        {
+            if (conversationTargetWords.Count == 0) return;
+            
+            try
+            {
+                // Check which target words are present in the message
+                var wordsInMessage = new List<string>();
+                foreach (var word in conversationTargetWords)
+                {
+                    if (userMessage.ToLower().Contains(word.ToLower()) && !usedTargetWords.Contains(word))
+                    {
+                        wordsInMessage.Add(word);
+                    }
+                }
+                
+                if (wordsInMessage.Count == 0) return;
+                
+                // Use AI to evaluate if the words are used appropriately
+                var wordsText = string.Join(", ", wordsInMessage);
+                var prompt = $@"Evaluate vocabulary usage in this English learning conversation:
+
+Student message: '{userMessage}'
+Target vocabulary words to check: {wordsText}
+
+For each target word that appears in the message, assess:
+1. Is it used correctly and appropriately?
+2. Does it fit the context naturally?
+3. Does it demonstrate understanding of the word's meaning?
+
+Respond with only the words that are used correctly, separated by commas.
+If no words are used correctly, respond with 'NONE'.
+
+Example response: 'adventure, beautiful' or 'NONE'";
+
+                var systemMessage = "You are an English language assessment expert evaluating vocabulary usage for language learners.";
+                var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+                
+                // Parse AI response and award points
+                if (!string.IsNullOrEmpty(aiResponse) && aiResponse.Trim().ToUpper() != "NONE")
+                {
+                    var correctlyUsedWords = aiResponse.Split(',')
+                        .Select(w => w.Trim().ToLower())
+                        .Where(w => !string.IsNullOrEmpty(w) && conversationTargetWords.Any(tw => tw.ToLower() == w))
+                        .ToList();
+                    
+                    foreach (var word in correctlyUsedWords)
+                    {
+                        var originalWord = conversationTargetWords.First(w => w.ToLower() == word);
+                        if (usedTargetWords.Add(originalWord))
+                        {
+                            // Award points for correct vocabulary usage
+                            score += GetScoreForDifficulty();
+                            streak++;
+                            wordsUsedCorrectly++;
+                            
+                            // Add to session words learned
+                            if (currentSession != null && !currentSession.WordsLearned.Contains(originalWord))
+                            {
+                                currentSession.WordsLearned.Add(originalWord);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently handle errors in vocabulary evaluation to not disrupt conversation flow
+                Console.WriteLine($"Error evaluating vocabulary usage: {ex.Message}");
+            }
+        }
+
     }
 
     // Enums and Data Models
