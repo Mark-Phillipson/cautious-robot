@@ -7,15 +7,13 @@ namespace BlazorApp.Client.Shared
     public interface IOpenAIService
     {
         Task<string> GenerateContentAsync(string prompt, string systemMessage = "You are a helpful English language tutor.");
-    }
-
-    public class OpenAIService : IOpenAIService
+    }    public class OpenAIService : IOpenAIService
     {
         private readonly HttpClient _httpClient;
-        private readonly IApiKeyService _apiKeyService;
+        private readonly IOpenAIApiKeyService _apiKeyService;
         private const string OpenAIBaseUrl = "https://api.openai.com/v1/chat/completions";
 
-        public OpenAIService(HttpClient httpClient, IApiKeyService apiKeyService)
+        public OpenAIService(HttpClient httpClient, IOpenAIApiKeyService apiKeyService)
         {
             _httpClient = httpClient;
             _apiKeyService = apiKeyService;

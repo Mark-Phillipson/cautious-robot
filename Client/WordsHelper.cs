@@ -11,9 +11,7 @@ public class WordsHelper
     public WordsHelper(string apiKey)
     {
         _apiKey = apiKey;
-    }
-
-    public async static Task<LoadWordResults> GetRandomWord(string apiKey, int maximumWordsLength, string? beginsWith = null, string? wordType = null)
+    }    public async static Task<LoadWordResults> GetRandomWord(string apiKey, int maximumWordsLength, string? beginsWith = null, string? wordType = null)
     {
         // https://www.wordsapi.com/ ( Documentation ) 500 requests per day free on basic
         var client = new HttpClient();
@@ -35,17 +33,36 @@ public class WordsHelper
                 { "x-rapidapi-key", apiKey },
                 { "x-rapidapi-host", "wordsapiv1.p.rapidapi.com" },
             },
-        };
-
-        using (var response = await client.SendAsync(request))
+        };        using (var response = await client.SendAsync(request))
             try
-            {
+            {                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Error Response: {response.StatusCode} - {errorContent}");
+                    loadWordResults.Message = $"API Error: {response.StatusCode} - {errorContent}";
+                    
+                    // Special handling for development environment CORS issues
+                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                    {
+                        throw new Exception($"API Error: This might be a CORS issue in development. The API key works in production but may be blocked from localhost. Try testing on the production site instead. Status: {response.StatusCode} ({response.ReasonPhrase})");
+                    }
+                    else
+                    {
+                        throw new Exception($"Problem loading word. Response status code does not indicate success: {response.StatusCode} ({response.ReasonPhrase}). Please check your API key or try again later.");
+                    }
+                }
                 response.EnsureSuccessStatusCode();
                 loadWordResults.Result = await response.Content.ReadAsStringAsync();
             }
+            catch (HttpRequestException httpEx)
+            {
+                Console.WriteLine($"HTTP Request Exception: {httpEx.Message}");
+                loadWordResults.Message = $"Network Error: {httpEx.Message}";
+                throw new Exception($"Problem loading word: {httpEx.Message}");
+            }
             catch (Exception exception)
             {
-                Console.WriteLine(exception.Message);
+                Console.WriteLine($"General Exception: {exception.Message}");
                 loadWordResults.Message = exception.Message;
                 throw new Exception($"Problem loading word: {exception.Message}");
             }

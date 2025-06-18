@@ -4,18 +4,19 @@
 <PageTitle>Hangman</PageTitle>
 <div class='row'>
     <div class='col-md-8'>
-        <h2 class='hide-on-mobile'>Guess the word by selecting letters.</h2>
-        @if (!ApiKeyAvailable)
+        <h2 class='hide-on-mobile'>Guess the word by selecting letters.</h2>        @if (!ApiKeyAvailable)
         {
+            <div class="alert alert-info mt-3">
+                <strong>Optional:</strong> Enter your Words API key for more word variety, or play with built-in words.
+            </div>
             <ApiKeyEntry OnApiKeySaved="OnApiKeySaved" />
-            <div class="alert alert-info mt-3">Please enter your Words API key to play Hangman.</div>
         }
-        else
-        {
-            <div class='row'>
-                <div class='col-md-8'>
-                    <button accesskey='1' class='btn btn-primary btn-sm' @onclick="(() => StartNewGame())"><u>1</u> Load
-                        New Word</button>
+        
+        <!-- Game section - always visible -->
+        <div class='row'>
+            <div class='col-md-8'>
+                <button accesskey='1' class='btn btn-primary btn-sm' @onclick="(() => StartNewGame())"><u>1</u> Load
+                    New Word</button>
                     <div>
                         <br class='hide-on-mobile' />
                         @if (CurrentWord != null)
@@ -38,11 +39,23 @@
                         }
                         <br class='hide-on-mobile' />
                         <br class='hide-on-mobile' />
-                    </div>
-
-                    <div>
+                    </div>                    <div>
                         <h2 class='fs-3 text-success hide-on-mobile'>@WordDescription</h2>
                         <h6 class='fs-6 text-success show-on-mobile'>@WordDescription</h6>
+                        
+                        @if (!string.IsNullOrEmpty(CurrentWord))
+                        {
+                            <small class="text-muted">
+                                @if (UsingApiWords)
+                                {
+                                    <span class="badge bg-primary">🌐 Words API</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">📚 Built-in Words</span>
+                                }
+                            </small>
+                        }
 
                         @if (loading)
                         {

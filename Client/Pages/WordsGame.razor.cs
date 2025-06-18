@@ -3,13 +3,10 @@ using BlazorApp.Client.Models;
 using BlazorApp.Client.Helper;
 
 namespace BlazorApp.Client.Pages
-{
-	public partial class WordsGame
-	{
-		[Inject] public required BlazorApp.Client.Shared.IApiKeyService ApiKeyService { get; set; }
+{	public partial class WordsGame
+	{		[Inject] public required BlazorApp.Client.Shared.IWordsApiKeyService ApiKeyService { get; set; }
 		private string? apiKey = null;
-		private bool ApiKeyAvailable => !string.IsNullOrWhiteSpace(apiKey);
-		private async Task OnApiKeySaved()
+		public bool ApiKeyAvailable => !string.IsNullOrWhiteSpace(apiKey);		public async Task OnApiKeySaved()
 		{
 			apiKey = await ApiKeyService.GetApiKeyAsync();
 			GameOptions.APIKey = apiKey;
@@ -17,14 +14,28 @@ namespace BlazorApp.Client.Pages
 			await LoadWordAsync();
 			StateHasChanged();
 		}
+
+		public async Task OnChangeApiKey()
+		{
+			// Clear the stored API key and reset state
+			await ApiKeyService.ClearApiKeyAsync();
+			apiKey = null;
+			GameOptions.APIKey = null;
+			HideKey = false;
+			Message = null;
+			LoadWordResults = null;
+			WordResult = null;
+			isLoading = false;
+			StateHasChanged();
+		}
 		private int currentQuestionNumber = 0;
 		ElementReference LoadWordsButton;
 		private string? response;
 		string? result = "";
-		WordsHelper? wordsHelper;
-		private int questionsAnswered = 0;
+		WordsHelper? wordsHelper;		private int questionsAnswered = 0;
 		private int questionsCorrect = 0;
 		private int wordCounter = 0;
+		private bool isLoading = true; // Start with loading = true until we know the API key status
 		private async Task CheckAnswerAsync(string? guessedWord, int indexPosition)
 		{
 			PlayAudio = true;
@@ -75,9 +86,11 @@ namespace BlazorApp.Client.Pages
 			await LoadWordsButton.FocusAsync();
 			PlayAudio = false;
 
-		}
-		private async Task LoadWordAsync()
+		}		private async Task LoadWordAsync()
 		{
+			isLoading = true;
+			StateHasChanged();
+			
 			Message = null;
 			LoadWordResults = null;
 			WordResult = null;
@@ -96,24 +109,62 @@ namespace BlazorApp.Client.Pages
 			dynamicClass = "";
 			currentQuestionNumber = 0;
 			ShowWord = true;
-			ReloadButtonClass();
-			// Try to get the API key from the text box in the user interface
-			if (GameOptions.APIKey != null && GameOptions.APIKey != "TBC")
+			ReloadButtonClass();			// Use API key from service if available
+			if (apiKey == null)
 			{
+				apiKey = await ApiKeyService.GetApiKeyAsync();
+			}
+			if (!string.IsNullOrWhiteSpace(apiKey))
+			{
+				GameOptions.APIKey = apiKey;
 				HideKey = true;
-				wordsHelper = new WordsHelper(GameOptions.APIKey);
-			}
-			if (wordsHelper != null)
+				wordsHelper = new WordsHelper(apiKey);
+			}			if (wordsHelper != null)
 			{
-				LoadWordResults =
-					await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower(), GameOptions?.WordType);
+				try
+				{
+					LoadWordResults =
+						await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower(), GameOptions?.WordType);
+				}				catch (Exception ex)
+				{
+					var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" || 
+					                   Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") == "Development";
+					
+					if (isDevelopment && ex.Message.Contains("403") || ex.Message.Contains("Forbidden"))
+					{
+						Message = $"Development Mode: API blocked due to CORS. This works in production. Error: {ex.Message}";
+					}
+					else
+					{
+						Message = $"API Error: {ex.Message}. Please check your API key or try again later.";
+					}
+					LoadWordResults = null;
+					Console.WriteLine($"WordsGame API Error: {ex.Message}");
+				}
+				
+				// Process successful API response
+				if (LoadWordResults?.WordResults != null && LoadWordResults.WordResults.Count > 0)
+				{
+					WordResult = LoadWordResults.WordResults[0];
+				}
+				
+				// Update message and result from API response
+				if (string.IsNullOrEmpty(Message))
+				{
+					Message = LoadWordResults?.Message;
+				}
+				result = LoadWordResults?.Result;
 			}
-			Message = LoadWordResults?.Message;
-			result = LoadWordResults?.Result;
-			if (LoadWordResults?.WordResults?.Count > 0)
+			else
 			{
-				WordResult = LoadWordResults.WordResults[0];
+				// No API key available - set proper state
+				Message = "Please enter your Words API key to load words.";
 			}
+			
+			// Always ensure loading state is properly ended
+			isLoading = false;
+			StateHasChanged();
+			StateHasChanged();
 		}
 		private void ReloadButtonClass()
 		{
@@ -140,15 +191,20 @@ namespace BlazorApp.Client.Pages
 			{
 				await LoadWordsButton.FocusAsync();
 			}
-		}
-		protected override async Task OnInitializedAsync()
+		}		protected override async Task OnInitializedAsync()
 		{
 			apiKey = await ApiKeyService.GetApiKeyAsync();
 			if (ApiKeyAvailable)
 			{
 				GameOptions.APIKey = apiKey;
-				wordsHelper = new WordsHelper(apiKey ?? "TBC");
+				HideKey = true;
 				await LoadWordAsync();
+			}
+			else
+			{
+				// Ensure loading state is properly handled when no API key exists
+				isLoading = false;
+				StateHasChanged();
 			}
 		}
 		private void ShowOptions()
