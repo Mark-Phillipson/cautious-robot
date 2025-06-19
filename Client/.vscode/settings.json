@@ -1,0 +1,14 @@
+{
+    // Copilot Instructions for this project
+    "copilot.instructions.file": "../.github/copilot-instructions.md",
+    "copilot.enable": {
+        "*": true,
+        "yaml": false,
+        "plaintext": false
+    },
+    "copilot.chat.welcomeMessage": "always",
+    "copilot.preferences": {
+        "includeCodeBlockLanguageInCompletions": true,
+        "enableAutoCompletions": true
+    }
+}

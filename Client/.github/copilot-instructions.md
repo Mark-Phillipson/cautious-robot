@@ -1,5 +1,30 @@
 # GitHub Copilot Instructions
 
+## ⚠️ CRITICAL: Build System Priority Rules
+
+### Always Use VS Code Tasks for Builds
+**When working in this project, ALWAYS use VS Code tasks for builds, runs, and tests:**
+
+- ✅ **Use**: `run_vs_code_task` tool with appropriate task ID
+- ❌ **Never**: `run_in_terminal` for build operations (unless explicitly requested by user)
+
+### Available Tasks
+- **Build**: `shell: dotnet build`
+- **Run**: `shell: dotnet run` 
+- **Watch**: `shell: dotnet watch`
+- **Test All**: `shell: test: run all tests`
+- **Test Coverage**: `shell: test: run with coverage`
+- **Test Verbose**: `shell: test: run verbose`
+
+### Task Usage Example
+```typescript
+// ✅ Correct way to build
+await run_vs_code_task({
+  id: "shell: dotnet build",
+  workspaceFolder: "c:\\Users\\MPhil\\source\\repos\\Words\\cautious-robot\\Client"
+});
+```
+
 ## Project Overview
 This is a Blazor WebAssembly (WASM) static web application hosted on Microsoft Azure Static Web Apps. The application includes word games and educational content, built with .NET 9.0.
 
@@ -33,6 +58,13 @@ This is a Blazor WebAssembly (WASM) static web application hosted on Microsoft A
 - Do Not Use `@code` blocks for component logic, instead separate code-behind files for components
 - Apply `@page` directive for routable components
 - Use proper parameter binding with `[Parameter]` attributes
+
+### Debugging Best Practices
+- Add `Console.WriteLine()` for debugging complex logic
+- Include debug panels in UI for development features
+- Create test methods for complex algorithms (like word detection)
+- Force `StateHasChanged()` after important state updates
+- Use debug buttons for manual testing during development
 
 ### C# Code Style
 - Follow Microsoft C# coding conventions
@@ -78,6 +110,13 @@ This is a Blazor WebAssembly (WASM) static web application hosted on Microsoft A
 - Implement proper audio loading and error handling
 - Provide mute/unmute functionality
 - Consider accessibility for audio features
+
+### AI-Powered Learning Features
+- Implement robust word detection algorithms for conversation practice
+- Use fallback logic when AI services are unavailable
+- Create encouraging evaluation prompts that support learning
+- Include debug features for complex scoring systems
+- Handle API key availability gracefully with meaningful fallbacks
 
 ### Data Handling
 - Load game data from JSON files in `wwwroot/sample-data/`

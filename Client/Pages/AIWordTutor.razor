@@ -143,13 +143,14 @@
                                         @message
                                     </div>
                                 }
-                            </div>                                <div class="chat-input-section">
+                            </div>                            <div class="chat-input-section">
                                 <input type="text" @bind="userInput" @onkeydown="HandleKeyPress" 
                                        placeholder="Type your response..." class="chat-input" />
                                 <button @onclick="SendMessage" class="send-btn">Send</button>
                                 @if (conversationTargetWords.Count > 0)
                                 {
                                     <button @onclick="TestWordEvaluation" class="test-btn" style="margin-left: 10px; background: #ff6b6b;">Test Debug</button>
+                                    <button @onclick="TestCurrentMessage" class="test-btn" style="margin-left: 5px; background: #17a2b8;">Test Input</button>
                                 }
                             </div>
                             
