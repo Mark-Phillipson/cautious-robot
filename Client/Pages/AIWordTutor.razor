@@ -81,8 +81,7 @@
                     <span class="score">Score: @score</span>
                     <span class="streak">Streak: @streak</span>
                     <span class="level">Level: @GetDifficultyName(difficulty)</span>
-                </div>
-                <button @onclick="ExitGame" class="exit-btn">Exit Game</button>
+                </div>                <button @onclick="ExitGame" class="exit-btn">Exit Game</button>
             </div>
 
             <div class="game-content">
@@ -303,9 +302,13 @@
     };
 }
 
-@if (PlayAudio)
+@if (PlayAudio && lastAnswerCorrect)
 {
-    <BlazorApp.Client.Pages.PlaySound AnswerState="lastAnswerCorrect" Play="true" />
+    <BlazorApp.Client.Pages.PlaySound AnswerState="true" Play="true" />
+}
+else if (PlayAudio)
+{
+    <BlazorApp.Client.Pages.PlaySound AnswerState="false" Play="true" />
 }
 else
 {

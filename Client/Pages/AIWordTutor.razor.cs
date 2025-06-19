@@ -919,14 +919,23 @@ Respond naturally as a conversation partner:";
             userInput = ""; // Clear input after processing
             StateHasChanged();
 
-            await Task.Delay(100); // Brief pause for sound effect
-            PlayAudio = false;
-        }
+            // Debug logging
+            Console.WriteLine($"AIWordTutor: PlayAudio set to true, lastAnswerCorrect: {lastAnswerCorrect}");
 
-        private async Task<bool> CheckAnswerWithAI(WordChallenge challenge, string answer)
+            await Task.Delay(2000); // Longer delay for sound effect to play
+            PlayAudio = false;
+            StateHasChanged();
+        }        private async Task<bool> CheckAnswerWithAI(WordChallenge challenge, string answer)
         {
             if (challenge.IsOpenEnded)
             {
+                // First, check if this is obviously a non-answer before sending to AI
+                if (!IsValidAnswer(answer))
+                {
+                    Console.WriteLine($"Pre-filtered non-answer: '{answer}'");
+                    return false;
+                }
+
                 // Use AI to evaluate open-ended responses
                 var prompt = $@"Evaluate this English learning response:
 
@@ -939,6 +948,8 @@ Please assess:
 2. Is the usage appropriate and contextually correct?
 3. Is it a meaningful attempt (not just random text)?
 
+IMPORTANT: If the student says they don't know, are unsure, or gives non-answers like 'I don't know', 'not sure', 'no idea', etc., respond with INCORRECT.
+
 Respond with: CORRECT if it shows good understanding, or INCORRECT if it doesn't.
 Then provide a brief, encouraging feedback comment (1 sentence).
 
@@ -946,7 +957,7 @@ Format:
 RESULT: [CORRECT/INCORRECT]
 FEEDBACK: [Your encouraging comment]";
 
-                var systemMessage = "You are a patient English language teacher evaluating student responses with encouragement and constructive guidance.";
+                var systemMessage = "You are a patient English language teacher evaluating student responses with encouragement and constructive guidance. Be strict about marking non-answers and 'I don't know' responses as incorrect.";
                 
                 try
                 {
@@ -956,8 +967,8 @@ FEEDBACK: [Your encouraging comment]";
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error in AI evaluation: {ex.Message}");
-                    // Fallback to simple check
-                    return !string.IsNullOrWhiteSpace(answer) && answer.Length > 10;
+                    // Improved fallback logic that recognizes non-answers
+                    return IsValidAnswer(answer);
                 }
             }
 
@@ -984,14 +995,12 @@ FEEDBACK: [Your encouraging comment]";
             }
             
             return false; // Default to incorrect if parsing fails
-        }
-
-        private bool CheckAnswer(WordChallenge challenge, string answer)
+        }        private bool CheckAnswer(WordChallenge challenge, string answer)
         {
             if (challenge.IsOpenEnded)
             {
-                // For open-ended questions, check if the target word is used meaningfully
-                return !string.IsNullOrWhiteSpace(answer) && answer.Length > 10;
+                // For open-ended questions, use the improved answer validation
+                return IsValidAnswer(answer);
             }
 
             return string.Equals(answer.Trim(), challenge.CorrectAnswer?.Trim(), StringComparison.OrdinalIgnoreCase);
@@ -1287,8 +1296,69 @@ Respond with: YES if the word shows reasonable understanding and usage, NO only 
             usedTargetWords.Clear();
             wordsUsedCorrectly = 0;
             
-            // Generate new conversation starter
-            await GenerateConversationStarter(newWords);
+            // Generate new conversation starter            await GenerateConversationStarter(newWords);
+        }
+
+        private bool IsValidAnswer(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer))
+                return false;
+
+            var trimmedAnswer = answer.Trim().ToLowerInvariant();
+            
+            // List of common non-answers that should not be marked as correct
+            var nonAnswers = new[]
+            {
+                "don't know",
+                "dont know", 
+                "i don't know",
+                "i dont know",
+                "no idea",
+                "not sure",
+                "idk",
+                "i'm not sure",
+                "im not sure",
+                "i have no idea",
+                "no clue",
+                "?",
+                "??",
+                "???",
+                "unknown",
+                "pass",
+                "skip",
+                "nothing",
+                "none",
+                "unsure"
+            };
+
+            // Check if the answer is a recognized non-answer
+            if (nonAnswers.Contains(trimmedAnswer))
+                return false;
+
+            // Check if answer is too short to be meaningful
+            if (trimmedAnswer.Length < 3)
+                return false;
+
+            // Check if answer is just repeated characters or nonsense
+            if (IsNonsenseAnswer(trimmedAnswer))
+                return false;
+
+            // If it passes all the non-answer checks and has reasonable length, consider it valid
+            return trimmedAnswer.Length >= 10;
+        }
+
+        private bool IsNonsenseAnswer(string answer)
+        {
+            // Check for repeated characters (like "aaaaaaa" or "xxxxxxx")
+            if (answer.Length >= 5 && answer.Distinct().Count() <= 2)
+                return true;
+
+            // Check for keyboard mashing patterns
+            var keyboardPatterns = new[] { "asdf", "qwer", "zxcv", "hjkl", "1234", "abcd" };
+            if (keyboardPatterns.Any(pattern => answer.Contains(pattern)))
+                return true;
+
+            return false;
         }
     }
 }
