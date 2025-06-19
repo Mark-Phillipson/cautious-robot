@@ -143,8 +143,7 @@
                                         @message
                                     </div>
                                 }
-                            </div>
-<div class="chat-input-section">
+                            </div>                                <div class="chat-input-section">
                                 <input type="text" @bind="userInput" @onkeydown="HandleKeyPress" 
                                        placeholder="Type your response..." class="chat-input" />
                                 <button @onclick="SendMessage" class="send-btn">Send</button>
@@ -152,6 +151,14 @@
                                 {
                                     <button @onclick="TestWordEvaluation" class="test-btn" style="margin-left: 10px; background: #ff6b6b;">Test Debug</button>
                                 }
+                            </div>
+                            
+                            <!-- Debug Panel for Scoring -->
+                            <div style="margin-top: 15px; padding: 10px; background: rgba(0,255,0,0.1); border: 1px solid #4CAF50; border-radius: 5px; font-size: 0.9em;">
+                                <strong>🐛 Debug Panel:</strong><br />
+                                Current Score: @score | Words Used: @wordsUsedCorrectly/@conversationTargetWords.Count<br />
+                                Used Words: [@string.Join(", ", usedTargetWords)]<br />
+                                Last Update: @DateTime.Now.ToString("HH:mm:ss")
                             </div>
                         </div>
                     }

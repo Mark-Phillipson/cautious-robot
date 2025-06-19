@@ -45,6 +45,26 @@
 			"problemMatcher": [
 				"$msCompile"
 			]
+		},
+		{
+			"type": "shell",
+			"label": "dotnet run",
+			"command": "dotnet run --urls http://localhost:7212",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "dotnet watch",
+			"command": "dotnet watch --urls http://localhost:7212",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [
+				"$msCompile"
+			]
 		}
 	]
 }

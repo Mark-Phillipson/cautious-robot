@@ -747,16 +747,20 @@ CORRECT: [Letter of correct answer]";
         {
             if (string.IsNullOrWhiteSpace(userInput)) return;
 
-            conversationHistory.Add(userInput);
+            var currentMessage = userInput;
+            conversationHistory.Add(currentMessage);
             
             // Check for vocabulary usage in conversation practice mode
             if (currentGameMode == GameMode.ConversationPractice)
             {
-                await EvaluateVocabularyUsage(userInput);
+                await EvaluateVocabularyUsage(currentMessage);
+                
+                // Force UI update after evaluation
+                await InvokeAsync(StateHasChanged);
             }
             
             // Generate AI response using OpenAI
-            var aiResponse = await GenerateAIResponse(userInput);
+            var aiResponse = await GenerateAIResponse(currentMessage);
             conversationHistory.Add(aiResponse);
             
             userInput = "";
@@ -765,7 +769,7 @@ CORRECT: [Letter of correct answer]";
             // Scroll to bottom after message is added
             await Task.Delay(100);
             await ScrollChatToBottom();
-        }        private async Task<string> GenerateAIResponse(string userMessage)
+        }private async Task<string> GenerateAIResponse(string userMessage)
         {
             try
             {
@@ -1051,8 +1055,7 @@ Be strict about correct usage - the word should be used meaningfully, not just m
                             responseLower.Contains("set your openai api key");
                         
                         Console.WriteLine($"Has API key message: {hasApiKeyMessage}");
-                        
-                        if (hasApiKeyMessage)
+                          if (hasApiKeyMessage)
                         {
                             Console.WriteLine($"API key not available, using fallback logic for '{targetWord}'");
                             // Fallback: Accept the word if it appears meaningfully in context
@@ -1062,6 +1065,7 @@ Be strict about correct usage - the word should be used meaningfully, not just m
                                 wordsUsedCorrectly++;
                                 score += 5;
                                 Console.WriteLine($"Word '{targetWord}' accepted via API key fallback logic");
+                                StateHasChanged(); // Ensure UI updates immediately
                             }
                         }
                         else if (aiResponse.Trim().ToUpper().StartsWith("YES"))
@@ -1070,13 +1074,13 @@ Be strict about correct usage - the word should be used meaningfully, not just m
                             wordsUsedCorrectly++;
                             score += 5; // Bonus points for conversation vocabulary usage
                             Console.WriteLine($"Word '{targetWord}' marked as correctly used!");
+                            StateHasChanged(); // Ensure UI updates immediately
                         }
                         else
                         {
                             Console.WriteLine($"AI determined '{targetWord}' was not used correctly");
                         }
-                    }
-                    catch (Exception ex)
+                    }                    catch (Exception ex)
                     {
                         Console.WriteLine($"Error evaluating vocabulary usage for '{targetWord}': {ex.Message}");
                         // Fallback: Accept the word if it appears meaningfully in context
@@ -1086,6 +1090,7 @@ Be strict about correct usage - the word should be used meaningfully, not just m
                             wordsUsedCorrectly++;
                             score += 5;
                             Console.WriteLine($"Word '{targetWord}' accepted via fallback logic");
+                            StateHasChanged(); // Ensure UI updates immediately
                         }
                     }
                 }
@@ -1094,11 +1099,21 @@ Be strict about correct usage - the word should be used meaningfully, not just m
             Console.WriteLine($"Final state - Words used correctly: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
             StateHasChanged();
         }
-        
-        private async Task TestWordEvaluation()
-        {            var testSentence = "I think analyzing that my sentence would be beneficial and not to do so would be negligent I will persist in creating this sentence otherwise it would be a catastrophe.";
+          private async Task TestWordEvaluation()
+        {
+            var testSentence = "I think analyzing that my sentence would be beneficial and not to do so would be negligent I will persist in creating this sentence otherwise it would be a catastrophe.";
             Console.WriteLine($"Testing word evaluation with: {testSentence}");
+            
+            // Show initial state
+            Console.WriteLine($"Before test - Score: {score}, Words used: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
+            
             await EvaluateVocabularyUsage(testSentence);
+            
+            // Force UI update after test
+            await InvokeAsync(StateHasChanged);
+            
+            // Show final state
+            Console.WriteLine($"After test - Score: {score}, Words used: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
         }
 
         private void StartFeedbackTimer()
