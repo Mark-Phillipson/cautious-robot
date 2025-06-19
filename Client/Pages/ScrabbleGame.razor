@@ -20,30 +20,7 @@
                         </ol>
                     </div>
 
-                    <div class="api-key-input-section">
-                        <label for="apiKeyInput" class="api-key-label">Enter your Words API key:</label>
-                        <div class="input-group">
-                            <input type="password" 
-                                   id="apiKeyInput"
-                                   @bind="userApiKey" 
-                                   @onkeypress="@(async (e) => { if (e.Key == "Enter") await ValidateApiKeyAndStartGame(); })"
-                                   placeholder="Your Words API key here..." 
-                                   class="api-key-input" />
-                            <button @onclick="ValidateApiKeyAndStartGame" 
-                                    type="button" 
-                                    class="start-game-btn"
-                                    disabled="@(string.IsNullOrWhiteSpace(userApiKey))">
-                                Start Game
-                            </button>
-                        </div>
-                        
-                        @if (!string.IsNullOrEmpty(apiKeyValidationMessage))
-                        {
-                            <div class="api-validation-message @(apiKeyValidationMessage.Contains("Validating") ? "validating" : "error")">
-                                @apiKeyValidationMessage
-                            </div>
-                        }
-                    </div>
+                    <BlazorApp.Client.Shared.ApiKeyEntry OnApiKeySaved="OnApiKeySaved" />
 
                     <div class="privacy-note">
                         <small>🔒 Your API key is stored locally in your browser session only and is never saved or shared.</small>
@@ -70,7 +47,7 @@
                         <span>Click "Play Word" to see the definition and synonyms</span>
                     </div>
                 }
-                <button @onclick="ResetGame" type="button" class="reset-game-btn">Change API Key</button>
+                <button @onclick="OnChangeApiKey" type="button" class="reset-game-btn">Change API Key</button>
             </div>
         <main class="scrabble-board" tabindex="0" aria-label="Scrabble Board" role="region">
             <table class="board-table" aria-label="Scrabble Board Preview">

@@ -11,6 +11,7 @@ namespace BlazorApp.Client.Pages
     public partial class ScrabbleGame : ComponentBase
     {
         [Inject] private HttpClient HttpClient { get; set; } = default!;
+        [Inject] public required BlazorApp.Client.Shared.IWordsApiKeyService ApiKeyService { get; set; }
 
         protected List<char> tileRack = new();
         protected List<(int index, bool isCenter)> selectedLetters = new();
@@ -21,9 +22,10 @@ namespace BlazorApp.Client.Pages
         protected string? currentWordDefinition;
         protected bool isValidatingWord= false ;
          protected  int soundToPlay = 0; // 0: none, 1: valid word, 2: invalid word 
-        protected string userApiKey = "";
+        protected string? apiKey = null;
         protected bool gameStarted = false;
-        protected string apiKeyValidationMessage = "";// Constants
+        protected string apiKeyValidationMessage = "";
+        public bool ApiKeyAvailable => !string.IsNullOrWhiteSpace(apiKey);// Constants
         protected static readonly string ScrabbleLetters = "EEEEEEEEEEEEAAAAAAAAAIIIIIIIIONNNNNNRRRRRRTTTTTTLLLLSSSSUUUUDDDDGGGBBCCMMPPFFHHVVWWYYKJXQZ";
         protected readonly Dictionary<char, int> letterScores = new()
         {
@@ -33,12 +35,20 @@ namespace BlazorApp.Client.Pages
             {'P', 3}, {'Q', 10}, {'R', 1}, {'S', 1}, {'T', 1},
             {'U', 1}, {'V', 4}, {'W', 4}, {'X', 8}, {'Y', 4},
             {'Z', 10}
-        };
-
-        protected override void OnInitialized()
+        };        protected override void OnInitialized()
         {
             Console.WriteLine("ScrabbleGame: OnInitialized called");
             StartNewGame();
+        }
+
+        protected override async Task OnInitializedAsync()
+        {
+            apiKey = await ApiKeyService.GetApiKeyAsync();
+            if (ApiKeyAvailable)
+            {
+                gameStarted = true;
+                StartNewGame();
+            }
         }
 
         protected void SelectTile(int index)
@@ -121,11 +131,10 @@ namespace BlazorApp.Client.Pages
             validationMessage = null;
             isValidatingWord = true;
             soundToPlay = 0;
-            StateHasChanged();
-            try
+            StateHasChanged();            try
             {
                 // Validate the word using the user's Words API
-                if (string.IsNullOrEmpty(userApiKey))
+                if (string.IsNullOrEmpty(apiKey))
                 {
                     validationMessage = "API key not provided. Please enter your Words API key to validate words.";
                     isValidatingWord = false;
@@ -133,7 +142,7 @@ namespace BlazorApp.Client.Pages
                     return;
                 }
 
-                var (isValid, definition) = await WordsHelper.IsValidWordWithDefinition(userApiKey, wordStr);
+                var (isValid, definition) = await WordsHelper.IsValidWordWithDefinition(apiKey, wordStr);
 
                 if (!isValid)
                 {
@@ -259,50 +268,29 @@ namespace BlazorApp.Client.Pages
             var finalWord = string.Join("", word.Select(w => w.letter));
             Console.WriteLine($"Final word built: {finalWord}");
             return word;
-        }
-
-        protected bool HasSelectedLetters => selectedLetters.Any();
-        protected async Task ValidateApiKeyAndStartGame()
+        }        protected bool HasSelectedLetters => selectedLetters.Any();
+        
+        public async Task OnApiKeySaved()
         {
-            if (string.IsNullOrWhiteSpace(userApiKey))
-            {
-                apiKeyValidationMessage = "Please enter your Words API key.";
-                StateHasChanged();
-                return;
-            }
-
-            apiKeyValidationMessage = "Validating API key...";
+            apiKey = await ApiKeyService.GetApiKeyAsync();
+            gameStarted = true;
+            apiKeyValidationMessage = "";
+            StartNewGame();
             StateHasChanged();
-
-            try
-            {
-                // Test the API key by validating a simple word
-                bool isValid = await WordsHelper.IsValidWord(userApiKey, "test");
-
-                if (isValid || userApiKey.Length > 10) // Accept if test word validates or if key looks valid
-                {
-                    gameStarted = true;
-                    apiKeyValidationMessage = "";
-                    StartNewGame();
-                }
-                else
-                {
-                    apiKeyValidationMessage = "Invalid API key. Please check your key and try again.";
-                    StateHasChanged();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error validating API key: {ex.Message}");
-                apiKeyValidationMessage = "Error validating API key. Please check your key and internet connection.";
-                StateHasChanged();
-            }
         }
 
-        protected void ResetGame()
+        public async Task OnChangeApiKey()
+        {
+            // Clear the stored API key and reset state
+            await ApiKeyService.ClearApiKeyAsync();
+            apiKey = null;
+            gameStarted = false;
+            apiKeyValidationMessage = "";
+            StateHasChanged();
+        }        protected void ResetGame()
         {
             gameStarted = false;
-            userApiKey = "";
+            apiKey = "";
             apiKeyValidationMessage = "";            currentScore = 0;
             lastWordScore = 0;
             validationMessage = null;
