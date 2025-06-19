@@ -16,13 +16,15 @@
                 </ol>
             </div>
             
-            <div class="api-key-input-section">                @if (!isOpenaiApiKeySaved)
-                {
-                    <label for="openaiApiKeyInput" class="api-key-label">Enter your OpenAI API key:</label>
+            <div class="api-key-input-section">                
+                @if (!isOpenaiApiKeySaved)
+                {                    <label for="openaiApiKeyInput" class="api-key-label">Enter your OpenAI API key:</label>
                     <div class="input-group">
                         <input type="password"
                                id="openaiApiKeyInput"
-                               name="openaiApiKey"
+                               name="openai_chatgpt_api_key"
+                               autocomplete="new-password"
+                               data-service="openai"
                                @bind="openaiUserApiKey"
                                @onkeypress="@(async (e) => { if (e.Key == "Enter") await SaveApiKey(); })"
                                placeholder="sk-..."
@@ -54,9 +56,8 @@
                         @openaiApiKeyValidationMessage
                     </div>
                 }
-            </div>
-            <div class="privacy-note">
-                <small>🔒 Your OpenAI API key is stored locally in your browser session only and is never saved or shared.</small>
+            </div>            <div class="privacy-note">
+                <small>🔒 Your OpenAI API key is stored locally in your browser only and is never saved or shared.</small>
             </div>
         </div>
     </div>

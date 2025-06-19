@@ -11,12 +11,10 @@ namespace BlazorApp.Client.Shared
     }
 
     // Keep the old interface for backward compatibility
-    public interface IApiKeyService : IWordsApiKeyService { }
-
-    public class WordsApiKeyService : IWordsApiKeyService, IApiKeyService
+    public interface IApiKeyService : IWordsApiKeyService { }    public class WordsApiKeyService : IWordsApiKeyService, IApiKeyService
     {
         private readonly IJSRuntime _jsRuntime;
-        private const string StorageKey = "wordsApiKey";
+        private const string StorageKey = "wordsapi_rapidapi_key";
         
         public WordsApiKeyService(IJSRuntime jsRuntime)
         {
@@ -25,17 +23,17 @@ namespace BlazorApp.Client.Shared
         
         public async Task<string?> GetApiKeyAsync()
         {
-            return await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", StorageKey);
+            return await _jsRuntime.InvokeAsync<string>("localStorage.getItem", StorageKey);
         }
         
         public async Task SetApiKeyAsync(string apiKey)
         {
-            await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", StorageKey, apiKey);
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, apiKey);
         }
         
         public async Task ClearApiKeyAsync()
         {
-            await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", StorageKey);
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StorageKey);
         }
     }
 }

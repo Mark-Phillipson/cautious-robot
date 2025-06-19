@@ -15,15 +15,16 @@
                     <li>Copy your API key and paste it below</li>
                 </ol>
             </div>            <div class="api-key-input-section">                @if (!isWordsApiKeySaved)
-                {
-                    <label for="wordsApiKeyInput" class="api-key-label">Enter your Words API key:</label>
+                {                    <label for="wordsApiKeyInput" class="api-key-label">Enter your Words API key:</label>
                     <div class="input-group">
                         <input type="password"
                                id="wordsApiKeyInput"
-                               name="wordsApiKey"
+                               name="wordsapi_rapidapi_key"
+                               autocomplete="off"
+                               data-service="wordsapi"
                                @bind="wordsUserApiKey"
                                @onkeypress="@(async (e) => { if (e.Key == "Enter") await SaveApiKey(); })"
-                               placeholder="Your RapidAPI key..."
+                               placeholder="Your RapidAPI Words API key..."
                                class="api-key-input" />
                         <button @onclick="SaveApiKey"
                                 type="button"
@@ -53,7 +54,7 @@
                     </div>
                 }
             </div>            <div class="privacy-note">
-                <small>🔒 Your Words API key is stored locally in your browser session only and is never saved or shared.</small>
+                <small>🔒 Your Words API key is stored locally in your browser only and is never saved or shared.</small>
             </div>
         </div>
     </div>
