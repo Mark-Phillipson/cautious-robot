@@ -11,10 +11,9 @@ namespace BlazorApp.Client.Pages
         [Inject] private HttpClient HttpClient { get; set; } = default!;
         [Inject] public required IOpenAIApiKeyService OpenAIApiKeyService { get; set; }
         [Inject] public required IOpenAIService OpenAIService { get; set; }
-        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-
-        // UI references
+        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;        // UI references
         private ElementReference chatHistoryContainer;
+        private ElementReference chatInputElement;
 
         // Game state
         private bool gameStarted = false;
@@ -722,10 +721,13 @@ CORRECT: [Letter of correct answer]";
             wordsUsedCorrectly = 0;
             StateHasChanged();
             return Task.CompletedTask;
-        }private async Task HandleKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+        }        private async Task HandleKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
         {
             if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(userInput))
             {
+                // Prevent multiple rapid Enter key presses during message sending
+                if (isLoading) return;
+                
                 await SendMessage();
             }
         }private async Task HandleKeyPressForTextarea(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
@@ -798,32 +800,45 @@ CORRECT: [Letter of correct answer]";
             var newWords = GetRandomWords(5);
             currentChallenges.Clear();
             await GenerateContextualChallenges(newWords);
-        }private async Task SendMessage()
+        }        private async Task SendMessage()
         {
-            if (string.IsNullOrWhiteSpace(userInput)) return;
+            if (string.IsNullOrWhiteSpace(userInput) || isLoading) return;
 
+            isLoading = true; // Prevent multiple submissions
             var currentMessage = userInput;
-            conversationHistory.Add(currentMessage);
+            userInput = ""; // Clear input immediately
+            StateHasChanged(); // Update UI to show cleared input and loading state
             
-            // Check for vocabulary usage in conversation practice mode
-            if (currentGameMode == GameMode.ConversationPractice)
+            try
             {
-                await EvaluateVocabularyUsage(currentMessage);
+                conversationHistory.Add(currentMessage);
                 
-                // Force UI update after evaluation
-                await InvokeAsync(StateHasChanged);
+                // Check for vocabulary usage in conversation practice mode
+                if (currentGameMode == GameMode.ConversationPractice)
+                {
+                    EvaluateVocabularyUsage(currentMessage);
+                    
+                    // Force UI update after evaluation
+                    await InvokeAsync(StateHasChanged);
+                }
+                
+                // Generate AI response using OpenAI
+                var aiResponse = await GenerateAIResponse(currentMessage);
+                conversationHistory.Add(aiResponse);
             }
-            
-            // Generate AI response using OpenAI
-            var aiResponse = await GenerateAIResponse(currentMessage);
-            conversationHistory.Add(aiResponse);
-            
-            userInput = "";
-            StateHasChanged();
-            
-            // Scroll to bottom after message is added
-            await Task.Delay(100);
-            await ScrollChatToBottom();
+            finally
+            {
+                isLoading = false; // Reset loading state
+                StateHasChanged();
+                
+                // Scroll to bottom after message is added
+                await Task.Delay(100);
+                await ScrollChatToBottom();
+                
+                // Focus back to input field
+                await Task.Delay(50);
+                await FocusChatInput();
+            }
         }private async Task<string> GenerateAIResponse(string userMessage)
         {
             try
@@ -1068,159 +1083,58 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             {
                 Console.WriteLine($"Error scrolling chat: {ex.Message}");
             }
-        }        private async Task EvaluateVocabularyUsage(string userMessage)
+        }        private async Task FocusChatInput()
+        {
+            try
+            {
+                await chatInputElement.FocusAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error focusing chat input: {ex.Message}");
+                // Fallback to JavaScript method
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("focusChatInput");
+                }
+                catch (Exception jsEx)
+                {
+                    Console.WriteLine($"Error with JS focus fallback: {jsEx.Message}");
+                }
+            }
+        }// ...existing code...
+        
+        private void EvaluateVocabularyUsage(string userMessage)
         {
             Console.WriteLine($"Evaluating message: {userMessage}");
             Console.WriteLine($"Target words: {string.Join(", ", conversationTargetWords)}");
-            Console.WriteLine($"Already used: {string.Join(", ", usedTargetWords)}");
+            
+            if (conversationTargetWords.Count == 0) return;
+            
+            var messageLower = userMessage.ToLowerInvariant();
+            var wordsFoundInMessage = new List<string>();
             
             foreach (var targetWord in conversationTargetWords)
             {
-                // Skip if word is already used
-                if (usedTargetWords.Contains(targetWord))
+                if (messageLower.Contains(targetWord.ToLowerInvariant()) && !usedTargetWords.Contains(targetWord))
                 {
-                    Console.WriteLine($"Word '{targetWord}' already used, skipping");
-                    continue;
-                }
-                
-                // Check if word is present in the message
-                var messageWords = userMessage.ToLower().Split(new char[] { ' ', '.', ',', '!', '?', ';', ':', '"', '\'', '(', ')', '[', ']', '-', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                var targetWordLower = targetWord.ToLower();
-                
-                // Enhanced word matching - check for exact match and common variations
-                bool wordFound = messageWords.Any(word => 
-                {
-                    // Remove any remaining punctuation from the word
-                    word = word.Trim('.', ',', '!', '?', ';', ':', '"', '\'', '(', ')', '[', ']', '-');
+                    usedTargetWords.Add(targetWord);
+                    wordsFoundInMessage.Add(targetWord);
+                    wordsUsedCorrectly++;
+                    score += 10; // Award points for using target words
                     
-                    return word == targetWordLower || 
-                           word == targetWordLower + "s" || 
-                           word == targetWordLower + "ed" || 
-                           word == targetWordLower + "ing" || 
-                           word == targetWordLower + "ly" ||
-                           word == targetWordLower + "d" ||  // for words like "analyze" -> "analyzed"
-                           word == targetWordLower.TrimEnd('e') + "ing" || // "analyze" -> "analyzing"
-                           word == targetWordLower.TrimEnd('e') + "ed" ||  // "analyze" -> "analyzed"
-                           (word.StartsWith(targetWordLower) && (word.EndsWith("ing") || word.EndsWith("ed") || word.EndsWith("s") || word.EndsWith("ly") || word.EndsWith("d"))) ||
-                           (targetWordLower.EndsWith("e") && word == targetWordLower.TrimEnd('e') + "ing") || // handle -e words
-                           (targetWordLower.EndsWith("y") && word == targetWordLower.TrimEnd('y') + "ies") || // happy -> happies, mystery -> mysteries
-                           word.Contains(targetWordLower); // Fallback for compound words or edge cases
-                });
-                
-                if (wordFound)
-                {
-                    Console.WriteLine($"Found word: '{targetWord}' in message");
-                    
-                    // More lenient AI prompt for verification
-                    var prompt = $@"Evaluate if the word '{targetWord}' is used appropriately in this conversation:
-
-Message: ""{userMessage}""
-
-The student is practicing vocabulary in natural conversation. Consider:
-1. Is the word '{targetWord}' used in a way that shows understanding of its meaning?
-2. Is it used naturally in the context of the conversation?
-3. Even if the grammar isn't perfect, does it demonstrate vocabulary knowledge?
-
-Be encouraging and give credit for reasonable attempts at using vocabulary correctly.
-
-Respond with: YES if the word shows reasonable understanding and usage, NO only if completely incorrect or nonsensical.";
-
-                    var systemMessage = "You are an encouraging English teacher evaluating student vocabulary usage. Be supportive and give credit for good attempts.";
-                    
-                    try                    {
-                        var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                        Console.WriteLine($"AI response for '{targetWord}': '{aiResponse}'");
-                        
-                        // Check if the response indicates missing API key (case-insensitive)
-                        var responseLower = aiResponse.ToLower();
-                        bool hasApiKeyMessage = responseLower.Contains("please set your openai api key") || 
-                            responseLower.Contains("api key first") ||
-                            responseLower.Contains("openai api key first") ||
-                            responseLower.Contains("set your openai api key") ||
-                            responseLower.Contains("api key") ||
-                            responseLower.Contains("openai");
-                        
-                        if (hasApiKeyMessage || string.IsNullOrWhiteSpace(aiResponse) || aiResponse.Length < 5)
-                        {
-                            Console.WriteLine($"API key not available or invalid response, using enhanced fallback logic for '{targetWord}'");
-                            // Enhanced fallback: Accept the word if it appears in context and message is substantial
-                            var contextLength = Math.Max(targetWord.Length * 2, 15); // Require more context
-                            if (userMessage.Length > contextLength)
-                            {
-                                usedTargetWords.Add(targetWord);
-                                wordsUsedCorrectly++;
-                                score += 5;
-                                Console.WriteLine($"Word '{targetWord}' accepted via enhanced fallback logic");
-                                StateHasChanged(); // Ensure UI updates immediately
-                            }
-                        }
-                        else
-                        {
-                            // More lenient parsing - look for positive indicators
-                            var responseUpper = aiResponse.Trim().ToUpper();
-                            bool isCorrect = responseUpper.StartsWith("YES") || 
-                                           responseUpper.Contains("CORRECT") || 
-                                           responseUpper.Contains("APPROPRIATE") ||
-                                           responseUpper.Contains("GOOD") ||
-                                           (!responseUpper.StartsWith("NO") && !responseUpper.Contains("INCORRECT"));
-                            
-                            if (isCorrect)
-                            {
-                                usedTargetWords.Add(targetWord);
-                                wordsUsedCorrectly++;
-                                score += 5; // Bonus points for conversation vocabulary usage
-                                Console.WriteLine($"Word '{targetWord}' marked as correctly used!");
-                                StateHasChanged(); // Ensure UI updates immediately
-                            }
-                            else
-                            {
-                                Console.WriteLine($"AI determined '{targetWord}' was not used correctly");
-                            }
-                        }                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error evaluating vocabulary usage for '{targetWord}': {ex.Message}");
-                        // Enhanced fallback: Accept the word if it appears meaningfully in context
-                        var contextLength = Math.Max(targetWord.Length * 2, 15); // Require substantial context
-                        if (userMessage.Length > contextLength)
-                        {
-                            usedTargetWords.Add(targetWord);
-                            wordsUsedCorrectly++;
-                            score += 5;
-                            Console.WriteLine($"Word '{targetWord}' accepted via enhanced exception fallback logic");
-                            StateHasChanged(); // Ensure UI updates immediately
-                        }
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"Word '{targetWord}' not found in message or already used");
+                    Console.WriteLine($"Found target word: {targetWord}");
                 }
             }
             
-            Console.WriteLine($"Final state - Words used correctly: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
-            StateHasChanged();
+            if (wordsFoundInMessage.Count > 0)
+            {
+                Console.WriteLine($"Words found this message: {string.Join(", ", wordsFoundInMessage)}");
+                Console.WriteLine($"Total words used: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
+                Console.WriteLine($"Current score: {score}");
+            }
         }
-          private async Task TestCurrentMessage()
-        {
-            if (string.IsNullOrWhiteSpace(userInput)) return;
-            
-            Console.WriteLine("=== TESTING CURRENT MESSAGE ===");
-            Console.WriteLine($"Testing message: {userInput}");
-            Console.WriteLine($"Current target words: {string.Join(", ", conversationTargetWords)}");
-            Console.WriteLine($"Words already used: {string.Join(", ", usedTargetWords)}");
-            Console.WriteLine($"Score before: {score}, Words used before: {wordsUsedCorrectly}");
-            
-            await EvaluateVocabularyUsage(userInput);
-            
-            Console.WriteLine($"Score after: {score}, Words used after: {wordsUsedCorrectly}");
-            Console.WriteLine("=== END TEST ===");
-            
-            StateHasChanged();
-        }
-
-        // ...existing code...
-        private async Task TestWordEvaluation()
+          private async Task TestWordEvaluation()
         {
             var testSentence = "I think analyzing that my sentence would be beneficial and not to do so would be negligent I will persist in creating this sentence otherwise it would be a catastrophe.";
             Console.WriteLine($"Testing word evaluation with: {testSentence}");
@@ -1228,14 +1142,14 @@ Respond with: YES if the word shows reasonable understanding and usage, NO only 
             // Show initial state
             Console.WriteLine($"Before test - Score: {score}, Words used: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
             
-            await EvaluateVocabularyUsage(testSentence);
+            EvaluateVocabularyUsage(testSentence);
             
             // Force UI update after test
             await InvokeAsync(StateHasChanged);
             
             // Show final state
             Console.WriteLine($"After test - Score: {score}, Words used: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
-        }        private void StartFeedbackTimer()
+        }private void StartFeedbackTimer()
         {
             StopFeedbackTimer(); // Stop any existing timer
             
@@ -1286,9 +1200,7 @@ Respond with: YES if the word shows reasonable understanding and usage, NO only 
         public void Dispose()
         {
             StopFeedbackTimer();
-        }
-
-        private async Task GenerateNewConversationTopic()
+        }        private async Task GenerateNewConversationTopic()
         {
             // Reset conversation state for new topic
             var newWords = GetRandomWords(5);
@@ -1296,7 +1208,8 @@ Respond with: YES if the word shows reasonable understanding and usage, NO only 
             usedTargetWords.Clear();
             wordsUsedCorrectly = 0;
             
-            // Generate new conversation starter            await GenerateConversationStarter(newWords);
+            // Generate new conversation starter
+            await GenerateConversationStarter(newWords);
         }
 
         private bool IsValidAnswer(string answer)
@@ -1320,10 +1233,6 @@ Respond with: YES if the word shows reasonable understanding and usage, NO only 
                 "im not sure",
                 "i have no idea",
                 "no clue",
-                "?",
-                "??",
-                "???",
-                "unknown",
                 "pass",
                 "skip",
                 "nothing",

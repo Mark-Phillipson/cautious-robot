@@ -99,20 +99,9 @@
                             <div class="story-content">
                                 <h3>📖 Your Story</h3>
                                 <p class="story-text">@currentContent</p>
-                            </div>
-                            @RenderCurrentChallenge()
-                              <!-- Debug Info -->
-                            <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px; font-size: 0.9em;">
-                                <strong>Debug:</strong> Question @(currentChallengeIndex + 1) of @currentChallenges.Count
-                                @if (currentChallengeIndex < currentChallenges.Count)
-                                {
-                                    var challenge = currentChallenges[currentChallengeIndex];
-                                    <br />
-                                    <text>Type: @challenge.Type, IsOpenEnded: @challenge.IsOpenEnded, Options: @(challenge.Options?.Count ?? 0)</text>
-                                }
-                            </div>
+                            </div>                            @RenderCurrentChallenge()
                         </div>
-                    }                    else if (currentGameMode == GameMode.ConversationPractice)
+                    }else if (currentGameMode == GameMode.ConversationPractice)
                     {                        <div class="conversation-section">
                             <!-- Target Words Display -->
                             @if (conversationTargetWords.Count > 0)
@@ -143,22 +132,9 @@
                                     </div>
                                 }
                             </div>                            <div class="chat-input-section">
-                                <input type="text" @bind="userInput" @onkeydown="HandleKeyPress" 
+                                <input type="text" @bind="userInput" @onkeydown="HandleKeyPress" @ref="chatInputElement"
                                        placeholder="Type your response..." class="chat-input" />
                                 <button @onclick="SendMessage" class="send-btn">Send</button>
-                                @if (conversationTargetWords.Count > 0)
-                                {
-                                    <button @onclick="TestWordEvaluation" class="test-btn" style="margin-left: 10px; background: #ff6b6b;">Test Debug</button>
-                                    <button @onclick="TestCurrentMessage" class="test-btn" style="margin-left: 5px; background: #17a2b8;">Test Input</button>
-                                }
-                            </div>
-                            
-                            <!-- Debug Panel for Scoring -->
-                            <div style="margin-top: 15px; padding: 10px; background: rgba(0,255,0,0.1); border: 1px solid #4CAF50; border-radius: 5px; font-size: 0.9em;">
-                                <strong>🐛 Debug Panel:</strong><br />
-                                Current Score: @score | Words Used: @wordsUsedCorrectly/@conversationTargetWords.Count<br />
-                                Used Words: [@string.Join(", ", usedTargetWords)]<br />
-                                Last Update: @DateTime.Now.ToString("HH:mm:ss")
                             </div>
                         </div>
                     }
@@ -186,16 +162,10 @@
                                 <span class="countdown-text">@countdownSeconds</span>
                             </div>
                         </div>
-                        
-                        <div class="progress-container">
+                          <div class="progress-container">
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: @(ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"></div>
                             </div>
-                        </div>
-                        
-                        <!-- Debug info -->
-                        <div style="font-size: 0.8em; color: #666; margin-bottom: 1rem;">
-                            Debug: Countdown=@countdownSeconds, Progress=@ProgressPercentage.ToString("F1")%
                         </div>
                         
                         <p>@feedbackMessage</p>

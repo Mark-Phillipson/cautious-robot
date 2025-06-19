@@ -14,3 +14,11 @@ window.smoothScrollToBottom = (element) => {
         });
     }
 };
+
+// Focus chat input functionality
+window.focusChatInput = () => {
+    const chatInput = document.querySelector('.chat-input');
+    if (chatInput) {
+        chatInput.focus();
+    }
+};
