@@ -90,8 +90,10 @@
 /* Keyboard shortcut styling */
 .nav-text u {
     text-decoration: underline;
-    text-decoration-color: #007bff;
-    text-decoration-thickness: 2px;
+    text-decoration-color: #00d4ff;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 2px;
+    font-weight: 600;
 }
 
 /* Responsive adjustments for smaller screens */
