@@ -1001,14 +1001,34 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             {
                 Console.WriteLine($"Error scrolling chat: {ex.Message}");
             }
-        }
-
-        private async Task EvaluateVocabularyUsage(string userMessage)
+        }        private async Task EvaluateVocabularyUsage(string userMessage)
         {
+            Console.WriteLine($"Evaluating message: {userMessage}");
+            Console.WriteLine($"Target words: {string.Join(", ", conversationTargetWords)}");
+            Console.WriteLine($"Already used: {string.Join(", ", usedTargetWords)}");
+            
             foreach (var targetWord in conversationTargetWords)
             {
-                if (userMessage.ToLower().Contains(targetWord.ToLower()) && !usedTargetWords.Contains(targetWord))
+                // Check if word is present in the message and not already used
+                var messageWords = userMessage.ToLower().Split(new char[] { ' ', '.', ',', '!', '?', ';', ':', '"', '\'', '(', ')', '[', ']', '-' }, StringSplitOptions.RemoveEmptyEntries);
+                var targetWordLower = targetWord.ToLower();
+                  // Check for exact word match or word with common suffixes/prefixes
+                bool wordFound = messageWords.Any(word => 
+                    word == targetWordLower || 
+                    word == targetWordLower + "s" || 
+                    word == targetWordLower + "ed" || 
+                    word == targetWordLower + "ing" || 
+                    word == targetWordLower + "ly" ||
+                    word == targetWordLower + "d" ||  // for words like "analyze" -> "analyzed"
+                    word == targetWordLower.TrimEnd('e') + "ing" || // "analyze" -> "analyzing"
+                    word.StartsWith(targetWordLower) && (word.EndsWith("ing") || word.EndsWith("ed") || word.EndsWith("s") || word.EndsWith("ly")) ||
+                    (targetWordLower.EndsWith("e") && word == targetWordLower.TrimEnd('e') + "ing") // handle -e words
+                );
+                
+                if (wordFound && !usedTargetWords.Contains(targetWord))
                 {
+                    Console.WriteLine($"Found word: {targetWord}");
+                    
                     // Use AI to verify correct usage
                     var prompt = $@"Does this sentence use the word '{targetWord}' correctly in context?
 
@@ -1019,29 +1039,68 @@ Respond with: YES if the word is used correctly in meaning and context, NO if it
 Be strict about correct usage - the word should be used meaningfully, not just mentioned.";
 
                     var systemMessage = "You are an English language expert evaluating vocabulary usage.";
-                    
-                    try
-                    {
-                        var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                        if (aiResponse.Trim().ToUpper().StartsWith("YES"))
+                      try
+                    {                        var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);                        Console.WriteLine($"AI response for '{targetWord}': '{aiResponse}'");
+                        Console.WriteLine($"Response length: {aiResponse.Length}");
+                        Console.WriteLine($"Response lower: '{aiResponse.ToLower()}'");
+                        
+                        // Check if the response indicates missing API key (case-insensitive)
+                        var responseLower = aiResponse.ToLower();
+                        bool hasApiKeyMessage = responseLower.Contains("please set your openai api key") || 
+                            responseLower.Contains("api key first") ||
+                            responseLower.Contains("openai api key first") ||
+                            responseLower.Contains("set your openai api key");
+                        
+                        Console.WriteLine($"Has API key message: {hasApiKeyMessage}");
+                        
+                        if (hasApiKeyMessage)
+                        {
+                            Console.WriteLine($"API key not available, using fallback logic for '{targetWord}'");
+                            // Fallback: Accept the word if it appears meaningfully in context
+                            if (userMessage.ToLower().Contains(targetWord.ToLower()) && userMessage.Length > targetWord.Length + 10)
+                            {
+                                usedTargetWords.Add(targetWord);
+                                wordsUsedCorrectly++;
+                                score += 5;
+                                Console.WriteLine($"Word '{targetWord}' accepted via API key fallback logic");
+                            }
+                        }
+                        else if (aiResponse.Trim().ToUpper().StartsWith("YES"))
                         {
                             usedTargetWords.Add(targetWord);
                             wordsUsedCorrectly++;
                             score += 5; // Bonus points for conversation vocabulary usage
+                            Console.WriteLine($"Word '{targetWord}' marked as correctly used!");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"AI determined '{targetWord}' was not used correctly");
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error evaluating vocabulary usage: {ex.Message}");
-                        // Fallback: simple check for word presence
-                        usedTargetWords.Add(targetWord);
-                        wordsUsedCorrectly++;
-                        score += 5;
+                        Console.WriteLine($"Error evaluating vocabulary usage for '{targetWord}': {ex.Message}");
+                        // Fallback: Accept the word if it appears meaningfully in context
+                        if (userMessage.ToLower().Contains(targetWord.ToLower()) && userMessage.Length > targetWord.Length + 10)
+                        {
+                            usedTargetWords.Add(targetWord);
+                            wordsUsedCorrectly++;
+                            score += 5;
+                            Console.WriteLine($"Word '{targetWord}' accepted via fallback logic");
+                        }
                     }
                 }
             }
             
+            Console.WriteLine($"Final state - Words used correctly: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
             StateHasChanged();
+        }
+        
+        private async Task TestWordEvaluation()
+        {
+            var testSentence = "I think analyzing that my sentence would be beneficial and not to do so would be negligent I will persist in creating this sentence otherwise it would be a catastrophe.";
+            Console.WriteLine($"Testing word evaluation with: {testSentence}");
+            await EvaluateVocabularyUsage(testSentence);
         }
     }
 }
