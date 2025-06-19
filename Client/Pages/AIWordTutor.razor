@@ -177,13 +177,27 @@
                         </div>
                     }
                 }
-            </div>
-
-            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
+            </div>            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
             {
                 <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
-                    <div class="feedback-content">
-                        <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
+                    <div class="feedback-content">                        <div class="feedback-header">
+                            <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
+                            <div class="countdown-display">
+                                <span class="countdown-text">@countdownSeconds</span>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: @(ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Debug info -->
+                        <div style="font-size: 0.8em; color: #666; margin-bottom: 1rem;">
+                            Debug: Countdown=@countdownSeconds, Progress=@ProgressPercentage.ToString("F1")%
+                        </div>
+                        
                         <p>@feedbackMessage</p>
                         @if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
                         {

@@ -32,13 +32,21 @@ namespace BlazorApp.Client.Pages
         private List<WordChallenge> currentChallenges = new();
         private int currentChallengeIndex = 0;
         private bool PlayAudio = false;
-        private bool hasApiKey = false;
-          // Feedback system
+        private bool hasApiKey = false;        // Feedback system
         private bool showFeedback = false;
         private string feedbackMessage = "";
         private bool lastAnswerCorrect = false;
         private string correctAnswer = "";
         private Timer? feedbackTimer;
+        
+        // Countdown timer for feedback popup
+        private int countdownSeconds = 10;
+        private int totalCountdownSeconds = 10;
+        private Timer? countdownTimer;
+
+        // Progress percentage for countdown visualization
+        private double ProgressPercentage => totalCountdownSeconds > 0 ? 
+            ((double)(totalCountdownSeconds - countdownSeconds) / totalCountdownSeconds) * 100 : 0;
 
         // Conversation practice scoring
         private List<string> conversationTargetWords = new();
@@ -1161,19 +1169,40 @@ Be strict about correct usage - the word should be used meaningfully, not just m
             
             // Show final state
             Console.WriteLine($"After test - Score: {score}, Words used: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
-        }
-
-        private void StartFeedbackTimer()
+        }        private void StartFeedbackTimer()
         {
             StopFeedbackTimer(); // Stop any existing timer
-            feedbackTimer = new Timer(AutoHideFeedback, null, TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+            
+            // Reset countdown
+            countdownSeconds = totalCountdownSeconds;
+            Console.WriteLine($"Starting feedback timer - countdown reset to {countdownSeconds}");
+            
+            // Start countdown timer that updates every second
+            countdownTimer = new Timer(UpdateCountdown, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+            
+            // Start the main feedback timer for auto-hide
+            feedbackTimer = new Timer(AutoHideFeedback, null, TimeSpan.FromSeconds(totalCountdownSeconds), Timeout.InfiniteTimeSpan);
         }
 
         private void StopFeedbackTimer()
         {
             feedbackTimer?.Dispose();
             feedbackTimer = null;
-        }        private async void AutoHideFeedback(object? state)
+            countdownTimer?.Dispose();
+            countdownTimer = null;
+            Console.WriteLine("Stopped feedback timers");
+        }        private async void UpdateCountdown(object? state)
+        {
+            await InvokeAsync(() =>
+            {
+                if (showFeedback && countdownSeconds > 0)
+                {
+                    countdownSeconds--;
+                    Console.WriteLine($"Countdown updated: {countdownSeconds}");
+                    StateHasChanged();
+                }
+            });
+        }private async void AutoHideFeedback(object? state)
         {
             await InvokeAsync(async () =>
             {
