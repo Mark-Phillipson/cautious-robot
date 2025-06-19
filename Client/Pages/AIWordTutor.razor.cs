@@ -725,7 +725,7 @@ CORRECT: [Letter of correct answer]";
             if (e.Key == "Enter" && e.CtrlKey && !string.IsNullOrWhiteSpace(userInput))
             {
                 await ProcessAnswer(userInput);
-            }        }private async Task ContinueLearning()
+            }        }        private async Task ContinueLearning()
         {
             StopFeedbackTimer();
             showFeedback = false;
@@ -735,15 +735,62 @@ CORRECT: [Letter of correct answer]";
             
             if (currentChallengeIndex >= currentChallenges.Count)
             {
-                // Generate new challenges or end session
-                await GeneratePersonalizedQuiz(new List<string> { wordLibrary[difficulty][new Random().Next(wordLibrary[difficulty].Count)] });
+                // Handle end of challenges based on game mode
+                switch (currentGameMode)
+                {
+                    case GameMode.StoryAdventure:
+                        // Generate a new story adventure with new words
+                        await GenerateNewStoryAdventure();
+                        break;
+                    case GameMode.PersonalizedQuiz:
+                        // Generate new quiz questions
+                        await GenerateNewPersonalizedQuiz();
+                        break;
+                    case GameMode.ContextualLearning:
+                        // Generate new contextual challenges
+                        await GenerateNewContextualChallenges();
+                        break;                    case GameMode.ConversationPractice:
+                        // For conversation mode, if all words are used, generate new conversation topic
+                        if (wordsUsedCorrectly >= conversationTargetWords.Count)
+                        {
+                            await GenerateNewConversationTopic();
+                        }
+                        else
+                        {
+                            // Continue current conversation - no action needed
+                            return;
+                        }
+                        break;
+                }
                 currentChallengeIndex = 0;
-                userInput = ""; // Reset user input instead of userAnswer
-                lastAnswerCorrect = false; // Reset to false instead of null
-                feedbackMessage = "";
-                StateHasChanged();
             }
-        }        private async Task SendMessage()
+            
+            userInput = ""; // Reset user input
+            lastAnswerCorrect = false; // Reset answer state
+            feedbackMessage = "";
+            StateHasChanged();
+        }
+
+        private async Task GenerateNewStoryAdventure()
+        {
+            var newWords = GetRandomWords(5);
+            currentChallenges.Clear();
+            await GenerateStoryAdventure(newWords);
+        }
+
+        private async Task GenerateNewPersonalizedQuiz()
+        {
+            var newWords = GetRandomWords(5);
+            currentChallenges.Clear();
+            await GeneratePersonalizedQuiz(newWords);
+        }
+
+        private async Task GenerateNewContextualChallenges()
+        {
+            var newWords = GetRandomWords(5);
+            currentChallenges.Clear();
+            await GenerateContextualChallenges(newWords);
+        }private async Task SendMessage()
         {
             if (string.IsNullOrWhiteSpace(userInput)) return;
 
@@ -1126,17 +1173,17 @@ Be strict about correct usage - the word should be used meaningfully, not just m
         {
             feedbackTimer?.Dispose();
             feedbackTimer = null;
-        }
-
-        private async void AutoHideFeedback(object? state)
+        }        private async void AutoHideFeedback(object? state)
         {
-            await InvokeAsync(() =>
+            await InvokeAsync(async () =>
             {
                 if (showFeedback)
                 {
                     showFeedback = false;
                     feedbackMessage = "";
-                    StateHasChanged();
+                    
+                    // Automatically advance to the next challenge when feedback auto-hides
+                    await ContinueLearning();
                 }
             });
         }
@@ -1144,6 +1191,18 @@ Be strict about correct usage - the word should be used meaningfully, not just m
         public void Dispose()
         {
             StopFeedbackTimer();
+        }
+
+        private async Task GenerateNewConversationTopic()
+        {
+            // Reset conversation state for new topic
+            var newWords = GetRandomWords(5);
+            conversationTargetWords = newWords;
+            usedTargetWords.Clear();
+            wordsUsedCorrectly = 0;
+            
+            // Generate new conversation starter
+            await GenerateConversationStarter(newWords);
         }
     }
 }
