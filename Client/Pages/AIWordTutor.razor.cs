@@ -5,7 +5,8 @@ using System.Text;
 using BlazorApp.Client.Shared;
 
 namespace BlazorApp.Client.Pages
-{    public partial class AIWordTutor : ComponentBase
+{
+    public partial class AIWordTutor : ComponentBase
     {
         [Inject] private HttpClient HttpClient { get; set; } = default!;
         [Inject] public required IOpenAIApiKeyService OpenAIApiKeyService { get; set; }
@@ -25,14 +26,15 @@ namespace BlazorApp.Client.Pages
         private string errorMessage = "";
 
         // Learning session data
-        private AILearningSession? currentSession;
-        private string? currentContent = "";
+        private AILearningSession? currentSession;        private string? currentContent = "";
         private List<string> conversationHistory = new();
         private string userInput = "";
-        private List<WordChallenge> currentChallenges = new();        private int currentChallengeIndex = 0;
+        private List<WordChallenge> currentChallenges = new();
+        private int currentChallengeIndex = 0;
         private bool PlayAudio = false;
-        private string apiKeyStatus = "";
-        private bool hasApiKey = false;        // Feedback system
+        private bool hasApiKey = false;
+        
+        // Feedback system
         private bool showFeedback = false;
         private string feedbackMessage = "";
         private bool lastAnswerCorrect = false;
@@ -80,23 +82,18 @@ namespace BlazorApp.Client.Pages
             // Check if API key already exists
             var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
             hasApiKey = !string.IsNullOrEmpty(apiKey);
-        }
-
-        private void SetDifficulty(DifficultyLevel newDifficulty)
+        }        private void SetDifficulty(DifficultyLevel newDifficulty)
         {
             difficulty = newDifficulty;
             StateHasChanged();
-        }        private async Task OnApiKeySaved()
+        }
+          private void OnApiKeySaved()
         {
-            apiKeyStatus = "saved";
             hasApiKey = true;
             StateHasChanged();
-            
-            // Clear the status after a few seconds
-            await Task.Delay(3000);
-            apiKeyStatus = "";
-            StateHasChanged();
-        }        private async Task StartGame(GameMode mode)
+        }
+        
+        private async Task StartGame(GameMode mode)
         {
             currentGameMode = mode;
             gameStarted = true;
@@ -225,7 +222,7 @@ etc.";
             {
                 currentContent = aiResponse;
                 // Fallback: create simple challenges
-                await GenerateSimpleChallenges(words);
+                 await GenerateSimpleChallenges(words);
             }
         }
 
@@ -235,7 +232,7 @@ etc.";
             return words.FirstOrDefault(word => lowerQuestion.Contains(word.ToLower())) ?? "";
         }
 
-        private async Task GenerateSimpleChallenges(List<string> words)
+        private Task GenerateSimpleChallenges(List<string> words)
         {
             foreach (var word in words)
             {
@@ -246,7 +243,7 @@ etc.";
                     1 => ChallengeType.Usage,
                     _ => ChallengeType.Context
                 };
-                
+
                 currentChallenges.Add(new WordChallenge
                 {
                     Type = challengeType,
@@ -258,12 +255,14 @@ etc.";
                         _ => $"How does '{word}' contribute to the meaning of this story?"
                     },
                     IsOpenEnded = challengeType != ChallengeType.Comprehension,
-                    Options = challengeType == ChallengeType.Comprehension ? GenerateMultipleChoiceOptions(word) : new List<string>(),                    CorrectAnswer = challengeType == ChallengeType.Comprehension ? GetSimpleDefinition(word) : ""
+                    Options = challengeType == ChallengeType.Comprehension ? GenerateMultipleChoiceOptions(word) : new List<string>(),
+                    CorrectAnswer = challengeType == ChallengeType.Comprehension ? GetSimpleDefinition(word) : ""
                 });
             }
-            
+
             return Task.CompletedTask;
-        }        private async Task GenerateConversationStarter(List<string> words)
+        }
+        private async Task GenerateConversationStarter(List<string> words)
         {
             conversationTargetWords = words;
             var wordsText = string.Join(", ", words);
@@ -1044,50 +1043,5 @@ Be strict about correct usage - the word should be used meaningfully, not just m
             
             StateHasChanged();
         }
-    }
-
-    // Supporting enums and classes
-    public enum GameMode
-    {
-        StoryAdventure,
-        ConversationPractice,
-        ContextualLearning,
-        PersonalizedQuiz
-    }
-
-    public enum DifficultyLevel
-    {
-        Beginner,
-        Intermediate,
-        Advanced
-    }
-
-    public enum ChallengeType
-    {
-        Comprehension,
-        Usage,
-        Context,
-        Definition,
-        Synonym
-    }
-
-    public class AILearningSession
-    {
-        public GameMode Mode { get; set; }
-        public DifficultyLevel Difficulty { get; set; }
-        public List<string> WordsLearned { get; set; } = new();
-        public int Score { get; set; }
-        public DateTime StartTime { get; set; }
-    }
-
-    public class WordChallenge
-    {
-        public ChallengeType Type { get; set; }
-        public string TargetWord { get; set; } = "";
-        public string Question { get; set; } = "";
-        public List<string>? Options { get; set; }
-        public string? CorrectAnswer { get; set; }
-        public bool IsOpenEnded { get; set; }
-        public string? Context { get; set; }
     }
 }
