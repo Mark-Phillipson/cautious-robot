@@ -9,6 +9,42 @@
 			"problemMatcher": [
 				"$msCompile"
 			]
+		},
+		{
+			"type": "shell",
+			"label": "test: run all tests",
+			"command": "dotnet test",
+			"group": "test",
+			"options": {
+				"cwd": "${workspaceFolder}/../Client.Tests"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "test: run with coverage",
+			"command": "dotnet test --collect:\"XPlat Code Coverage\"",
+			"group": "test",
+			"options": {
+				"cwd": "${workspaceFolder}/../Client.Tests"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "test: run verbose",
+			"command": "dotnet test --verbosity normal",
+			"group": "test",
+			"options": {
+				"cwd": "${workspaceFolder}/../Client.Tests"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
 		}
 	]
 }
