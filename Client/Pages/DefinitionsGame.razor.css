@@ -27,7 +27,7 @@
 	align-items: stretch;
 }
 .background {
-	background-image: url("images/dictionary.jpg");
+	background-image: url("images/dictionary.png");
 	background-color: rgba(0, 0, 0, 0.8);
 	/* white with 60% opacity */
 	background-blend-mode: darken;

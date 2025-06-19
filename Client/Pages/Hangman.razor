@@ -1,5 +1,6 @@
 @page "/hangman"
 @using BlazorApp.Client.Shared
+<div class="background p-3">
 <h1 class='hide-on-mobile'>Hangman </h1>
 <PageTitle>Hangman</PageTitle>
 <div class='row'>
@@ -115,10 +116,10 @@
         else if (GameStatus.Contains("You lose!"))
         {
             <PlaySound AnswerState=false Play=true />
-        }
-        else
+        }        else
         {
             <PlaySound AnswerState=false Play=false />
         }
     </div>
+</div>
 </div>
