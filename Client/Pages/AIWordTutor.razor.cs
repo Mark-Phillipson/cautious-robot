@@ -98,35 +98,48 @@ namespace BlazorApp.Client.Pages
             StateHasChanged();
         }        private async Task StartGame(GameMode mode)
         {
-            // Check if API key exists before starting
-            var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                apiKeyStatus = "missing";
-                StateHasChanged();
-                return;
-            }
-
             currentGameMode = mode;
             gameStarted = true;
-            await InitializeGameSession();
-        }
-
-        private async Task InitializeGameSession()
-        {
             isLoading = true;
+            errorMessage = "";
+            score = 0;
+            streak = 0;
+            currentChallenges.Clear();
+            currentChallengeIndex = 0;
+            conversationHistory.Clear();
+            conversationTargetWords.Clear();
+            usedTargetWords.Clear();
+            wordsUsedCorrectly = 0;
+
+            StateHasChanged();
+
             try
             {
                 currentSession = new AILearningSession
                 {
-                    GameMode = currentGameMode,
+                    Mode = mode,
                     Difficulty = difficulty,
-                    StartTime = DateTime.Now,
-                    WordsLearned = new List<string>(),
-                    PlayerPreferences = new PlayerPreferences()
+                    StartTime = DateTime.Now
                 };
 
-                await GenerateInitialContent();
+                // Select words based on difficulty level
+                var wordsToUse = GetRandomWords(5);
+
+                switch (mode)
+                {
+                    case GameMode.StoryAdventure:
+                        await GenerateStoryAdventure(wordsToUse);
+                        break;
+                    case GameMode.ConversationPractice:
+                        await GenerateConversationStarter(wordsToUse);
+                        break;
+                    case GameMode.ContextualLearning:
+                        await GenerateContextualChallenges(wordsToUse);
+                        break;
+                    case GameMode.PersonalizedQuiz:
+                        await GeneratePersonalizedQuiz(wordsToUse);
+                        break;
+                }
             }
             catch (Exception ex)
             {
@@ -140,300 +153,94 @@ namespace BlazorApp.Client.Pages
             }
         }
 
-        private async Task GenerateInitialContent()
-        {
-            var selectedWords = GetRandomWords(3); // Start with 3 words
-            currentChallenges.Clear();
-            currentChallengeIndex = 0;
-
-            switch (currentGameMode)
-            {
-                case GameMode.StoryAdventure:
-                    await GenerateStoryContent(selectedWords);
-                    break;
-                case GameMode.ConversationPractice:
-                    await GenerateConversationStarter(selectedWords);
-                    break;
-                case GameMode.ContextualLearning:
-                    await GenerateContextualChallenges(selectedWords);
-                    break;
-                case GameMode.PersonalizedQuiz:
-                    await GenerateQuizQuestions(selectedWords);
-                    break;
-            }
-        }
-
         private List<string> GetRandomWords(int count)
         {
-            var words = wordLibrary[difficulty];
+            var availableWords = wordLibrary[difficulty];
             var random = new Random();
-            return words.OrderBy(x => random.Next()).Take(count).ToList();
-        }        private async Task GenerateStoryContent(List<string> words)
+            return availableWords.OrderBy(x => random.Next()).Take(count).ToList();
+        }
+
+        private async Task GenerateStoryAdventure(List<string> words)
         {
             var wordsText = string.Join(", ", words);
-            var difficultyText = difficulty.ToString().ToLower();              var prompt = $@"Create an engaging, {difficultyText}-level English learning story that naturally incorporates these words: {wordsText}. 
+            var difficultyText = difficulty.ToString().ToLower();
+            
+            var prompt = $@"Create an engaging short story (2-3 paragraphs) for {difficultyText}-level English learners that naturally incorporates these vocabulary words: {wordsText}.
 
-IMPORTANT: Format your response EXACTLY as shown below. Do not add any extra text or formatting:
+The story should:
+1. Be appropriate for {difficultyText} level learners
+2. Use each word naturally in context
+3. Be interesting and engaging
+4. Help learners understand word meanings through context
+5. Be exactly 2-3 paragraphs
 
+After the story, create 3-5 comprehension questions about the vocabulary words used.
+
+Format:
 STORY:
-Write a 2-3 sentence story here that uses the vocabulary words naturally. Make it interesting and educational.
+[Your story here]
 
 QUESTIONS:
-1. What does '{words[0]}' mean in this story context?
-A) First option here
-B) Second option here  
-C) Third option here
-D) Fourth option here
-Correct: A
+1. [Question about first word]
+2. [Question about second word]
+etc.";
 
-2. Use the word '{words[1]}' in your own sentence:
-
-3. How does '{words[2]}' contribute to the story's meaning?
-
-CRITICAL: 
-- Put ONLY the story after 'STORY:'
-- Put questions starting with '1.' after 'QUESTIONS:'  
-- For question 1, provide exactly 4 options (A, B, C, D) on separate lines
-- End with 'Correct: [letter]' on its own line
-- Questions 2 and 3 are open-ended (no options needed)";var systemMessage = "You are an expert English language tutor creating engaging educational content for vocabulary learning.";
+            var systemMessage = "You are an expert English language teacher creating engaging educational content.";
             
             var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-            await ParseStoryResponse(aiResponse, words);
-        }        private async Task ParseStoryResponse(string aiResponse, List<string> words)
-        {
-            try
-            {
-                // Clean up the response
-                var cleanResponse = aiResponse.Trim();
-                
-                // First, try to find the STORY: and QUESTIONS: markers
-                var storyStartIndex = cleanResponse.IndexOf("STORY:", StringComparison.OrdinalIgnoreCase);
-                var questionsStartIndex = cleanResponse.IndexOf("QUESTIONS:", StringComparison.OrdinalIgnoreCase);
-                
-                if (storyStartIndex >= 0 && questionsStartIndex > storyStartIndex)
-                {
-                    // Extract story content between markers
-                    var storyStart = storyStartIndex + "STORY:".Length;
-                    var storyLength = questionsStartIndex - storyStart;
-                    var storyContent = cleanResponse.Substring(storyStart, storyLength).Trim();
-                    
-                    // Clean the story content - remove any remaining markers or formatting
-                    var storyLines = storyContent.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-                        .Where(line => !string.IsNullOrWhiteSpace(line) && 
-                                     !line.Trim().StartsWith("QUESTIONS") &&
-                                     !line.Trim().StartsWith("1.") &&
-                                     !line.Trim().StartsWith("2.") &&
-                                     !line.Trim().StartsWith("3."))
-                        .Select(line => line.Trim())
-                        .Where(line => !string.IsNullOrWhiteSpace(line));
-                    
-                    currentContent = string.Join(" ", storyLines);
-                    
-                    // Extract questions section
-                    var questionsContent = cleanResponse.Substring(questionsStartIndex + "QUESTIONS:".Length).Trim();
-                    await ParseQuestionsFromResponse(questionsContent, words);
-                }
-                else
-                {
-                    // Fallback parsing - try to separate story from questions
-                    var lines = cleanResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                    var storyLines = new List<string>();
-                    var questionLines = new List<string>();
-                    bool inQuestions = false;
-                    
-                    foreach (var line in lines)
-                    {
-                        var trimmedLine = line.Trim();
-                        
-                        // Skip empty lines and headers
-                        if (string.IsNullOrWhiteSpace(trimmedLine) || 
-                            trimmedLine.Equals("STORY:", StringComparison.OrdinalIgnoreCase) ||
-                            trimmedLine.Equals("QUESTIONS:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
-                        
-                        // Detect start of questions
-                        if (trimmedLine.StartsWith("1.") || trimmedLine.StartsWith("What") || 
-                            trimmedLine.StartsWith("How") || trimmedLine.StartsWith("Why") ||
-                            trimmedLine.StartsWith("Which") || trimmedLine.StartsWith("Use the word") ||
-                            (trimmedLine.Contains("?") && (trimmedLine.StartsWith("A)") || trimmedLine.StartsWith("B)") || trimmedLine.Contains("Correct:"))))
-                        {
-                            inQuestions = true;
-                        }
-                        
-                        if (inQuestions)
-                        {
-                            questionLines.Add(trimmedLine);
-                        }
-                        else
-                        {
-                            storyLines.Add(trimmedLine);
-                        }
-                    }
-                    
-                    // Join story lines properly
-                    currentContent = string.Join(" ", storyLines.Where(line => !string.IsNullOrWhiteSpace(line)));
-                    
-                    if (questionLines.Count > 0)
-                    {
-                        var questionsText = string.Join("\n", questionLines);
-                        await ParseQuestionsFromResponse(questionsText, words);
-                    }
-                    else
-                    {
-                        await CreateFallbackQuestions(words);
-                    }
-                }
-                
-                // Ensure we have some content
-                if (string.IsNullOrWhiteSpace(currentContent))
-                {
-                    currentContent = "Let's start your English learning adventure with these words!";
-                    await CreateFallbackQuestions(words);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error parsing story response: {ex.Message}");
-                // Create a simple story from the first few sentences
-                var sentences = aiResponse.Split('.', StringSplitOptions.RemoveEmptyEntries);
-                currentContent = sentences.Length > 0 ? string.Join(". ", sentences.Take(3)) + "." : "A learning story with vocabulary words.";
-                await CreateFallbackQuestions(words);
-            }
-        }        private async Task ParseQuestionsFromResponse(string questionsText, List<string> words)
-        {
-            currentChallenges = new List<WordChallenge>();
-            var lines = questionsText.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             
-            WordChallenge? currentQuestion = null;
+            // Parse the response to extract story and questions
+            var sections = aiResponse.Split(new[] { "QUESTIONS:" }, StringSplitOptions.RemoveEmptyEntries);
             
-            // Debug logging
-            Console.WriteLine($"Parsing questions from: {questionsText}");
-            Console.WriteLine($"Split into {lines.Length} lines");
-            
-            foreach (var line in lines)
+            if (sections.Length >= 2)
             {
-                var trimmedLine = line.Trim();
-                Console.WriteLine($"Processing line: '{trimmedLine}'");
+                currentContent = sections[0].Replace("STORY:", "").Trim();
                 
-                if (trimmedLine.StartsWith("1."))
+                // Parse questions and create challenges
+                var questionLines = sections[1].Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in questionLines.Where(l => l.Trim().Length > 0))
                 {
-                    // Save previous question if it exists
-                    if (currentQuestion != null) 
+                    var cleanLine = line.Trim();
+                    if (cleanLine.StartsWith("1.") || cleanLine.StartsWith("2.") || 
+                        cleanLine.StartsWith("3.") || cleanLine.StartsWith("4.") || 
+                        cleanLine.StartsWith("5."))
                     {
-                        currentChallenges.Add(currentQuestion);
-                        Console.WriteLine($"Added previous question with {currentQuestion.Options?.Count ?? 0} options");
-                    }
-                    
-                    currentQuestion = new WordChallenge
-                    {
-                        Type = ChallengeType.Comprehension,
-                        TargetWord = words.ElementAtOrDefault(0) ?? "",
-                        Question = trimmedLine.Substring(2).Trim(),
-                        Options = new List<string>(),
-                        IsOpenEnded = true // Start as open-ended, change if we find options
-                    };
-                    Console.WriteLine($"Created new question 1: {currentQuestion.Question}");
-                }
-                else if (trimmedLine.StartsWith("2."))
-                {
-                    // Save previous question if it exists
-                    if (currentQuestion != null) 
-                    {
-                        currentChallenges.Add(currentQuestion);
-                        Console.WriteLine($"Added question 1 with {currentQuestion.Options?.Count ?? 0} options, IsOpenEnded: {currentQuestion.IsOpenEnded}");
-                    }
-                    
-                    currentQuestion = new WordChallenge
-                    {
-                        Type = ChallengeType.Usage,
-                        TargetWord = words.ElementAtOrDefault(1) ?? "",
-                        Question = trimmedLine.Substring(2).Trim(),
-                        IsOpenEnded = true
-                    };
-                    Console.WriteLine($"Created new question 2: {currentQuestion.Question}");
-                }
-                else if (trimmedLine.StartsWith("3."))
-                {
-                    // Save previous question if it exists
-                    if (currentQuestion != null) 
-                    {
-                        currentChallenges.Add(currentQuestion);
-                        Console.WriteLine($"Added question 2 with {currentQuestion.Options?.Count ?? 0} options, IsOpenEnded: {currentQuestion.IsOpenEnded}");
-                    }
-                    
-                    currentQuestion = new WordChallenge
-                    {
-                        Type = ChallengeType.Context,
-                        TargetWord = words.ElementAtOrDefault(2) ?? "",
-                        Question = trimmedLine.Substring(2).Trim(),
-                        IsOpenEnded = true
-                    };
-                    Console.WriteLine($"Created new question 3: {currentQuestion.Question}");
-                }
-                else if (trimmedLine.StartsWith("A)") || trimmedLine.StartsWith("B)") || 
-                         trimmedLine.StartsWith("C)") || trimmedLine.StartsWith("D)"))
-                {
-                    if (currentQuestion?.Options != null)
-                    {
-                        var option = trimmedLine.Substring(2).Trim();
-                        currentQuestion.Options.Add(option);
-                        Console.WriteLine($"Added option: {option}");
-                        
-                        // Mark as multiple choice since we found options
-                        currentQuestion.IsOpenEnded = false;
-                        Console.WriteLine($"Set question as multiple choice (IsOpenEnded = false)");
-                    }
-                }
-                else if (trimmedLine.StartsWith("Correct:"))
-                {
-                    if (currentQuestion?.Options != null && currentQuestion.Options.Count > 0)
-                    {
-                        var correctLetter = trimmedLine.Substring(8).Trim().ToUpper();
-                        Console.WriteLine($"Correct answer letter: {correctLetter}");
-                        
-                        if (correctLetter.Length > 0)
+                        // Extract the word this question is about
+                        var word = ExtractWordFromQuestion(cleanLine, words);
+                        if (!string.IsNullOrEmpty(word))
                         {
-                            var index = correctLetter[0] - 'A';
-                            if (index >= 0 && index < currentQuestion.Options.Count)
+                            currentChallenges.Add(new WordChallenge
                             {
-                                currentQuestion.CorrectAnswer = currentQuestion.Options[index];
-                                Console.WriteLine($"Set correct answer to: {currentQuestion.CorrectAnswer}");
-                            }
+                                Type = ChallengeType.Context,
+                                TargetWord = word,
+                                Question = cleanLine.Substring(2).Trim(),
+                                IsOpenEnded = true,
+                                Context = currentContent
+                            });
                         }
                     }
                 }
             }
-            
-            // Don't forget to add the last question
-            if (currentQuestion != null) 
+            else
             {
-                currentChallenges.Add(currentQuestion);
-                Console.WriteLine($"Added final question with {currentQuestion.Options?.Count ?? 0} options, IsOpenEnded: {currentQuestion.IsOpenEnded}");
-            }
-            
-            Console.WriteLine($"Total challenges created: {currentChallenges.Count}");
-            foreach (var (challenge, index) in currentChallenges.Select((c, i) => (c, i)))
-            {
-                Console.WriteLine($"Challenge {index + 1}: {challenge.Question}, Options: {challenge.Options?.Count ?? 0}, IsOpenEnded: {challenge.IsOpenEnded}");
-            }
-            
-            // If we didn't get enough questions, create fallbacks
-            if (currentChallenges.Count < 3)
-            {
-                await CreateFallbackQuestions(words);
+                currentContent = aiResponse;
+                // Fallback: create simple challenges
+                await GenerateSimpleChallenges(words);
             }
         }
 
-        private Task CreateFallbackQuestions(List<string> words)
+        private string ExtractWordFromQuestion(string question, List<string> words)
         {
-            currentChallenges = new List<WordChallenge>();
-            
-            for (int i = 0; i < Math.Min(words.Count, 3); i++)
+            var lowerQuestion = question.ToLower();
+            return words.FirstOrDefault(word => lowerQuestion.Contains(word.ToLower())) ?? "";
+        }
+
+        private async Task GenerateSimpleChallenges(List<string> words)
+        {
+            foreach (var word in words)
             {
-                var word = words[i];
-                var challengeType = i switch
+                var random = new Random();
+                var challengeType = random.Next(3) switch
                 {
                     0 => ChallengeType.Comprehension,
                     1 => ChallengeType.Usage,
@@ -458,60 +265,90 @@ CRITICAL:
             return Task.CompletedTask;
         }        private async Task GenerateConversationStarter(List<string> words)
         {
+            conversationTargetWords = words;
             var wordsText = string.Join(", ", words);
             var difficultyText = difficulty.ToString().ToLower();
-            
-            // Set up conversation practice scoring
-            conversationTargetWords = new List<string>(words);
-            usedTargetWords = new HashSet<string>();
-            wordsUsedCorrectly = 0;
-            
-            var prompt = $@"Start a friendly, engaging conversation for {difficultyText}-level English learners. 
-Naturally incorporate these vocabulary words: {wordsText}
-Ask thoughtful questions that encourage the learner to use these words in their responses.
-Keep it conversational, warm, and encouraging. Limit to 2-3 sentences.";
 
-            var systemMessage = "You are a friendly, encouraging English conversation partner helping students practice vocabulary through natural dialogue.";
+            var prompt = $@"You are starting a friendly English conversation practice session. The student should practice using these words naturally: {wordsText}.
+
+Create an engaging conversation starter (1-2 sentences) that:
+1. Is appropriate for {difficultyText}-level learners
+2. Naturally introduces a topic where these words might be used
+3. Asks an open-ended question to get the conversation going
+4. Is warm and encouraging
+
+Example topics: daily activities, hobbies, travel experiences, personal goals, etc.
+
+Just provide the conversation starter, nothing else.";
+
+            var systemMessage = "You are a friendly English conversation teacher helping students practice vocabulary.";
             
             var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-            currentContent = aiResponse;
-            conversationHistory.Add(currentContent);
             
-            // Ensure the initial conversation is visible
-            StateHasChanged();
-            await ScrollChatToBottom();
-        }private async Task GenerateContextualChallenges(List<string> words)
+            currentContent = "Ready to practice conversation! Try to use the target words naturally.";
+            conversationHistory.Add(aiResponse.Trim());
+        }
+
+        private async Task GenerateContextualChallenges(List<string> words)
         {
-            currentChallenges = new List<WordChallenge>();
+            currentContent = "Let's practice understanding words in different contexts!";
             
             foreach (var word in words)
             {
-                var prompt = $@"Create a realistic, practical scenario for using the word '{word}' in everyday English conversation. 
-Provide:
-1. A specific, relatable situation (1-2 sentences)
-2. A guiding question that helps the learner think about how to use '{word}' appropriately in that context
+                var prompt = $@"Create a contextual English learning exercise for the word '{word}' at {difficulty.ToString().ToLower()} level.
 
-Make it relevant to modern life and appropriate for {difficulty.ToString().ToLower()}-level learners.";
+Create a short scenario (1-2 sentences) that uses the word '{word}' in context, then ask a comprehension question about it.
 
-                var systemMessage = "You are an English language teacher creating practical, real-world vocabulary exercises.";
+Format:
+SCENARIO: [1-2 sentences using the word naturally]
+QUESTION: [Question about the word's meaning or usage in this context]";
+
+                var systemMessage = "You are creating contextual vocabulary exercises for English learners.";
                 
-                var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                
-                currentChallenges.Add(new WordChallenge
+                try
                 {
-                    Type = ChallengeType.RealWorld,
-                    TargetWord = word,
-                    Question = aiResponse,
-                    IsOpenEnded = true,
-                    Context = $"Real-world usage of '{word}'"
-                });
+                    var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+                    var lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                    
+                    var scenario = "";
+                    var question = "";
+                    
+                    foreach (var line in lines)
+                    {
+                        if (line.StartsWith("SCENARIO:"))
+                            scenario = line.Substring(9).Trim();
+                        else if (line.StartsWith("QUESTION:"))
+                            question = line.Substring(9).Trim();
+                    }
+                    
+                    currentChallenges.Add(new WordChallenge
+                    {
+                        Type = ChallengeType.Context,
+                        TargetWord = word,
+                        Question = !string.IsNullOrEmpty(question) ? question : $"What does '{word}' mean in this context?",
+                        Context = !string.IsNullOrEmpty(scenario) ? scenario : $"Context for '{word}'",
+                        IsOpenEnded = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error generating contextual challenge for {word}: {ex.Message}");
+                    // Fallback challenge
+                    currentChallenges.Add(new WordChallenge
+                    {
+                        Type = ChallengeType.Context,
+                        TargetWord = word,
+                        Question = $"How would you use '{word}' in a sentence?",
+                        IsOpenEnded = true
+                    });
+                }
             }
+        }
 
-            currentContent = "Let's practice using words in real-world situations!";
-        }        private async Task GenerateQuizQuestions(List<string> words)
+        private async Task GeneratePersonalizedQuiz(List<string> words)
         {
-            currentChallenges = new List<WordChallenge>();
-
+            currentContent = "Let's test your knowledge with some smart questions!";
+            
             foreach (var word in words)
             {
                 var questionTypes = new[] { "definition", "synonym", "usage", "context" };
@@ -520,13 +357,15 @@ Make it relevant to modern life and appropriate for {difficulty.ToString().ToLow
 
                 var prompt = $@"Create a {questionType} question for the word '{word}' appropriate for {difficulty.ToString().ToLower()}-level English learners.
 
-For definition questions: Provide the question and 4 multiple choice options (A, B, C, D) with one correct answer.
-For synonym questions: Ask for the closest meaning and provide 4 options.
-For usage questions: Create a sentence with a blank and 4 word choices.
-For context questions: Provide a short scenario and ask how the word fits.
+For definition questions: Ask 'What does [word] mean?' and provide 4 definition options (A, B, C, D) with one correct definition.
+For synonym questions: Ask 'Which word means the same as [word]?' and provide 4 word options with one correct synonym.
+For usage questions: Ask 'Which sentence uses [word] correctly?' and provide 4 complete sentence options.
+For context questions: Provide a short scenario and ask how the word fits, with 4 definition options.
+
+Make sure the question type is clear from the wording. 
 
 Format as:
-QUESTION: [Your question]
+QUESTION: [Your clear question indicating the type]
 A) [Option 1]
 B) [Option 2] 
 C) [Option 3]
@@ -576,7 +415,7 @@ CORRECT: [Letter of correct answer]";
                     }
                 }                return Task.FromResult(new WordChallenge
                 {
-                    Type = ChallengeType.Definition, // Default type
+                    Type = GetChallengeTypeFromQuestion(question),
                     TargetWord = word,
                     Question = !string.IsNullOrEmpty(question) ? question : $"What does '{word}' mean?",
                     Options = options.Count > 0 ? options : GenerateMultipleChoiceOptions(word),
@@ -595,6 +434,25 @@ CORRECT: [Letter of correct answer]";
                     CorrectAnswer = GetSimpleDefinition(word)
                 });
             }
+        }
+
+        private ChallengeType GetChallengeTypeFromQuestion(string question)
+        {
+            if (string.IsNullOrEmpty(question))
+                return ChallengeType.Comprehension;
+                
+            var lowerQuestion = question.ToLower();
+            
+            if (lowerQuestion.Contains("what does") && lowerQuestion.Contains("mean"))
+                return ChallengeType.Comprehension;
+            else if (lowerQuestion.Contains("which word means the same") || lowerQuestion.Contains("synonym"))
+                return ChallengeType.Synonym;
+            else if (lowerQuestion.Contains("which sentence uses") || lowerQuestion.Contains("correctly"))
+                return ChallengeType.Usage;
+            else if (lowerQuestion.Contains("context") || lowerQuestion.Contains("scenario"))
+                return ChallengeType.Context;
+            else
+                return ChallengeType.Comprehension; // Default
         }
 
         // Utility methods for generating content
@@ -620,37 +478,180 @@ CORRECT: [Letter of correct answer]";
                 GetRandomWord()
             };
             return options.OrderBy(x => Guid.NewGuid()).ToList();
-        }
-
-        private string GetSimpleDefinition(string word)
+        }        private string GetSimpleDefinition(string word)
         {
             var definitions = new Dictionary<string, string>
             {
+                // Beginner words
                 {"adventure", "An exciting and unusual experience or activity"},
                 {"beautiful", "Pleasing to look at; attractive"},
                 {"celebrate", "To acknowledge a significant or happy day or event"},
-                {"ambitious", "Having a strong desire for success or achievement"},
-                {"ubiquitous", "Present, appearing, or found everywhere"},
+                {"discover", "To find something for the first time"},
+                {"enormous", "Very large in size or quantity"},
                 {"friendship", "A close relationship between friends"},
+                {"grateful", "Feeling thankful for something"},
+                {"harmony", "A pleasant combination of different things"},
+                {"important", "Having great significance or value"},
+                {"journey", "A trip from one place to another"},
+                {"kindness", "The quality of being friendly and caring"},
+                {"laughter", "The sound made when someone finds something funny"},
+                {"mystery", "Something that is difficult to understand"},
+                {"nature", "The physical world including plants and animals"},
+                {"opportunity", "A chance to do something"},
+                {"peaceful", "Calm and quiet; without conflict"},
+                {"question", "A sentence that asks for information"},
+                {"respect", "Admiration for someone or something"},
+                {"sunshine", "Direct light from the sun"},
+                {"treasure", "Something very valuable"},
+                {"umbrella", "A device used for protection from rain"},
+                {"victory", "Success in a struggle or contest"},
+                {"wonderful", "Extremely good or pleasant"},
+                {"explore", "To travel through an area to learn about it"},
+                {"youthful", "Having the characteristics of a young person"},
+                
+                // Intermediate words
+                {"ambitious", "Having a strong desire for success or achievement"},
+                {"beneficial", "Having a good or helpful result"},
+                {"comprehensive", "Complete and including everything"},
+                {"demonstrate", "To show clearly by giving proof or evidence"},
+                {"elaborate", "Involving many carefully arranged parts; detailed"},
+                {"fundamental", "Forming a necessary base or core"},
+                {"genuine", "Truly what it is said to be; authentic"},
+                {"hypothesis", "A suggested explanation for something"},
+                {"inevitable", "Certain to happen; unavoidable"},
+                {"jurisdiction", "The official power to make legal decisions"},
+                {"magnificent", "Extremely beautiful, elaborate, or impressive"},
+                {"negligent", "Failing to take proper care"},
+                {"optimistic", "Hopeful and confident about the future"},
+                {"persistent", "Continuing firmly despite difficulties"},
+                {"reluctant", "Unwilling or hesitant"},
+                {"sophisticated", "Having a refined knowledge of culture and fashion"},
+                {"temporary", "Lasting for only a limited period"},
+                {"unprecedented", "Never done or known before"},
+                {"versatile", "Able to adapt to many different functions"},
                 {"wisdom", "The quality of having experience, knowledge, and good judgment"},
-                {"magnificent", "Extremely beautiful, elaborate, or impressive"}
+                {"analyze", "To examine something in detail"},
+                {"bureaucracy", "A system of government with many departments"},
+                {"catastrophe", "A sudden event causing great damage"},
+                {"diligent", "Having or showing care in one's work"},
+                {"empathy", "The ability to understand others' feelings"},
+                
+                // Advanced words
+                {"ubiquitous", "Present, appearing, or found everywhere"},
+                {"perspicacious", "Having a ready insight into things"},
+                {"serendipitous", "Occurring by happy chance"},
+                {"magnanimous", "Very generous or forgiving"},
+                {"eloquent", "Fluent and persuasive in speaking"},
+                {"ephemeral", "Lasting for a very short time"},
+                {"indigenous", "Originating naturally in a particular place"},
+                {"meticulous", "Showing great attention to detail"},
+                {"ostentatious", "Characterized by showy display"},
+                {"pragmatic", "Dealing with things in a practical way"},
+                {"quintessential", "Representing the most perfect example"},
+                {"resilient", "Able to recover quickly from difficulties"},
+                {"scrupulous", "Diligent, thorough, and extremely attentive to details"},
+                {"tenacious", "Holding fast; persistent"},
+                {"vicarious", "Experienced through someone else"},
+                {"whimsical", "Playfully quaint or fanciful"},
+                {"xenophobic", "Having dislike of people from other countries"},
+                {"zealous", "Having great energy or passion for something"},
+                {"acquiesce", "To accept something reluctantly but without protest"},
+                {"belligerent", "Hostile and aggressive"},
+                {"cacophony", "A harsh, discordant mixture of sounds"},
+                {"deleterious", "Causing harm or damage"},
+                {"effervescent", "Vivacious and enthusiastic"},
+                {"facetious", "Treating serious issues with inappropriate humor"},
+                {"gregarious", "Fond of the company of others; sociable"}
             };
 
-            return definitions.GetValueOrDefault(word, "A meaningful word in English language");
-        }
-
-        private string GetSynonym(string word)
+            return definitions.GetValueOrDefault(word, $"Definition for '{word}' (word not in dictionary)");
+        }        private string GetSynonym(string word)
         {
             var synonyms = new Dictionary<string, string>
             {
-                {"beautiful", "attractive"},
+                // Beginner words
                 {"adventure", "journey"},
+                {"beautiful", "attractive"},
+                {"celebrate", "commemorate"},
+                {"discover", "find"},
+                {"enormous", "huge"},
+                {"friendship", "companionship"},
+                {"grateful", "thankful"},
+                {"harmony", "balance"},
+                {"important", "significant"},
+                {"journey", "trip"},
+                {"kindness", "compassion"},
+                {"laughter", "giggling"},
+                {"mystery", "puzzle"},
+                {"nature", "environment"},
+                {"opportunity", "chance"},
+                {"peaceful", "calm"},
+                {"question", "inquiry"},
+                {"respect", "honor"},
+                {"sunshine", "sunlight"},
+                {"treasure", "riches"},
+                {"umbrella", "parasol"},
+                {"victory", "triumph"},
+                {"wonderful", "amazing"},
+                {"explore", "investigate"},
+                {"youthful", "young"},
+                
+                // Intermediate words
                 {"ambitious", "determined"},
+                {"beneficial", "helpful"},
+                {"comprehensive", "complete"},
+                {"demonstrate", "show"},
+                {"elaborate", "detailed"},
+                {"fundamental", "basic"},
+                {"genuine", "authentic"},
+                {"hypothesis", "theory"},
+                {"inevitable", "unavoidable"},
+                {"jurisdiction", "authority"},
+                {"magnificent", "splendid"},
+                {"negligent", "careless"},
+                {"optimistic", "hopeful"},
+                {"persistent", "determined"},
+                {"reluctant", "hesitant"},
+                {"sophisticated", "refined"},
+                {"temporary", "brief"},
+                {"unprecedented", "unparalleled"},
+                {"versatile", "adaptable"},
                 {"wisdom", "knowledge"},
-                {"magnificent", "splendid"}
+                {"analyze", "examine"},
+                {"bureaucracy", "administration"},
+                {"catastrophe", "disaster"},
+                {"diligent", "hardworking"},
+                {"empathy", "compassion"},
+                
+                // Advanced words
+                {"ubiquitous", "omnipresent"},
+                {"perspicacious", "perceptive"},
+                {"serendipitous", "fortuitous"},
+                {"magnanimous", "generous"},
+                {"eloquent", "articulate"},
+                {"ephemeral", "fleeting"},
+                {"indigenous", "native"},
+                {"meticulous", "careful"},
+                {"ostentatious", "showy"},
+                {"pragmatic", "practical"},
+                {"quintessential", "typical"},
+                {"resilient", "tough"},
+                {"scrupulous", "thorough"},
+                {"tenacious", "persistent"},
+                {"vicarious", "indirect"},
+                {"whimsical", "playful"},
+                {"xenophobic", "prejudiced"},
+                {"zealous", "enthusiastic"},
+                {"acquiesce", "agree"},
+                {"belligerent", "aggressive"},
+                {"cacophony", "noise"},
+                {"deleterious", "harmful"},
+                {"effervescent", "bubbly"},
+                {"facetious", "joking"},
+                {"gregarious", "sociable"}
             };
 
-            return synonyms.GetValueOrDefault(word, "similar");
+            return synonyms.GetValueOrDefault(word, $"synonym for '{word}'");
         }
 
         private string GetRandomDefinition()
@@ -687,9 +688,7 @@ CORRECT: [Letter of correct answer]";
                 GameMode.PersonalizedQuiz => "🧠 Smart Quiz",
                 _ => "Learning Mode"
             };
-        }
-
-        private string GetDifficultyName(DifficultyLevel level)
+        }        private string GetDifficultyName(DifficultyLevel level)
         {
             return level switch
             {
@@ -701,50 +700,44 @@ CORRECT: [Letter of correct answer]";
         }        private Task ExitGame()
         {
             gameStarted = false;
-            currentSession = null;
-            currentChallenges.Clear();
+            currentContent = "";
             conversationHistory.Clear();
-            userInput = "";
+            currentChallenges.Clear();
+            currentChallengeIndex = 0;
+            score = 0;
+            streak = 0;
+            showFeedback = false;
             feedbackMessage = "";
-            errorMessage = "";
-            
-            // Reset conversation practice scoring
+            lastAnswerCorrect = false;
+            userInput = "";
             conversationTargetWords.Clear();
             usedTargetWords.Clear();
             wordsUsedCorrectly = 0;
-            score = 0;
-            streak = 0;
-            
             StateHasChanged();
             return Task.CompletedTask;
         }private async Task HandleKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
         {
             if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(userInput))
             {
-                // Prevent the default behavior to avoid form submission
                 await SendMessage();
             }
         }private async Task HandleKeyPressForTextarea(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
         {
-            if (e.Key == "Enter" && !e.ShiftKey && !string.IsNullOrWhiteSpace(userInput))
+            if (e.Key == "Enter" && e.CtrlKey && !string.IsNullOrWhiteSpace(userInput))
             {
-                // Enter without Shift submits the answer, Shift+Enter adds new line
                 await ProcessAnswer(userInput);
             }
         }private async Task ContinueLearning()
         {
-            if (currentChallengeIndex < currentChallenges.Count - 1)
+            showFeedback = false;
+            feedbackMessage = "";
+            
+            currentChallengeIndex++;
+            
+            if (currentChallengeIndex >= currentChallenges.Count)
             {
-                currentChallengeIndex++;
-                userInput = ""; // Reset user input instead of userAnswer
-                lastAnswerCorrect = false; // Reset to false instead of null
-                feedbackMessage = "";
-                StateHasChanged();
-            }
-            else
-            {
-                // Generate new content or end session
-                await GenerateInitialContent();
+                // Generate new challenges or end session
+                await GeneratePersonalizedQuiz(new List<string> { wordLibrary[difficulty][new Random().Next(wordLibrary[difficulty].Count)] });
                 currentChallengeIndex = 0;
                 userInput = ""; // Reset user input instead of userAnswer
                 lastAnswerCorrect = false; // Reset to false instead of null
@@ -770,74 +763,50 @@ CORRECT: [Letter of correct answer]";
             userInput = "";
             StateHasChanged();
             
-            // Scroll chat to bottom to show latest messages
+            // Scroll to bottom after message is added
+            await Task.Delay(100);
             await ScrollChatToBottom();
         }        private async Task<string> GenerateAIResponse(string userMessage)
         {
-            var conversationContext = string.Join("\n", conversationHistory.TakeLast(6));
-            var targetWords = currentSession?.WordsLearned ?? new List<string>();
-            var wordsText = targetWords.Count > 0 ? string.Join(", ", targetWords) : "";
-            
-            // For conversation practice, use the target words from the conversation
-            if (currentGameMode == GameMode.ConversationPractice && conversationTargetWords.Count > 0)
-            {
-                var remainingWords = conversationTargetWords.Where(w => !usedTargetWords.Contains(w)).ToList();
-                var remainingWordsText = remainingWords.Count > 0 ? string.Join(", ", remainingWords) : "";
-                
-                var prompt = $@"Continue this English learning conversation. The student just said: '{userMessage}'
-
-Previous conversation context:
-{conversationContext}
-
-Target vocabulary words the student should try to use: {string.Join(", ", conversationTargetWords)}
-Words already used correctly: {string.Join(", ", usedTargetWords)}
-{(remainingWords.Count > 0 ? $"Words still to use: {remainingWordsText}" : "All words have been used!")}
-
-Please provide an encouraging, natural response that:
-1. Responds thoughtfully to what they said
-2. {(remainingWords.Count > 0 ? $"Gently encourages use of remaining vocabulary words: {remainingWordsText}" : "Congratulates them on using all target words")}
-3. Asks a follow-up question to keep the conversation flowing
-4. Stays appropriate for {difficulty.ToString().ToLower()}-level learners
-
-Keep it conversational and supportive (1-2 sentences).";
-
-                var systemMessage = "You are a patient, encouraging English conversation partner helping students practice vocabulary naturally.";
-                
-                try
-                {
-                    return await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error generating AI response: {ex.Message}");
-                    return "That's interesting! Can you tell me more about that? I'd love to hear your thoughts.";
-                }
-            }
-            
-            // Default behavior for other modes
-            var defaultPrompt = $@"Continue this English learning conversation. The student just said: '{userMessage}'
-
-Previous conversation context:
-{conversationContext}
-
-Please provide an encouraging, natural response that:
-1. Responds thoughtfully to what they said
-2. Gently encourages use of vocabulary words{(wordsText.Length > 0 ? $" like: {wordsText}" : "")}
-3. Asks a follow-up question to keep the conversation flowing
-4. Stays appropriate for {difficulty.ToString().ToLower()}-level learners
-
-Keep it conversational and supportive (1-2 sentences).";
-
-            var defaultSystemMessage = "You are a patient, encouraging English conversation partner helping students practice vocabulary naturally.";
-            
             try
             {
-                return await OpenAIService.GenerateContentAsync(defaultPrompt, defaultSystemMessage);
+                var wordsContext = string.Join(", ", conversationTargetWords);
+                var prompt = $@"You are a friendly English conversation teacher. The user is practicing with these target words: {wordsContext}.
+
+User said: ""{userMessage}""
+
+Guidelines:
+1. If they used any target words correctly, acknowledge it positively
+2. Keep responses conversational and encouraging
+3. Try to naturally use some target words in your response
+4. Ask follow-up questions to continue the conversation
+5. Gently guide them to use more target words if they haven't used many
+6. Keep responses to 1-2 sentences maximum
+
+Previous conversation context: {string.Join(" ", conversationHistory.TakeLast(6))}
+
+Respond naturally as a conversation partner:";
+
+                var systemMessage = "You are a supportive English conversation teacher helping students practice vocabulary in natural conversation.";
+                
+                return await OpenAIService.GenerateContentAsync(prompt, systemMessage);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error generating AI response: {ex.Message}");
-                return "That's interesting! Can you tell me more about that? I'd love to hear your thoughts.";
+                var fallbackResponses = new[]
+                {
+                    "That's interesting! Can you tell me more about that?",
+                    "I see! What do you think about that situation?",
+                    "That sounds great! How did that make you feel?",
+                    "Wonderful! Can you share another example?",
+                    "That's a good point! What would you do differently?",
+                    "I understand. Can you explain that in more detail?",
+                    "That's fascinating! What else can you tell me about it?"
+                };
+                
+                var random = new Random();
+                return fallbackResponses[random.Next(fallbackResponses.Length)];
             }
         }
 
@@ -869,11 +838,23 @@ Keep it conversational and supportive (1-2 sentences).";
                 {
                     currentSession.WordsLearned.Add(challenge.TargetWord);
                 }
-            }
-            else
+            }            else
             {
                 streak = 0;
-                feedbackMessage = $"Not quite right. The correct answer is: {correctAnswer}";
+                
+                // Provide better feedback based on challenge type
+                if (challenge.Type == ChallengeType.Comprehension)
+                {
+                    feedbackMessage = $"Not quite right. '{challenge.TargetWord}' means: {correctAnswer}";
+                }
+                else if (challenge.IsOpenEnded)
+                {
+                    feedbackMessage = $"Good effort! For '{challenge.TargetWord}', try incorporating its meaning more clearly in your response.";
+                }
+                else
+                {
+                    feedbackMessage = $"Not quite right. The correct answer is: {correctAnswer}";
+                }
             }
 
             showFeedback = true;
@@ -998,106 +979,74 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
 
         private string GeneratePositiveFeedback(string word)
         {
-            var feedback = new List<string>
+            var feedbacks = new[]
             {
-                $"Excellent! You really understand how to use '{word}' correctly.",
-                $"Perfect! Your understanding of '{word}' is spot on.",
-                $"Great job! You've mastered the word '{word}'.",
-                $"Wonderful! '{word}' is now part of your vocabulary.",
-                $"Outstanding! You used '{word}' like a native speaker would."            };
+                $"Excellent! You really understand '{word}' well.",
+                $"Perfect! Great job with '{word}'.",
+                $"Outstanding! You've mastered '{word}'.",
+                $"Wonderful! Your understanding of '{word}' is impressive.",
+                $"Brilliant! You've got '{word}' down perfectly."
+            };
+            
+            var random = new Random();
+            return feedbacks[random.Next(feedbacks.Length)];
+        }
 
-            var random = new Random();            return feedback[random.Next(feedback.Count)];
-        }        // Helper method to scroll chat to bottom
         private async Task ScrollChatToBottom()
         {
             try
             {
-                // Small delay to ensure DOM has been updated
-                await Task.Delay(50);
                 await JSRuntime.InvokeVoidAsync("scrollToBottom", chatHistoryContainer);
             }
             catch (Exception ex)
             {
-                // Silently handle JS interop errors - not critical functionality
-                Console.WriteLine($"Chat scroll error: {ex.Message}");
+                Console.WriteLine($"Error scrolling chat: {ex.Message}");
             }
         }
 
         private async Task EvaluateVocabularyUsage(string userMessage)
         {
-            if (conversationTargetWords.Count == 0) return;
-            
-            try
+            foreach (var targetWord in conversationTargetWords)
             {
-                // Check which target words are present in the message
-                var wordsInMessage = new List<string>();
-                foreach (var word in conversationTargetWords)
+                if (userMessage.ToLower().Contains(targetWord.ToLower()) && !usedTargetWords.Contains(targetWord))
                 {
-                    if (userMessage.ToLower().Contains(word.ToLower()) && !usedTargetWords.Contains(word))
-                    {
-                        wordsInMessage.Add(word);
-                    }
-                }
-                
-                if (wordsInMessage.Count == 0) return;
-                
-                // Use AI to evaluate if the words are used appropriately
-                var wordsText = string.Join(", ", wordsInMessage);
-                var prompt = $@"Evaluate vocabulary usage in this English learning conversation:
+                    // Use AI to verify correct usage
+                    var prompt = $@"Does this sentence use the word '{targetWord}' correctly in context?
 
-Student message: '{userMessage}'
-Target vocabulary words to check: {wordsText}
+Sentence: ""{userMessage}""
 
-For each target word that appears in the message, assess:
-1. Is it used correctly and appropriately?
-2. Does it fit the context naturally?
-3. Does it demonstrate understanding of the word's meaning?
+Respond with: YES if the word is used correctly in meaning and context, NO if it's incorrect or just mentioned without proper usage.
 
-Respond with only the words that are used correctly, separated by commas.
-If no words are used correctly, respond with 'NONE'.
+Be strict about correct usage - the word should be used meaningfully, not just mentioned.";
 
-Example response: 'adventure, beautiful' or 'NONE'";
-
-                var systemMessage = "You are an English language assessment expert evaluating vocabulary usage for language learners.";
-                var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                
-                // Parse AI response and award points
-                if (!string.IsNullOrEmpty(aiResponse) && aiResponse.Trim().ToUpper() != "NONE")
-                {
-                    var correctlyUsedWords = aiResponse.Split(',')
-                        .Select(w => w.Trim().ToLower())
-                        .Where(w => !string.IsNullOrEmpty(w) && conversationTargetWords.Any(tw => tw.ToLower() == w))
-                        .ToList();
+                    var systemMessage = "You are an English language expert evaluating vocabulary usage.";
                     
-                    foreach (var word in correctlyUsedWords)
+                    try
                     {
-                        var originalWord = conversationTargetWords.First(w => w.ToLower() == word);
-                        if (usedTargetWords.Add(originalWord))
+                        var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+                        if (aiResponse.Trim().ToUpper().StartsWith("YES"))
                         {
-                            // Award points for correct vocabulary usage
-                            score += GetScoreForDifficulty();
-                            streak++;
+                            usedTargetWords.Add(targetWord);
                             wordsUsedCorrectly++;
-                            
-                            // Add to session words learned
-                            if (currentSession != null && !currentSession.WordsLearned.Contains(originalWord))
-                            {
-                                currentSession.WordsLearned.Add(originalWord);
-                            }
+                            score += 5; // Bonus points for conversation vocabulary usage
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error evaluating vocabulary usage: {ex.Message}");
+                        // Fallback: simple check for word presence
+                        usedTargetWords.Add(targetWord);
+                        wordsUsedCorrectly++;
+                        score += 5;
+                    }
                 }
             }
-            catch (Exception ex)
-            {
-                // Silently handle errors in vocabulary evaluation to not disrupt conversation flow
-                Console.WriteLine($"Error evaluating vocabulary usage: {ex.Message}");
-            }
+            
+            StateHasChanged();
         }
-
     }
 
-    // Enums and Data Models
+    // Supporting enums and classes
     public enum GameMode
     {
         StoryAdventure,
@@ -1115,34 +1064,30 @@ Example response: 'adventure, beautiful' or 'NONE'";
 
     public enum ChallengeType
     {
-        Definition,
-        Synonym,
-        Usage,
         Comprehension,
+        Usage,
         Context,
-        RealWorld
+        Definition,
+        Synonym
     }
 
     public class AILearningSession
     {
-        public GameMode GameMode { get; set; }
+        public GameMode Mode { get; set; }
         public DifficultyLevel Difficulty { get; set; }
-        public DateTime StartTime { get; set; }
         public List<string> WordsLearned { get; set; } = new();
-        public PlayerPreferences PlayerPreferences { get; set; } = new();
+        public int Score { get; set; }
+        public DateTime StartTime { get; set; }
     }
 
-    public class PlayerPreferences
-    {
-        public bool PrefersVisualLearning { get; set; }
-        public bool PrefersAudioFeedback { get; set; } = true;
-        public List<string> InterestTopics { get; set; } = new();
-    }    public class WordChallenge
+    public class WordChallenge
     {
         public ChallengeType Type { get; set; }
-        public string TargetWord { get; set; } = "";        public string Question { get; set; } = "";
+        public string TargetWord { get; set; } = "";
+        public string Question { get; set; } = "";
         public List<string>? Options { get; set; }
-        public string? CorrectAnswer { get; set; }        public bool IsOpenEnded { get; set; }
+        public string? CorrectAnswer { get; set; }
+        public bool IsOpenEnded { get; set; }
         public string? Context { get; set; }
     }
 }
