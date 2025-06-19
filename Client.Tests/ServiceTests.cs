@@ -9,14 +9,13 @@ namespace Client.Tests;
 /// Tests for service layer components used by AIWordTutor
 /// </summary>
 public class ServiceTests
-{
-    [Fact]
+{    [Fact]
     public async Task OpenAIApiKeyService_GetApiKey_ShouldCallJSRuntime()
     {
         // Arrange
         var mockJSRuntime = new Mock<IJSRuntime>();
         mockJSRuntime.Setup(x => x.InvokeAsync<string?>(
-            "sessionStorage.getItem", 
+            "localStorage.getItem", 
             It.IsAny<object[]>()))
             .ReturnsAsync("test-api-key");
 
@@ -28,7 +27,7 @@ public class ServiceTests
         // Assert
         Assert.Equal("test-api-key", result);
         mockJSRuntime.Verify(x => x.InvokeAsync<string?>(
-            "sessionStorage.getItem", 
+            "localStorage.getItem", 
             It.IsAny<object[]>()), Times.Once);
     }    [Fact]
     public async Task OpenAIApiKeyService_SetApiKey_ShouldCallJSRuntime()
@@ -42,10 +41,10 @@ public class ServiceTests
         await service.SetApiKeyAsync(testApiKey);
 
         // Assert
-        // Verify that the underlying InvokeAsync was called with the right parameters
+        // Verify that the underlying InvokeVoidAsync was called with the right parameters
         mockJSRuntime.Verify(x => x.InvokeAsync<object>(
-            "sessionStorage.setItem",
-            It.Is<object[]>(args => args.Length == 2 && args[0].ToString() == "openaiApiKey" && args[1].ToString() == testApiKey)), 
+            "localStorage.setItem",
+            It.Is<object[]>(args => args.Length == 2 && args[0].ToString() == "openai_chatgpt_api_key" && args[1].ToString() == testApiKey)), 
             Times.Once);
     }    [Fact]
     public async Task OpenAIApiKeyService_ClearApiKey_ShouldCallJSRuntime()
@@ -58,10 +57,10 @@ public class ServiceTests
         await service.ClearApiKeyAsync();
 
         // Assert
-        // Verify that the underlying InvokeAsync was called with the right parameters
+        // Verify that the underlying InvokeVoidAsync was called with the right parameters
         mockJSRuntime.Verify(x => x.InvokeAsync<object>(
-            "sessionStorage.removeItem",
-            It.Is<object[]>(args => args.Length == 1 && args[0].ToString() == "openaiApiKey")), 
+            "localStorage.removeItem",
+            It.Is<object[]>(args => args.Length == 1 && args[0].ToString() == "openai_chatgpt_api_key")), 
             Times.Once);
     }
 
@@ -94,9 +93,7 @@ public class ServiceTests
         // This test verifies the service is properly set up and would proceed
         // In a real test, we'd mock the HTTP response
         Assert.NotNull(service);
-    }
-
-    [Theory]
+    }    [Theory]
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
@@ -105,7 +102,7 @@ public class ServiceTests
         // Arrange
         var mockJSRuntime = new Mock<IJSRuntime>();
         mockJSRuntime.Setup(x => x.InvokeAsync<string?>(
-            "sessionStorage.getItem", 
+            "localStorage.getItem", 
             It.IsAny<object[]>()))
             .ReturnsAsync(apiKey);
 
@@ -117,9 +114,7 @@ public class ServiceTests
 
         // Assert
         Assert.True(isEmpty);
-    }
-
-    [Theory]
+    }    [Theory]
     [InlineData("sk-1234567890abcdef")]
     [InlineData("test-key")]
     [InlineData("valid-api-key-123")]
@@ -128,7 +123,7 @@ public class ServiceTests
         // Arrange
         var mockJSRuntime = new Mock<IJSRuntime>();
         mockJSRuntime.Setup(x => x.InvokeAsync<string?>(
-            "sessionStorage.getItem", 
+            "localStorage.getItem", 
             It.IsAny<object[]>()))
             .ReturnsAsync(apiKey);
 

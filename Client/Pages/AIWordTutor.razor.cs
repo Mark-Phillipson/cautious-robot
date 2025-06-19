@@ -6,7 +6,7 @@ using BlazorApp.Client.Shared;
 
 namespace BlazorApp.Client.Pages
 {
-    public partial class AIWordTutor : ComponentBase
+    public partial class AIWordTutor : ComponentBase, IDisposable
     {
         [Inject] private HttpClient HttpClient { get; set; } = default!;
         [Inject] public required IOpenAIApiKeyService OpenAIApiKeyService { get; set; }
@@ -33,12 +33,12 @@ namespace BlazorApp.Client.Pages
         private int currentChallengeIndex = 0;
         private bool PlayAudio = false;
         private bool hasApiKey = false;
-        
-        // Feedback system
+          // Feedback system
         private bool showFeedback = false;
         private string feedbackMessage = "";
         private bool lastAnswerCorrect = false;
         private string correctAnswer = "";
+        private Timer? feedbackTimer;
 
         // Conversation practice scoring
         private List<string> conversationTargetWords = new();
@@ -695,8 +695,7 @@ CORRECT: [Letter of correct answer]";
                 DifficultyLevel.Intermediate => "Intermediate", 
                 DifficultyLevel.Advanced => "Advanced",
                 _ => "Unknown"
-            };
-        }        private Task ExitGame()
+            };        }        private Task ExitGame()
         {
             gameStarted = false;
             currentContent = "";
@@ -705,6 +704,7 @@ CORRECT: [Letter of correct answer]";
             currentChallengeIndex = 0;
             score = 0;
             streak = 0;
+            StopFeedbackTimer();
             showFeedback = false;
             feedbackMessage = "";
             lastAnswerCorrect = false;
@@ -725,9 +725,9 @@ CORRECT: [Letter of correct answer]";
             if (e.Key == "Enter" && e.CtrlKey && !string.IsNullOrWhiteSpace(userInput))
             {
                 await ProcessAnswer(userInput);
-            }
-        }private async Task ContinueLearning()
+            }        }private async Task ContinueLearning()
         {
+            StopFeedbackTimer();
             showFeedback = false;
             feedbackMessage = "";
             
@@ -854,9 +854,8 @@ Respond naturally as a conversation partner:";
                 {
                     feedbackMessage = $"Not quite right. The correct answer is: {correctAnswer}";
                 }
-            }
-
-            showFeedback = true;
+            }            showFeedback = true;
+            StartFeedbackTimer();
             PlayAudio = true;
             userInput = ""; // Clear input after processing
             StateHasChanged();
@@ -1097,10 +1096,39 @@ Be strict about correct usage - the word should be used meaningfully, not just m
         }
         
         private async Task TestWordEvaluation()
-        {
-            var testSentence = "I think analyzing that my sentence would be beneficial and not to do so would be negligent I will persist in creating this sentence otherwise it would be a catastrophe.";
+        {            var testSentence = "I think analyzing that my sentence would be beneficial and not to do so would be negligent I will persist in creating this sentence otherwise it would be a catastrophe.";
             Console.WriteLine($"Testing word evaluation with: {testSentence}");
             await EvaluateVocabularyUsage(testSentence);
+        }
+
+        private void StartFeedbackTimer()
+        {
+            StopFeedbackTimer(); // Stop any existing timer
+            feedbackTimer = new Timer(AutoHideFeedback, null, TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+        }
+
+        private void StopFeedbackTimer()
+        {
+            feedbackTimer?.Dispose();
+            feedbackTimer = null;
+        }
+
+        private async void AutoHideFeedback(object? state)
+        {
+            await InvokeAsync(() =>
+            {
+                if (showFeedback)
+                {
+                    showFeedback = false;
+                    feedbackMessage = "";
+                    StateHasChanged();
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            StopFeedbackTimer();
         }
     }
 }
