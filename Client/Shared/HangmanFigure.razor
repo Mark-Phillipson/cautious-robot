@@ -1,0 +1,23 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="hangman-figure">
+    <svg viewBox="0 0 120 160" width="120" height="160" class="figure-svg">
+        <!-- Gallows -->
+        <line x1="10" y1="150" x2="100" y2="150" stroke="#333" stroke-width="4"/>
+        <line x1="30" y1="150" x2="30" y2="20" stroke="#333" stroke-width="4"/>
+        <line x1="30" y1="20" x2="80" y2="20" stroke="#333" stroke-width="4"/>
+        <line x1="80" y1="20" x2="80" y2="40" stroke="#333" stroke-width="4"/>
+        <!-- Parts -->
+        <circle cx="80" cy="50" r="10" class="part head @(WrongCount>=1 ? "visible" : "")" stroke="#333" stroke-width="4" fill="none"/>
+        <line x1="80" y1="60" x2="80" y2="100" class="part body @(WrongCount>=2 ? "visible" : "")" stroke="#333" stroke-width="4"/>
+        <line x1="80" y1="70" x2="60" y2="90" class="part arm @(WrongCount>=3 ? "visible" : "")" stroke="#333" stroke-width="4"/>
+        <line x1="80" y1="70" x2="100" y2="90" class="part arm @(WrongCount>=4 ? "visible" : "")" stroke="#333" stroke-width="4"/>
+        <line x1="80" y1="100" x2="60" y2="130" class="part leg @(WrongCount>=5 ? "visible" : "")" stroke="#333" stroke-width="4"/>
+        <line x1="80" y1="100" x2="100" y2="130" class="part leg @(WrongCount>=6 ? "visible" : "")" stroke="#333" stroke-width="4"/>
+    </svg>
+</div>
+
+@code {
+    [Parameter] public int WrongCount { get; set; }
+    [Parameter] public int MaxWrong { get; set; }
+}

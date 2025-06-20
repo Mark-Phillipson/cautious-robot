@@ -168,6 +168,7 @@
                     {
                         <div class="hangman-section">
                             <h3>🕹️ Hangman</h3>
+                            <HangmanFigure WrongCount="@hangmanWrongGuesses" MaxWrong="@hangmanMaxWrong" />
                             <p style="color: #b00; font-weight: bold; font-size: 1.2rem;">[DEBUG: Answer is '@hangmanWord']</p>
                             <p>Theme: @themeInput</p>
                             <p>Word: @GetHangmanDisplay()</p>
@@ -176,6 +177,7 @@
                             <p><strong>Hint:</strong> @(string.IsNullOrWhiteSpace(hangmanDefinition) ? "No hint available." : hangmanDefinition)</p>
                             @if (hangmanGameOver)
                             {
+                                <BlazorApp.Client.Pages.PlaySound Play="true" AnswerState="@hangmanWin" />
                                 <p class="@(hangmanWin ? "hangman-win" : "hangman-lose")">
                                     @(hangmanWin ? "🎉 You won!" : $"Game over! The word was '{hangmanWord}'.")
                                 </p>

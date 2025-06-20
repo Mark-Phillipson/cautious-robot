@@ -1,0 +1,4 @@
+.hangman-figure { text-align: center; margin: 1rem; }
+.figure-svg { overflow: visible; }
+.part { opacity: 0; transition: opacity 0.5s ease-in-out; }
+.part.visible { opacity: 1; }
