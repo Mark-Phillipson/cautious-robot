@@ -101,8 +101,16 @@ namespace BlazorApp.Client.Pages
 
                 if (mode == GameMode.Hangman)
                 {
-                    var hangmanWords = await GetWordsFromAI(1);
-                    hangmanWord = hangmanWords.FirstOrDefault() ?? "example";
+                    // Ensure new hangman word differs from previous to avoid repeats
+                    string newWord;
+                    do
+                    {
+                        var words = await GetWordsFromAI(1);
+                        newWord = words.FirstOrDefault() ?? "example";
+                    }
+                    while (!string.IsNullOrEmpty(hangmanWord) && newWord.Equals(hangmanWord, StringComparison.OrdinalIgnoreCase));
+                    hangmanWord = newWord;
+
                     hangmanGuesses.Clear();
                     hangmanWrongGuesses = 0;
                     hangmanGameOver = false;
