@@ -1,16 +1,8 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">
-            Words
-            <span class="text-info" style="font-size:xx-small"></span></a>
-
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿@using Microsoft.AspNetCore.Components.Routing
 <div class="background">
-    <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">        <nav class="flex-column">            <div class="nav-item px-3">
+    <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+        <nav class="flex-column">
+            <div class="nav-item px-3">
                 <NavLink accesskey="h" class="nav-link" href="" Match="NavLinkMatch.All">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-house nav-icon" viewBox="0 0 16 16">
                         <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 1.5H8.707zM13 7.793V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.793l5-5 5 5z"/>
@@ -96,12 +88,8 @@
 
 
 @code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
+    [Parameter]
+    public string? NavMenuCssClass { get; set; }
+    [Parameter]
+    public EventCallback ToggleNavMenu { get; set; }
 }

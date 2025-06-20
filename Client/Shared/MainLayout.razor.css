@@ -14,12 +14,16 @@ main {
 }
 
 .top-row {
-    background-color: var(--bs-body-bg);
+    background-color: #181c20 !important; /* stronger solid background for nav bar */
+    color: #fff !important;
     border-bottom: 1px solid #d6d5d5;
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1001;
 }
 
     .top-row ::deep a, .top-row ::deep .btn-link {
@@ -38,8 +42,22 @@ main {
     }
 
 @media (max-width: 1000px) {
+    .top-row {
+        display: flex !important;
+        height: 3.5rem !important;
+        align-items: center !important;
+        background-color: var(--bs-body-bg) !important;
+        border-bottom: 1px solid #d6d5d5 !important;
+    }
+    .navbar-toggler {
+        display: block !important;
+    }
     .top-row:not(.auth) {
         display: none;
+        height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
     .top-row.auth {
@@ -48,6 +66,50 @@ main {
 
     .top-row ::deep a, .top-row ::deep .btn-link {
         margin-left: 0;
+    }
+
+    .sidebar.collapse {
+        position: absolute;
+        top: 3.5rem;
+        left: 0;
+        background-image: linear-gradient(180deg, black 0%, #072439 70%);
+        width: 250px;
+        height: calc(100vh - 3.5rem);
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000;
+        display: block !important; /* override bootstraps hide */
+    }
+    .sidebar.collapse.show {
+        transform: translateX(0);
+    }
+
+    /* When sidebar is expanded, show the NavMenu background wrapper */
+    .sidebar.collapse.show .background {
+        display: block !important;
+    }
+
+    /* Override NavMenu background height to avoid full viewport and extra scrollbar */
+    .sidebar .background {
+        height: calc(100vh - 3.5rem) !important;
+    }
+
+    .page {
+        flex-direction: column;
+        overflow-x: hidden;
+    }
+    main, article {
+        padding-top: 0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        margin-top: 0;
+    }
+
+    /* Lock page scroll when menu is open */
+    .page.menu-open {
+        height: 100vh;
+        overflow: hidden;
     }
 }
 
