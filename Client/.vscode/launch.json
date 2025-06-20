@@ -6,8 +6,23 @@
             "type": "blazorwasm",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "url": "http://localhost:5055",
+            "url": "http://localhost:7212",
             "browser": "edge"
+        },
+        {
+            "name": "Attach to Blazor WebAssembly Application",
+            "type": "blazorwasm",
+            "request": "attach",
+            "url": "http://localhost:7212",
+            "browser": "edge"
+        },
+        {
+            "name": "Launch with Chrome",
+            "type": "blazorwasm",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "url": "http://localhost:7212",
+            "browser": "chrome"
         }
     ]
 }

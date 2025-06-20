@@ -97,32 +97,22 @@
     }
     <div style="display:block;" class="">
         @if (AnswerOptions != null && AnswerOptions.Count > 0)
-        {
-            @for (int i = 0; i < AnswerOptions.Count; i++)
+        {            @for (int i = 0; i < AnswerOptions.Count; i++)
             {
                 var option = AnswerOptions[i];
-                <div style="display:inline;" class="d-none d-lg-block">
-                    <button accesskey="@((i+1)<10 ? (i+1).ToString():"")" @onclick="@(() => CheckAnswerAsync(option.Word, i))" style="margin:3px"
-                            class="btn @option.ButtonClass btn-lg">
-                        <u>@((i+1)<10?(i+1).ToString():"")</u>    @option.Definition
-                        @if (!string.IsNullOrWhiteSpace(option.PartOfSpeech))
-                        {
-                            <text> (</text>
-                            @option.PartOfSpeech <text>)</text>
-                        }
-                    </button>
-                </div>
-                @*<div class="d-flex custom-layout d-lg-none">
-                    <button accesskey="@((i+1)<10 ? (i+1).ToString():"")" @onclick="@(() => CheckAnswerAsync(option.Word, i))" style="margin:3px"
-                            class="btn @option.ButtonClass btn-sm">
+                var buttonIndex = i; // Capture the index for the closure
+                <div style="display:block; margin:3px;">
+                    <button accesskey="@((i+1)<10 ? (i+1).ToString():"")" 
+                            @onclick="@(() => CheckAnswerAsync(option.Word, buttonIndex))" 
+                            class="btn @(buttonIndex < ButtonClass.Count ? ButtonClass[buttonIndex] : "btn-info") btn-lg"
+                            style="width: 100%; text-align: left;">
                         <u>@((i+1)<10?(i+1).ToString():"")</u> @option.Definition
                         @if (!string.IsNullOrWhiteSpace(option.PartOfSpeech))
                         {
-                            <text> (</text>
-                            @option.PartOfSpeech <text>)</text>
+                            <text> (</text>@option.PartOfSpeech<text>)</text>
                         }
                     </button>
-                </div>*@
+                </div>
             }
         }
     </div>

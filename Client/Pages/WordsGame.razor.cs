@@ -3,10 +3,17 @@ using BlazorApp.Client.Models;
 using BlazorApp.Client.Helper;
 
 namespace BlazorApp.Client.Pages
-{	public partial class WordsGame
-	{		[Inject] public required BlazorApp.Client.Shared.IWordsApiKeyService ApiKeyService { get; set; }
+{
+	public partial class WordsGame : ComponentBase
+	{
+		[Inject] public required BlazorApp.Client.Shared.IWordsApiKeyService ApiKeyService { get; set; }
 		private string? apiKey = null;
-		public bool ApiKeyAvailable => !string.IsNullOrWhiteSpace(apiKey);		public async Task OnApiKeySaved()
+		public List<string> ButtonClass { get; set; } = new List<string>() { "btn-info", "btn-info", "btn-info", "btn-info", "btn-info", };
+		public bool HideKey { get; set; } = false;
+		public string? Message { get; set; }
+		public bool ShowWord { get; set; } = true;
+
+		public bool ApiKeyAvailable => !string.IsNullOrWhiteSpace(apiKey); public async Task OnApiKeySaved()
 		{
 			apiKey = await ApiKeyService.GetApiKeyAsync();
 			GameOptions.APIKey = apiKey;
@@ -32,7 +39,7 @@ namespace BlazorApp.Client.Pages
 		ElementReference LoadWordsButton;
 		private string? response;
 		string? result = "";
-		WordsHelper? wordsHelper;		private int questionsAnswered = 0;
+		WordsHelper? wordsHelper; private int questionsAnswered = 0;
 		private int questionsCorrect = 0;
 		private int wordCounter = 0;
 		private bool isLoading = true; // Start with loading = true until we know the API key status
@@ -86,11 +93,12 @@ namespace BlazorApp.Client.Pages
 			await LoadWordsButton.FocusAsync();
 			PlayAudio = false;
 
-		}		private async Task LoadWordAsync()
+		}
+		private async Task LoadWordAsync()
 		{
 			isLoading = true;
 			StateHasChanged();
-			
+
 			Message = null;
 			LoadWordResults = null;
 			WordResult = null;
@@ -109,7 +117,7 @@ namespace BlazorApp.Client.Pages
 			dynamicClass = "";
 			currentQuestionNumber = 0;
 			ShowWord = true;
-			ReloadButtonClass();			// Use API key from service if available
+			ReloadButtonClass();            // Use API key from service if available
 			if (apiKey == null)
 			{
 				apiKey = await ApiKeyService.GetApiKeyAsync();
@@ -119,17 +127,19 @@ namespace BlazorApp.Client.Pages
 				GameOptions.APIKey = apiKey;
 				HideKey = true;
 				wordsHelper = new WordsHelper(apiKey);
-			}			if (wordsHelper != null)
+			}
+			if (wordsHelper != null)
 			{
 				try
 				{
 					LoadWordResults =
 						await wordsHelper.LoadWord(wordsToLoad, GameOptions?.MaximumWordLength ?? 20, GameOptions?.BeginsWith?.ToLower(), GameOptions?.WordType);
-				}				catch (Exception ex)
+				}
+				catch (Exception ex)
 				{
-					var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" || 
-					                   Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") == "Development";
-					
+					var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ||
+									   Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") == "Development";
+
 					if (isDevelopment && ex.Message.Contains("403") || ex.Message.Contains("Forbidden"))
 					{
 						Message = $"Development Mode: API blocked due to CORS. This works in production. Error: {ex.Message}";
@@ -141,13 +151,13 @@ namespace BlazorApp.Client.Pages
 					LoadWordResults = null;
 					Console.WriteLine($"WordsGame API Error: {ex.Message}");
 				}
-				
+
 				// Process successful API response
 				if (LoadWordResults?.WordResults != null && LoadWordResults.WordResults.Count > 0)
 				{
 					WordResult = LoadWordResults.WordResults[0];
 				}
-				
+
 				// Update message and result from API response
 				if (string.IsNullOrEmpty(Message))
 				{
@@ -160,7 +170,7 @@ namespace BlazorApp.Client.Pages
 				// No API key available - set proper state
 				Message = "Please enter your Words API key to load words.";
 			}
-			
+
 			// Always ensure loading state is properly ended
 			isLoading = false;
 			StateHasChanged();
@@ -191,7 +201,8 @@ namespace BlazorApp.Client.Pages
 			{
 				await LoadWordsButton.FocusAsync();
 			}
-		}		protected override async Task OnInitializedAsync()
+		}
+		protected override async Task OnInitializedAsync()
 		{
 			apiKey = await ApiKeyService.GetApiKeyAsync();
 			if (ApiKeyAvailable)
@@ -214,11 +225,5 @@ namespace BlazorApp.Client.Pages
 				GameOptions.ShowOptions = !GameOptions.ShowOptions;
 			}
 		}
-		public List<string> ButtonClass { get; set; } = new List<string>() { "btn-info", "btn-info", "btn-info", "btn-info", "btn-info", };
-		public bool HideKey { get; set; } = false;
-		public string? Message { get; set; }
-		public bool ShowWord { get; set; } = true;
-
-
 	}
 }
