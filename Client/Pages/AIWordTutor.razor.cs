@@ -82,6 +82,9 @@ namespace BlazorApp.Client.Pages
             conversationTargetWords.Clear();
             usedTargetWords.Clear();
             wordsUsedCorrectly = 0;
+            // Preserve previous word so we can avoid repeats
+            var previousHangmanWord = hangmanWord;
+
             hangmanGuesses.Clear();
             hangmanWrongGuesses = 0;
             hangmanGameOver = false;
@@ -108,7 +111,7 @@ namespace BlazorApp.Client.Pages
                         var words = await GetWordsFromAI(1);
                         newWord = words.FirstOrDefault() ?? "example";
                     }
-                    while (!string.IsNullOrEmpty(hangmanWord) && newWord.Equals(hangmanWord, StringComparison.OrdinalIgnoreCase));
+                    while (!string.IsNullOrEmpty(previousHangmanWord) && newWord.Equals(previousHangmanWord, StringComparison.OrdinalIgnoreCase));
                     hangmanWord = newWord;
 
                     hangmanGuesses.Clear();
@@ -1278,7 +1281,8 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                 hangmanWin = true;
                 score += 20; // Award points for win
             }
-            StateHasChanged();
+            // Trigger UI update asynchronously to satisfy async signature
+            await InvokeAsync(StateHasChanged);
         }
 
         // Hangman state fields
