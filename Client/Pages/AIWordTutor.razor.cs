@@ -52,39 +52,7 @@ namespace BlazorApp.Client.Pages
         private HashSet<string> usedTargetWords = new();
         private int wordsUsedCorrectly = 0;
 
-        // Sample words organized by difficulty
-        private readonly Dictionary<DifficultyLevel, List<string>> wordLibrary = new()
-        {
-            {
-                DifficultyLevel.Beginner, new List<string>
-                {
-                    "adventure", "beautiful", "celebrate", "discover", "enormous", "friendship",
-                    "grateful", "harmony", "important", "journey", "kindness", "laughter",
-                    "mystery", "nature", "opportunity", "peaceful", "question", "respect",
-                    "sunshine", "treasure", "umbrella", "victory", "wonderful", "explore", "youthful"
-                }
-            },
-            {
-                DifficultyLevel.Intermediate, new List<string>
-                {
-                    "ambitious", "beneficial", "comprehensive", "demonstrate", "elaborate",
-                    "fundamental", "genuine", "hypothesis", "inevitable", "jurisdiction",
-                    "magnificent", "negligent", "optimistic", "persistent", "reluctant",
-                    "sophisticated", "temporary", "unprecedented", "versatile", "wisdom",
-                    "analyze", "bureaucracy", "catastrophe", "diligent", "empathy"
-                }
-            },
-            {
-                DifficultyLevel.Advanced, new List<string>
-                {
-                    "ubiquitous", "perspicacious", "serendipitous", "magnanimous", "eloquent",
-                    "ephemeral", "indigenous", "meticulous", "ostentatious", "pragmatic",
-                    "quintessential", "resilient", "scrupulous", "tenacious", "vicarious",
-                    "whimsical", "xenophobic", "zealous", "acquiesce", "belligerent",
-                    "cacophony", "deleterious", "effervescent", "facetious", "gregarious"
-                }
-            }
-        };        protected override async Task OnInitializedAsync()
+        private string? themeInput = string.Empty;        protected override async Task OnInitializedAsync()
         {
             // Check if API key already exists
             var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
@@ -95,10 +63,10 @@ namespace BlazorApp.Client.Pages
             StateHasChanged();
         }
           private void OnApiKeySaved()
-        {
-            hasApiKey = true;
-            StateHasChanged();
-        }
+          {
+              hasApiKey = true;
+              StateHasChanged();
+          }
         
         private async Task StartGame(GameMode mode)
         {
@@ -126,8 +94,8 @@ namespace BlazorApp.Client.Pages
                     StartTime = DateTime.Now
                 };
 
-                // Select words based on difficulty level
-                var wordsToUse = GetRandomWords(5);
+                // Select words using OpenAI (theme-aware)
+                var wordsToUse = await GetWordsFromAI(5);
 
                 switch (mode)
                 {
@@ -157,11 +125,22 @@ namespace BlazorApp.Client.Pages
             }
         }
 
-        private List<string> GetRandomWords(int count)
+        private async Task<List<string>> GetWordsFromAI(int count)
         {
-            var availableWords = wordLibrary[difficulty];
-            var random = new Random();
-            return availableWords.OrderBy(x => random.Next()).Take(count).ToList();
+            var theme = string.IsNullOrWhiteSpace(themeInput) ? "random" : themeInput.Trim();
+            var difficultyText = difficulty.ToString().ToLower();
+            var prompt = string.IsNullOrWhiteSpace(themeInput)
+                ? $"Generate a list of {count} random English vocabulary words appropriate for {difficultyText}-level learners. Return only a comma-separated list."
+                : $"Generate a list of {count} English vocabulary words about '{theme}' appropriate for {difficultyText}-level learners. Return only a comma-separated list.";
+            var systemMessage = "You are an expert English language teacher.";
+            var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+            var words = aiResponse.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                  .Select(w => w.Trim())
+                                  .Where(w => !string.IsNullOrWhiteSpace(w))
+                                  .Distinct(StringComparer.OrdinalIgnoreCase)
+                                  .Take(count)
+                                  .ToList();
+            return words;
         }
 
         private async Task GenerateStoryAdventure(List<string> words)
@@ -783,21 +762,21 @@ CORRECT: [Letter of correct answer]";
 
         private async Task GenerateNewStoryAdventure()
         {
-            var newWords = GetRandomWords(5);
+            var newWords = await GetWordsFromAI(5);
             currentChallenges.Clear();
             await GenerateStoryAdventure(newWords);
         }
 
         private async Task GenerateNewPersonalizedQuiz()
         {
-            var newWords = GetRandomWords(5);
+            var newWords = await GetWordsFromAI(5);
             currentChallenges.Clear();
             await GeneratePersonalizedQuiz(newWords);
         }
 
         private async Task GenerateNewContextualChallenges()
         {
-            var newWords = GetRandomWords(5);
+            var newWords = await GetWordsFromAI(5);
             currentChallenges.Clear();
             await GenerateContextualChallenges(newWords);
         }        private async Task SendMessage()
@@ -1203,7 +1182,7 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
         }        private async Task GenerateNewConversationTopic()
         {
             // Reset conversation state for new topic
-            var newWords = GetRandomWords(5);
+            var newWords = await GetWordsFromAI(5);
             conversationTargetWords = newWords;
             usedTargetWords.Clear();
             wordsUsedCorrectly = 0;
