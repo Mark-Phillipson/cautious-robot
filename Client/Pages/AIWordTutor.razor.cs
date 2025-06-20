@@ -82,7 +82,12 @@ namespace BlazorApp.Client.Pages
             conversationTargetWords.Clear();
             usedTargetWords.Clear();
             wordsUsedCorrectly = 0;
-
+            hangmanGuesses.Clear();
+            hangmanWrongGuesses = 0;
+            hangmanGameOver = false;
+            hangmanWin = false;
+            hangmanWord = string.Empty;
+            hangmanDefinition = null;
             StateHasChanged();
 
             try
@@ -93,6 +98,19 @@ namespace BlazorApp.Client.Pages
                     Difficulty = difficulty,
                     StartTime = DateTime.Now
                 };
+
+                if (mode == GameMode.Hangman)
+                {
+                    var hangmanWords = await GetWordsFromAI(1);
+                    hangmanWord = hangmanWords.FirstOrDefault() ?? "example";
+                    hangmanGuesses.Clear();
+                    hangmanWrongGuesses = 0;
+                    hangmanGameOver = false;
+                    hangmanWin = false;
+                    hangmanDefinition = await GetSimpleDefinitionAsync(hangmanWord); // Fetch definition for answer word
+                    StateHasChanged();
+                    return;
+                }
 
                 // Select words using OpenAI (theme-aware)
                 var wordsToUse = await GetWordsFromAI(5);
@@ -218,7 +236,7 @@ etc.";
             return words.FirstOrDefault(word => lowerQuestion.Contains(word.ToLower())) ?? "";
         }
 
-        private Task GenerateSimpleChallenges(List<string> words)
+        private async Task GenerateSimpleChallenges(List<string> words)
         {
             foreach (var word in words)
             {
@@ -241,12 +259,11 @@ etc.";
                         _ => $"How does '{word}' contribute to the meaning of this story?"
                     },
                     IsOpenEnded = challengeType != ChallengeType.Comprehension,
-                    Options = challengeType == ChallengeType.Comprehension ? GenerateMultipleChoiceOptions(word) : new List<string>(),
-                    CorrectAnswer = challengeType == ChallengeType.Comprehension ? GetSimpleDefinition(word) : ""
+                    Options = challengeType == ChallengeType.Comprehension ? await GenerateMultipleChoiceOptionsAsync(word) : new List<string>(),
+                    CorrectAnswer = challengeType == ChallengeType.Comprehension ? await GetSimpleDefinitionAsync(word) : ""
                 });
             }
-
-            return Task.CompletedTask;
+            // No return needed for async Task
         }
         private async Task GenerateConversationStarter(List<string> words)
         {
@@ -367,7 +384,7 @@ CORRECT: [Letter of correct answer]";
             currentContent = "Let's test your knowledge with some smart questions!";
         }
 
-        private Task<WordChallenge> ParseQuizResponse(string aiResponse, string word)
+        private async Task<WordChallenge> ParseQuizResponse(string aiResponse, string word)
         {
             try
             {
@@ -379,7 +396,6 @@ CORRECT: [Letter of correct answer]";
                 foreach (var line in lines)
                 {
                     var trimmedLine = line.Trim();
-                    
                     if (trimmedLine.StartsWith("QUESTION:"))
                     {
                         question = trimmedLine.Substring(9).Trim();
@@ -398,26 +414,28 @@ CORRECT: [Letter of correct answer]";
                             correctAnswer = options[index];
                         }
                     }
-                }                return Task.FromResult(new WordChallenge
+                }
+                return new WordChallenge
                 {
                     Type = GetChallengeTypeFromQuestion(question),
                     TargetWord = word,
                     Question = !string.IsNullOrEmpty(question) ? question : $"What does '{word}' mean?",
-                    Options = options.Count > 0 ? options : GenerateMultipleChoiceOptions(word),
-                    CorrectAnswer = !string.IsNullOrEmpty(correctAnswer) ? correctAnswer : GetSimpleDefinition(word)
-                });
+                    Options = options.Count > 0 ? options : await GenerateMultipleChoiceOptionsAsync(word),
+                    CorrectAnswer = !string.IsNullOrEmpty(correctAnswer) ? correctAnswer : await GetSimpleDefinitionAsync(word)
+                };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing quiz response: {ex.Message}");                // Return fallback question
-                return Task.FromResult(new WordChallenge
+                Console.WriteLine($"Error parsing quiz response: {ex.Message}");
+                // Return fallback question
+                return new WordChallenge
                 {
                     Type = ChallengeType.Definition,
                     TargetWord = word,
                     Question = $"What does '{word}' mean?",
-                    Options = GenerateMultipleChoiceOptions(word),
-                    CorrectAnswer = GetSimpleDefinition(word)
-                });
+                    Options = await GenerateMultipleChoiceOptionsAsync(word),
+                    CorrectAnswer = await GetSimpleDefinitionAsync(word)
+                };
             }
         }
 
@@ -441,11 +459,11 @@ CORRECT: [Letter of correct answer]";
         }
 
         // Utility methods for generating content
-        private List<string> GenerateMultipleChoiceOptions(string word)
+        private async Task<List<string>> GenerateMultipleChoiceOptionsAsync(string word)
         {
             var options = new List<string>
             {
-                GetSimpleDefinition(word),
+                await GetSimpleDefinitionAsync(word),
                 GetRandomDefinition(),
                 GetRandomDefinition(),
                 GetRandomDefinition()
@@ -463,94 +481,63 @@ CORRECT: [Letter of correct answer]";
                 GetRandomWord()
             };
             return options.OrderBy(x => Guid.NewGuid()).ToList();
-        }        private string GetSimpleDefinition(string word)
-        {
-            var definitions = new Dictionary<string, string>
-            {
-                // Beginner words
-                {"adventure", "An exciting and unusual experience or activity"},
-                {"beautiful", "Pleasing to look at; attractive"},
-                {"celebrate", "To acknowledge a significant or happy day or event"},
-                {"discover", "To find something for the first time"},
-                {"enormous", "Very large in size or quantity"},
-                {"friendship", "A close relationship between friends"},
-                {"grateful", "Feeling thankful for something"},
-                {"harmony", "A pleasant combination of different things"},
-                {"important", "Having great significance or value"},
-                {"journey", "A trip from one place to another"},
-                {"kindness", "The quality of being friendly and caring"},
-                {"laughter", "The sound made when someone finds something funny"},
-                {"mystery", "Something that is difficult to understand"},
-                {"nature", "The physical world including plants and animals"},
-                {"opportunity", "A chance to do something"},
-                {"peaceful", "Calm and quiet; without conflict"},
-                {"question", "A sentence that asks for information"},
-                {"respect", "Admiration for someone or something"},
-                {"sunshine", "Direct light from the sun"},
-                {"treasure", "Something very valuable"},
-                {"umbrella", "A device used for protection from rain"},
-                {"victory", "Success in a struggle or contest"},
-                {"wonderful", "Extremely good or pleasant"},
-                {"explore", "To travel through an area to learn about it"},
-                {"youthful", "Having the characteristics of a young person"},
-                
-                // Intermediate words
-                {"ambitious", "Having a strong desire for success or achievement"},
-                {"beneficial", "Having a good or helpful result"},
-                {"comprehensive", "Complete and including everything"},
-                {"demonstrate", "To show clearly by giving proof or evidence"},
-                {"elaborate", "Involving many carefully arranged parts; detailed"},
-                {"fundamental", "Forming a necessary base or core"},
-                {"genuine", "Truly what it is said to be; authentic"},
-                {"hypothesis", "A suggested explanation for something"},
-                {"inevitable", "Certain to happen; unavoidable"},
-                {"jurisdiction", "The official power to make legal decisions"},
-                {"magnificent", "Extremely beautiful, elaborate, or impressive"},
-                {"negligent", "Failing to take proper care"},
-                {"optimistic", "Hopeful and confident about the future"},
-                {"persistent", "Continuing firmly despite difficulties"},
-                {"reluctant", "Unwilling or hesitant"},
-                {"sophisticated", "Having a refined knowledge of culture and fashion"},
-                {"temporary", "Lasting for only a limited period"},
-                {"unprecedented", "Never done or known before"},
-                {"versatile", "Able to adapt to many different functions"},
-                {"wisdom", "The quality of having experience, knowledge, and good judgment"},
-                {"analyze", "To examine something in detail"},
-                {"bureaucracy", "A system of government with many departments"},
-                {"catastrophe", "A sudden event causing great damage"},
-                {"diligent", "Having or showing care in one's work"},
-                {"empathy", "The ability to understand others' feelings"},
-                
-                // Advanced words
-                {"ubiquitous", "Present, appearing, or found everywhere"},
-                {"perspicacious", "Having a ready insight into things"},
-                {"serendipitous", "Occurring by happy chance"},
-                {"magnanimous", "Very generous or forgiving"},
-                {"eloquent", "Fluent and persuasive in speaking"},
-                {"ephemeral", "Lasting for a very short time"},
-                {"indigenous", "Originating naturally in a particular place"},
-                {"meticulous", "Showing great attention to detail"},
-                {"ostentatious", "Characterized by showy display"},
-                {"pragmatic", "Dealing with things in a practical way"},
-                {"quintessential", "Representing the most perfect example"},
-                {"resilient", "Able to recover quickly from difficulties"},
-                {"scrupulous", "Diligent, thorough, and extremely attentive to details"},
-                {"tenacious", "Holding fast; persistent"},
-                {"vicarious", "Experienced through someone else"},
-                {"whimsical", "Playfully quaint or fanciful"},
-                {"xenophobic", "Having dislike of people from other countries"},
-                {"zealous", "Having great energy or passion for something"},
-                {"acquiesce", "To accept something reluctantly but without protest"},
-                {"belligerent", "Hostile and aggressive"},
-                {"cacophony", "A harsh, discordant mixture of sounds"},
-                {"deleterious", "Causing harm or damage"},
-                {"effervescent", "Vivacious and enthusiastic"},
-                {"facetious", "Treating serious issues with inappropriate humor"},
-                {"gregarious", "Fond of the company of others; sociable"}
-            };
+        }        private readonly Dictionary<string, string> _definitionCache = new();
+private async Task<string> GetSimpleDefinitionAsync(string word)
+{
+    if (string.IsNullOrWhiteSpace(word)) return "";
+    word = word.Trim();
+    var wordLower = word.ToLowerInvariant();
+    if (_definitionCache.TryGetValue(wordLower, out var cachedDef))
+        return cachedDef;
 
-            return definitions.GetValueOrDefault(word, $"Definition for '{word}' (word not in dictionary)");
-        }        private string GetSynonym(string word)
+    // Use OpenAI to fetch a definition
+    var prompt = $"Provide a simple, clear English definition for the word '{wordLower}'. Limit to one sentence. Do not use the word itself or any obvious forms of it in the definition.";
+    var systemMessage = "You are an expert English dictionary.";
+    try
+    {
+        var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+        var definition = aiResponse.Trim();
+        if (string.IsNullOrWhiteSpace(definition))
+            definition = $"No definition found for '{wordLower}'.";
+
+        // Post-process: mask the word and simple variants in the definition
+        string MaskWord(string def, string w)
+        {
+            var forms = new List<string> { w };
+            if (w.Length > 0)
+                forms.Add(char.ToUpper(w[0]) + w.Substring(1));
+            var suffixes = new[] { "s", "es", "ed", "ing" };
+            foreach (var suffix in suffixes)
+            {
+                forms.Add(w + suffix);
+                if (w.Length > 0)
+                    forms.Add(char.ToUpper(w[0]) + w.Substring(1) + suffix);
+            }
+            string root = w;
+            if (w.EndsWith("ing") && w.Length > 3) root = w.Substring(0, w.Length - 3);
+            else if (w.EndsWith("ed") && w.Length > 2) root = w.Substring(0, w.Length - 2);
+            else if (w.EndsWith("es") && w.Length > 2) root = w.Substring(0, w.Length - 2);
+            else if (w.EndsWith("s") && w.Length > 1) root = w.Substring(0, w.Length - 1);
+            if (root != w && root.Length > 2) forms.Add(root);
+            foreach (var form in forms.Distinct())
+            {
+                // Mask at start of string
+                def = System.Text.RegularExpressions.Regex.Replace(def, $@"^(?i){System.Text.RegularExpressions.Regex.Escape(form)}", "_____", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                // Mask as whole word anywhere
+                def = System.Text.RegularExpressions.Regex.Replace(def, $@"\b{System.Text.RegularExpressions.Regex.Escape(form)}\b", "_____", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            }
+            return def;
+        }
+        definition = MaskWord(definition, wordLower);
+        _definitionCache[wordLower] = definition;
+        return definition;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error fetching definition for '{wordLower}': {ex.Message}");
+        return $"No definition found for '{wordLower}'.";
+    }
+}        private string GetSynonym(string word)
         {
             var synonyms = new Dictionary<string, string>
             {
@@ -671,6 +658,7 @@ CORRECT: [Letter of correct answer]";
                 GameMode.ConversationPractice => "💬 Conversation Practice",
                 GameMode.ContextualLearning => "🎯 Contextual Learning",
                 GameMode.PersonalizedQuiz => "🧠 Smart Quiz",
+                GameMode.Hangman => "🪄 Hangman",
                 _ => "Learning Mode"
             };
         }        private string GetDifficultyName(DifficultyLevel level)
@@ -698,6 +686,11 @@ CORRECT: [Letter of correct answer]";
             conversationTargetWords.Clear();
             usedTargetWords.Clear();
             wordsUsedCorrectly = 0;
+            hangmanGuesses.Clear();
+            hangmanWrongGuesses = 0;
+            hangmanGameOver = false;
+            hangmanWin = false;
+            hangmanWord = string.Empty;
             StateHasChanged();
             return Task.CompletedTask;
         }        private async Task HandleKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
@@ -1248,5 +1241,45 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
 
             return false;
         }
+
+        private string GetHangmanDisplay()
+        {
+            if (string.IsNullOrEmpty(hangmanWord)) return string.Empty;
+            return string.Join(" ", hangmanWord.Select(c => hangmanGuesses.Contains(char.ToUpperInvariant(c)) ? c.ToString() : "_"));
+        }
+
+        public async Task ProcessHangmanGuess(char guess)
+        {
+            if (hangmanGameOver || string.IsNullOrEmpty(hangmanWord)) return;
+            guess = char.ToUpperInvariant(guess);
+            if (!char.IsLetter(guess) || hangmanGuesses.Contains(guess)) return;
+            hangmanGuesses.Add(guess);
+            var wordUpper = hangmanWord.ToUpperInvariant();
+            if (!wordUpper.Contains(guess))
+            {
+                hangmanWrongGuesses++;
+                if (hangmanWrongGuesses >= hangmanMaxWrong)
+                {
+                    hangmanGameOver = true;
+                    hangmanWin = false;
+                }
+            }
+            else if (wordUpper.All(c => !char.IsLetter(c) || hangmanGuesses.Contains(char.ToUpperInvariant(c))))
+            {
+                hangmanGameOver = true;
+                hangmanWin = true;
+                score += 20; // Award points for win
+            }
+            StateHasChanged();
+        }
+
+        // Hangman state fields
+        private string hangmanWord = string.Empty;
+        private string? hangmanDefinition;
+        private HashSet<char> hangmanGuesses = new();
+        private int hangmanWrongGuesses = 0;
+        private int hangmanMaxWrong = 6;
+        private bool hangmanGameOver = false;
+        private bool hangmanWin = false;
     }
 }
