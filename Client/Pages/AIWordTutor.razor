@@ -235,7 +235,9 @@
             builder.AddAttribute(1, "class", "challenge-section");
             
             builder.OpenElement(2, "h4");
-            builder.AddContent(3, challenge.Question);
+            builder.AddAttribute(3, "class", "challenge-question");
+            builder.AddAttribute(4, "style", "color: #111;");
+            builder.AddContent(5, challenge.Question);
             builder.CloseElement();
             
             // Add a container for the text input and button
@@ -262,9 +264,10 @@
         {
             builder.OpenElement(0, "div");
             builder.AddAttribute(1, "class", "challenge-section");
-            
             builder.OpenElement(2, "h4");
-            builder.AddContent(3, challenge.Question);
+            builder.AddAttribute(3, "class", "challenge-question");
+            builder.AddAttribute(4, "style", "color: #111;");
+            builder.AddContent(5, challenge.Question);
             builder.CloseElement();
               builder.OpenElement(4, "div");
             builder.AddAttribute(5, "class", "options-grid");

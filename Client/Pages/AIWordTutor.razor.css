@@ -343,6 +343,21 @@
     line-height: 1.4 !important;
 }
 
+.challenge-question h4 {
+    font-weight: 900 !important;
+    color: red !important;
+    font-size: 1.5rem !important;
+    margin-bottom: 1.2rem !important;
+    letter-spacing: 0.01em;
+    text-shadow: 0 2px 6px #fff, 0 0 2px #e0e0e0;
+    background: linear-gradient(90deg, #fff 80%, #f3f6ff 100%) !important;
+    border-radius: 8px;
+    padding: 0.5rem 0.5rem 0.5rem 0 !important;
+    border-left: 5px solid #667eea;
+    display: inline-block;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.07);
+}
+
 /* Original grid and button styles - now replaced by more specific rules above */
 
 .answer-textarea {
