@@ -1005,3 +1005,11 @@ button.option-btn:focus {
     letter-spacing: 0.01em;
     text-shadow: 0 1px 0 #fff, 0 0 2px #e0e0e0;
 }
+
+.disclaimer {
+    text-align: center;
+    margin-top: 2rem;
+    color: #b71c1c;
+    font-size: 1.05rem;
+    font-weight: 500;
+}

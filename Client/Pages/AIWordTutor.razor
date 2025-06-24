@@ -26,11 +26,11 @@
                 <!-- Theme Input Section -->
                 <div class="theme-section" style="margin: 1.5rem 0 2rem 0; display: flex; flex-direction: column; align-items: center;">
                     <label for="themeInput" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.3rem; color: #444;">
-    Theme <span style="color: red;">*</span> (mandatory):
-</label>
-<input id="themeInput" @bind="themeInput" placeholder="e.g. travel, food, sports, etc." class="theme-input"
-    style="width: 260px; padding: 0.5rem 1rem; border-radius: 8px; border: 1.5px solid #bdbdbd; font-size: 1rem; margin-bottom: 0.3rem; background: #f8f9fa; color: #333; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: border 0.2s;" />
-<small style="color: #c00; font-size: 0.95rem; font-weight: 500;">Theme is required.  Please change if required.</small>
+                        Theme <span style="color: red;">*</span> (mandatory):
+                    </label>
+                    <input id="themeInput" @bind="themeInput" placeholder="e.g. travel, food, sports, etc." class="theme-input"
+                        style="width: 260px; padding: 0.5rem 1rem; border-radius: 8px; border: 1.5px solid #bdbdbd; font-size: 1rem; margin-bottom: 0.3rem; background: #f8f9fa; color: #333; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: border 0.2s;" />
+                    <small style="color: #c00; font-size: 0.95rem; font-weight: 500;">Theme is required.  Please change if required.</small>
                 </div>
 
                 <div class="game-modes">
@@ -148,7 +148,8 @@
                                         @message
                                     </div>
                                 }
-                            </div>                            <div class="chat-input-section">
+                            </div>                            
+                            <div class="chat-input-section">
                                 <input type="text" @bind="userInput" @onkeydown="HandleKeyPress" @ref="chatInputElement"
                                        placeholder="Type your response..." class="chat-input" />
                                 <button @onclick="SendMessage" class="send-btn">Send</button>
@@ -195,12 +196,12 @@
                             }
                         </div>
                     }
-                }
             </div>            
             @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
             {
                 <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
-                    <div class="feedback-content">                        <div class="feedback-header">
+                    <div class="feedback-content">                        
+                        <div class="feedback-header">
                             <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
                             <div class="countdown-display">
                                 <span class="countdown-text">@countdownSeconds</span>
@@ -208,7 +209,8 @@
                         </div>
                           <div class="progress-container">
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: @(ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                                <div class="progress-fill" style="width: @(ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%">
+                                </div>
                             </div>
                         </div>
                         
