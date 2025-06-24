@@ -724,7 +724,11 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
             showFeedback = false;
             feedbackMessage = "";
             
-            currentChallengeIndex++;
+            // Only move to next challenge if the last answer was correct
+            if (lastAnswerCorrect)
+            {
+                currentChallengeIndex++;
+            }
             
             if (currentChallengeIndex >= currentChallenges.Count)
             {
@@ -894,7 +898,8 @@ Respond naturally as a conversation partner:";
                 {
                     currentSession.WordsLearned.Add(challenge.TargetWord);
                 }
-            }            else
+            }
+            else
             {
                 streak = 0;
                 
@@ -905,7 +910,15 @@ Respond naturally as a conversation partner:";
                 }
                 else if (challenge.IsOpenEnded)
                 {
-                    feedbackMessage = $"Good effort! For '{challenge.TargetWord}', try incorporating its meaning more clearly in your response.";
+                    // Only mention the target word if the user actually used it; otherwise give a generic prompt
+                    if (answer.IndexOf(challenge.TargetWord, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        feedbackMessage = $"Good effort! For '{challenge.TargetWord}', try incorporating its meaning more clearly in your response.";
+                    }
+                    else
+                    {
+                        feedbackMessage = "Not quite right. Please try again focusing on the question.";
+                    }
                 }
                 else
                 {
@@ -923,7 +936,8 @@ Respond naturally as a conversation partner:";
             await Task.Delay(2000); // Longer delay for sound effect to play
             PlayAudio = false;
             StateHasChanged();
-        }        private async Task<bool> CheckAnswerWithAI(WordChallenge challenge, string answer)
+        }
+        private async Task<bool> CheckAnswerWithAI(WordChallenge challenge, string answer)
         {
             if (challenge.IsOpenEnded)
             {
@@ -949,6 +963,7 @@ Please assess:
 IMPORTANT: If the student says they don't know, are unsure, or gives non-answers like 'I don't know', 'not sure', 'no idea', etc., respond with INCORRECT.
 
 Respond with: CORRECT if it shows good understanding, or INCORRECT if it doesn't.
+Use emotes where applicable
 Then provide a brief, encouraging feedback comment (1 sentence).
 
 Format:
@@ -956,7 +971,7 @@ RESULT: [CORRECT/INCORRECT]
 FEEDBACK: [Your encouraging comment]";
 
                 var systemMessage = "You are a patient English language teacher evaluating student responses with encouragement and constructive guidance. Be strict about marking non-answers and 'I don't know' responses as incorrect.";
-                
+
                 try
                 {
                     var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
