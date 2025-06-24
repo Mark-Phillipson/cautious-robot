@@ -930,6 +930,17 @@ Respond naturally as a conversation partner:";
             userInput = ""; // Clear input after processing
             StateHasChanged();
 
+            // Accessibility: Focus the Continue Learning button after feedback is shown
+            try
+            {
+                await Task.Delay(100); // Allow UI to render feedback popup
+                await continueBtnRef.FocusAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error focusing Continue Learning button: {ex.Message}");
+            }
+
             // Debug logging
             Console.WriteLine($"AIWordTutor: PlayAudio set to true, lastAnswerCorrect: {lastAnswerCorrect}");
 

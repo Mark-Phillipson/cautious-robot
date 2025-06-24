@@ -28,11 +28,12 @@ public class AIWordTutorLogicTests
         var gameModeValues = Enum.GetValues(typeof(GameMode));
 
         // Act & Assert
-        Assert.Equal(4, gameModeValues.Length);
+        Assert.Equal(5, gameModeValues.Length);
         Assert.Contains(GameMode.StoryAdventure, gameModeValues.Cast<GameMode>());
         Assert.Contains(GameMode.ConversationPractice, gameModeValues.Cast<GameMode>());
         Assert.Contains(GameMode.ContextualLearning, gameModeValues.Cast<GameMode>());
         Assert.Contains(GameMode.PersonalizedQuiz, gameModeValues.Cast<GameMode>());
+        Assert.Contains(GameMode.Hangman, gameModeValues.Cast<GameMode>());
     }
 
     [Theory]

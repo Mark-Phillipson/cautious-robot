@@ -211,7 +211,7 @@
                         {
                             <p><strong>Correct answer:</strong> @correctAnswer</p>
                         }
-                        <button @onclick="ContinueLearning" class="continue-btn">Continue Learning</button>
+                        <button @onclick="ContinueLearning" class="continue-btn" @ref="continueBtnRef">Continue Learning</button>
                     </div>
                 </div>
             }
@@ -251,6 +251,7 @@
               builder.OpenElement(12, "button");
             builder.AddAttribute(13, "class", "submit-btn");
             builder.AddAttribute(14, "onclick", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(userInput)));
+            builder.AddAttribute(14, "disabled", isLoading);
             builder.AddContent(15, "Submit Answer");
             builder.CloseElement();
             
@@ -365,6 +366,7 @@ else
 </style>
 
 @code {
+    private ElementReference continueBtnRef;
     @* private string? hangmanDefinition; *@
     private HashSet<char> HangmanGuessedLettersUpper => new HashSet<char>(hangmanGuesses.Select(c => char.ToUpperInvariant(c)));
 }
