@@ -60,13 +60,29 @@ namespace BlazorApp.Client.Pages
         };
         private static readonly Random _random = new();
 
+        private HashSet<char> HangmanGuessedLettersUpper => new HashSet<char>(hangmanGuesses.Select(c => char.ToUpperInvariant(c)));
+
         protected override async Task OnInitializedAsync()
         {
-            // Set a random theme if not already set
+            // Use AI to pick a theme if not already set
             if (string.IsNullOrWhiteSpace(themeInput))
             {
-                themeInput = DefaultThemes[_random.Next(DefaultThemes.Length)];
-                Console.WriteLine($"Theme defaulted to: {themeInput}");
+                try
+                {
+                    var prompt = "Suggest a single, engaging English learning theme for vocabulary practice. Return only the theme word or phrase.";
+                    var systemMessage = "You are an expert English language teacher.";
+                    var aiTheme = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+                    themeInput = aiTheme.Trim();
+                    Console.WriteLine($"Theme picked by AI: {themeInput}");
+                }
+                catch (Exception)
+                {
+                    // Fallback to static list if AI fails
+                    var themes = new[] { "nature", "travel", "food", "technology", "sports", "music", "friendship", "adventure", "school", "weather", "animals", "science", "art", "history", "health" };
+                    var random = new Random();
+                    themeInput = themes[random.Next(themes.Length)];
+                    Console.WriteLine($"AI theme failed, fallback to: {themeInput}");
+                }
             }
             // Check if API key already exists
             var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();

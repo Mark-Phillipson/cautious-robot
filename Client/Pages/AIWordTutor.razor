@@ -196,7 +196,8 @@
                         </div>
                     }
                 }
-            </div>            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
+            </div>            
+            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
             {
                 <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
                     <div class="feedback-content">                        <div class="feedback-header">
@@ -347,18 +348,3 @@ else
 <div class="disclaimer">
     ⚠️ Disclaimer: AI-generated content may contain inaccuracies. Please verify information independently.
 </div>
-
-@code {
-    private HashSet<char> HangmanGuessedLettersUpper => new HashSet<char>(hangmanGuesses.Select(c => char.ToUpperInvariant(c)));
-    
-    protected override void OnInitialized()
-    {
-        // Randomly choose a theme as the page loads (not when a game starts)
-        if (string.IsNullOrWhiteSpace(themeInput))
-        {
-            var themes = new[] { "nature", "travel", "food", "technology", "sports", "music", "friendship", "adventure", "school", "weather", "animals", "science", "art", "history", "health" };
-            var random = new Random();
-            themeInput = themes[random.Next(themes.Length)];
-        }
-    }
-}
