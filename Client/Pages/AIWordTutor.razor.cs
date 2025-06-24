@@ -14,6 +14,8 @@ namespace BlazorApp.Client.Pages
         [Inject] private IJSRuntime JSRuntime { get; set; } = default!;        // UI references
         private ElementReference chatHistoryContainer;
         private ElementReference chatInputElement;
+        private ElementReference continueBtnRef;
+        private ElementReference answerTextAreaRef;
 
         // Game state
         private bool gameStarted = false;
@@ -52,8 +54,20 @@ namespace BlazorApp.Client.Pages
         private HashSet<string> usedTargetWords = new();
         private int wordsUsedCorrectly = 0;
 
-        private string? themeInput = string.Empty;        protected override async Task OnInitializedAsync()
+        private string? themeInput = string.Empty;        private static readonly string[] DefaultThemes = new[]
         {
+            "nature", "travel", "food", "technology", "sports", "music", "friendship", "adventure", "school", "weather", "animals", "science", "art", "history", "health"
+        };
+        private static readonly Random _random = new();
+
+        protected override async Task OnInitializedAsync()
+        {
+            // Set a random theme if not already set
+            if (string.IsNullOrWhiteSpace(themeInput))
+            {
+                themeInput = DefaultThemes[_random.Next(DefaultThemes.Length)];
+                Console.WriteLine($"Theme defaulted to: {themeInput}");
+            }
             // Check if API key already exists
             var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
             hasApiKey = !string.IsNullOrEmpty(apiKey);
@@ -70,6 +84,14 @@ namespace BlazorApp.Client.Pages
         
         private async Task StartGame(GameMode mode)
         {
+            // Enforce mandatory theme
+            if (string.IsNullOrWhiteSpace(themeInput))
+            {
+                errorMessage = "Please enter a theme to start the game.";
+                StateHasChanged();
+                return;
+            }
+
             currentGameMode = mode;
             gameStarted = true;
             isLoading = true;
@@ -156,11 +178,9 @@ namespace BlazorApp.Client.Pages
 
         private async Task<List<string>> GetWordsFromAI(int count)
         {
-            var theme = string.IsNullOrWhiteSpace(themeInput) ? "random" : themeInput.Trim();
+            var theme = themeInput!.Trim(); // Always use the current theme, which is mandatory
             var difficultyText = difficulty.ToString().ToLower();
-            var prompt = string.IsNullOrWhiteSpace(themeInput)
-                ? $"Generate a list of {count} random English vocabulary words appropriate for {difficultyText}-level learners. Return only a comma-separated list."
-                : $"Generate a list of {count} English vocabulary words about '{theme}' appropriate for {difficultyText}-level learners. Return only a comma-separated list.";
+            var prompt = $"Generate a list of {count} English vocabulary words about '{theme}' appropriate for {difficultyText}-level learners. Return only a comma-separated list.";
             var systemMessage = "You are an expert English language teacher.";
             var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
             var words = aiResponse.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -723,49 +743,66 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
             StopFeedbackTimer();
             showFeedback = false;
             feedbackMessage = "";
-            
+
             // Only move to next challenge if the last answer was correct
             if (lastAnswerCorrect)
             {
                 currentChallengeIndex++;
             }
-            
+
+            // If we've reached the end of challenges, generate new content
             if (currentChallengeIndex >= currentChallenges.Count)
             {
-                // Handle end of challenges based on game mode
-                switch (currentGameMode)
+                isLoading = true;
+                StateHasChanged();
+                try
                 {
-                    case GameMode.StoryAdventure:
-                        // Generate a new story adventure with new words
-                        await GenerateNewStoryAdventure();
-                        break;
-                    case GameMode.PersonalizedQuiz:
-                        // Generate new quiz questions
-                        await GenerateNewPersonalizedQuiz();
-                        break;
-                    case GameMode.ContextualLearning:
-                        // Generate new contextual challenges
-                        await GenerateNewContextualChallenges();
-                        break;                    case GameMode.ConversationPractice:
-                        // For conversation mode, if all words are used, generate new conversation topic
-                        if (wordsUsedCorrectly >= conversationTargetWords.Count)
-                        {
-                            await GenerateNewConversationTopic();
-                        }
-                        else
-                        {
-                            // Continue current conversation - no action needed
-                            return;
-                        }
-                        break;
+                    switch (currentGameMode)
+                    {
+                        case GameMode.StoryAdventure:
+                            await GenerateNewStoryAdventure();
+                            break;
+                        case GameMode.PersonalizedQuiz:
+                            await GenerateNewPersonalizedQuiz();
+                            break;
+                        case GameMode.ContextualLearning:
+                            await GenerateNewContextualChallenges();
+                            break;
+                        case GameMode.ConversationPractice:
+                            // For conversation mode, if all words are used, generate new conversation topic
+                            if (wordsUsedCorrectly >= conversationTargetWords.Count)
+                            {
+                                await GenerateNewConversationTopic();
+                            }
+                            // else: continue current conversation - no action needed
+                            break;
+                    }
+                    currentChallengeIndex = 0;
                 }
-                currentChallengeIndex = 0;
+                catch (Exception ex)
+                {
+                    errorMessage = $"Failed to load next challenge: {ex.Message}";
+                    Console.WriteLine(errorMessage);
+                    // Fallback: reset state to avoid stuck UI
+                    currentContent = "Sorry, something went wrong. Please try again.";
+                    currentChallenges.Clear();
+                    currentChallengeIndex = 0;
+                }
+                finally
+                {
+                    isLoading = false;
+                    StateHasChanged();
+                }
             }
-            
-            userInput = ""; // Reset user input
-            lastAnswerCorrect = false; // Reset answer state
-            feedbackMessage = "";
-            StateHasChanged();
+            else
+            {
+                // If not at end, just reset input and state
+                userInput = "";
+                lastAnswerCorrect = false;
+                feedbackMessage = "";
+                StateHasChanged();
+                await FocusAnswerTextAreaIfNeeded();
+            }
         }
 
         private async Task GenerateNewStoryAdventure()
@@ -875,6 +912,8 @@ Respond naturally as a conversation partner:";
             if (currentChallengeIndex >= currentChallenges.Count) return;
 
             var challenge = currentChallenges[currentChallengeIndex];
+            isLoading = true; // Show spinner while processing answer
+            StateHasChanged();
             
             // Use AI-powered checking for open-ended questions, regular checking for multiple choice
             var isCorrect = challenge.IsOpenEnded 
@@ -1111,9 +1150,7 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                     Console.WriteLine($"Error with JS focus fallback: {jsEx.Message}");
                 }
             }
-        }// ...existing code...
-        
-        private void EvaluateVocabularyUsage(string userMessage)
+        }        private void EvaluateVocabularyUsage(string userMessage)
         {
             Console.WriteLine($"Evaluating message: {userMessage}");
             Console.WriteLine($"Target words: {string.Join(", ", conversationTargetWords)}");
@@ -1319,5 +1356,20 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
         private int hangmanMaxWrong = 6;
         private bool hangmanGameOver = false;
         private bool hangmanWin = false;
+        
+        private async Task FocusAnswerTextAreaIfNeeded()
+        {
+            if (currentGameMode == GameMode.StoryAdventure && currentChallengeIndex < currentChallenges.Count)
+            {
+                try
+                {
+                    await InvokeAsync(async () => await answerTextAreaRef.FocusAsync());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error focusing answer textarea: {ex.Message}");
+                }
+            }
+        }
     }
 }
