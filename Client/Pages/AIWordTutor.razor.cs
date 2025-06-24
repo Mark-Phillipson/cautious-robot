@@ -1387,5 +1387,103 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                 }
             }
         }
+
+        public RenderFragment RenderCurrentChallenge => builder =>
+        {
+            if (currentChallengeIndex >= currentChallenges.Count)
+            {
+                builder.AddMarkupContent(0, "<p>Loading next challenge...</p>");
+                return;
+            }
+
+            var challenge = currentChallenges[currentChallengeIndex];
+            if (challenge.IsOpenEnded)
+            {
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "class", "challenge-section");
+
+                builder.OpenElement(2, "h4");
+                builder.AddAttribute(3, "class", "challenge-question");
+                builder.AddAttribute(4, "style", "color: #111;");
+                builder.AddContent(5, challenge.Question);
+                builder.CloseElement();
+
+                builder.OpenElement(4, "div");
+                builder.AddAttribute(5, "class", "text-input-container");
+                builder.OpenElement(6, "textarea");
+                builder.AddAttribute(7, "class", "answer-textarea");
+                builder.AddAttribute(8, "placeholder", "Write your answer here...");
+                builder.AddAttribute(9, "value", userInput);
+                builder.AddAttribute(10, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, (e) => userInput = e.Value?.ToString() ?? ""));
+                builder.AddAttribute(11, "onkeydown", EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.KeyboardEventArgs>(this, HandleKeyPressForTextarea));
+                builder.AddElementReferenceCapture(12, r => answerTextAreaRef = r);
+                builder.CloseElement();
+                if (isLoading)
+                {
+                    builder.OpenElement(100, "div");
+                    builder.AddAttribute(101, "class", "answer-spinner-overlay");
+                    builder.OpenElement(102, "div");
+                    builder.AddAttribute(103, "class", "loading-spinner");
+                    builder.CloseElement();
+                    builder.CloseElement();
+                }
+                builder.OpenElement(13, "button");
+                builder.AddAttribute(14, "class", "submit-btn");
+                builder.AddAttribute(15, "onclick", EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(userInput)));
+                builder.AddAttribute(15, "disabled", isLoading);
+                builder.AddContent(16, "Submit Answer");
+                builder.CloseElement();
+                builder.CloseElement(); // text-input-container
+                builder.CloseElement(); // challenge-section
+            }
+            else
+            {
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "class", "challenge-section");
+                builder.OpenElement(2, "h4");
+                builder.AddAttribute(3, "class", "challenge-question");
+                builder.AddAttribute(4, "style", "color: #111;");
+                builder.AddContent(5, challenge.Question);
+                builder.CloseElement();
+                builder.OpenElement(4, "div");
+                builder.AddAttribute(5, "class", "options-grid");
+                builder.AddAttribute(6, "style",
+                    "display: grid; " +
+                    "grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); " +
+                    "gap: 15px; " +
+                    "margin-top: 1.5rem; " +
+                    "margin-bottom: 1rem;");
+                if (challenge.Options != null)
+                {
+                    var optionIndex = 7;
+                    foreach (var option in challenge.Options)
+                    {
+                        builder.OpenElement(optionIndex++, "button");
+                        builder.AddAttribute(optionIndex++, "class", "option-btn");
+                        builder.AddAttribute(optionIndex++, "style",
+                            "background: linear-gradient(135deg, #f8f9fa, #ffffff); " +
+                            "border: 2px solid #dee2e6; " +
+                            "border-radius: 15px; " +
+                            "padding: 18px 20px; " +
+                            "cursor: pointer; " +
+                            "transition: all 0.3s ease; " +
+                            "text-align: center; " +
+                            "font-size: 1.1rem; " +
+                            "font-weight: 500; " +
+                            "color: #495057; " +
+                            "box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); " +
+                            "font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; " +
+                            "min-height: 60px; " +
+                            "width: 100%; " +
+                            "display: flex; " + "align-items: center; " + "justify-content: center;");
+                        builder.AddAttribute(optionIndex++, "onclick", EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(option)));
+                        builder.AddContent(optionIndex++, option);
+                        builder.CloseElement();
+                    }
+                    builder.CloseElement(); // options-grid
+                }
+                builder.CloseElement(); // challenge-section
+            }
+        };
     }
 }
