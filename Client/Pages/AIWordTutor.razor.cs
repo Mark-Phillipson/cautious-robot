@@ -1432,6 +1432,12 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             await InvokeAsync(StateHasChanged);
         }
 
+        private void OnHangmanLayoutChanged(bool useKeyboard)
+        {
+            useKeyboardLayout = useKeyboard;
+            StateHasChanged();
+        }
+
         // Hangman state fields
         private string hangmanWord = string.Empty;
         private string? hangmanDefinition;
@@ -1440,6 +1446,7 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
         private int hangmanMaxWrong = 6;
         private bool hangmanGameOver = false;
         private bool hangmanWin = false;
+        private bool useKeyboardLayout = true; // Default to keyboard layout
         
         private async Task FocusAnswerTextAreaIfNeeded()
         {

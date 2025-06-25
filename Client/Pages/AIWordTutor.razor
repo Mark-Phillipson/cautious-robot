@@ -210,7 +210,9 @@
                             {
                                 <HangmanInput OnGuess="ProcessHangmanGuess"
                                               Disabled="@(hangmanGameOver)"
-                                              GuessedLetters="@(HangmanGuessedLettersUpper)" />
+                                              GuessedLetters="@(HangmanGuessedLettersUpper)"
+                                              UseKeyboardLayout="@useKeyboardLayout"
+                                              OnLayoutChanged="OnHangmanLayoutChanged" />
                             }
                         </div>
                     }
