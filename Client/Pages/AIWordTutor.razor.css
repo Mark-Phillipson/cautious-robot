@@ -1570,3 +1570,29 @@ button.letter-btn:hover:not(:disabled) {
                 0 4px 12px rgba(102, 126, 234, 0.2) !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
 }
+
+/* Random Theme Button Styles */
+.random-theme-btn {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(238, 90, 36, 0.3);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.random-theme-btn:hover {
+    background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(238, 90, 36, 0.4);
+}
+
+.random-theme-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(238, 90, 36, 0.3);
+}
