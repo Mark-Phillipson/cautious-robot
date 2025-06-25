@@ -196,14 +196,6 @@
                                 </div>
                             }
                             
-                            @if (hangmanGuesses.Count > 0)
-                            {
-                                <div class="guessed-letters">
-                                    <strong>🔤 Guessed Letters:</strong>
-                                    <div class="guessed-letters-list">@string.Join(" ", hangmanGuesses.OrderBy(c => c))</div>
-                                </div>
-                            }
-                            
                             @if (hangmanGameOver)
                             {
                                 <BlazorApp.Client.Pages.PlaySound Play="true" AnswerState="@hangmanWin" />

@@ -1354,32 +1354,6 @@ button.option-btn:focus {
     }
 }
 
-/* Guessed Letters Display */
-.guessed-letters {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
-    padding: 1rem 1.5rem;
-    margin: 1.5rem 0;
-    border: 2px solid #e9ecef;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-.guessed-letters strong {
-    color: #667eea;
-    font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.guessed-letters-list {
-    font-family: 'Courier New', monospace;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #495057;
-    letter-spacing: 2px;
-    margin-top: 0.5rem;
-}
-
 /* Wrong Guesses Counter */
 .wrong-counter {
     background: linear-gradient(135deg, #fff5f5, #fed7d7);
