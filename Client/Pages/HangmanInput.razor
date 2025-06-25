@@ -1,18 +1,18 @@
 @using Microsoft.AspNetCore.Components
 
-<div class="hangman-keyboard">
+<div class="letter-grid">
     @foreach (var letter in Letters)
     {
         var isGuessed = GuessedLettersUpper.Contains(letter);
         if (Disabled || isGuessed)
         {
-            <button class="hangman-key @(isGuessed ? "guessed" : "")" disabled>
+            <button class="letter-btn" disabled>
                 @letter
             </button>
         }
         else
         {
-            <button class="hangman-key" @onclick="() => GuessLetter(letter)">
+            <button class="letter-btn" @onclick="() => GuessLetter(letter)">
                 @letter
             </button>
         }

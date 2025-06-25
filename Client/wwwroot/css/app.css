@@ -215,3 +215,133 @@ a, .btn-link {
     align-self: flex-start !important;
     margin-top: 10px !important;
 }
+
+/* Modern Hangman Letter Button Styles - Global Override */
+.letter-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)) !important;
+    gap: 12px !important;
+    max-width: 700px !important;
+    margin: 2rem auto !important;
+    padding: 2rem !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    border-radius: 25px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+.letter-btn {
+    background: linear-gradient(135deg, #ffffff, #f8fafc) !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 15px !important;
+    padding: 15px 8px !important;
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    color: #4a5568 !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    min-height: 55px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    letter-spacing: 1px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+}
+
+.letter-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    border-color: #5a67d8 !important;
+    color: white !important;
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35), 0 4px 12px rgba(102, 126, 234, 0.2) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.letter-btn:active:not(:disabled) {
+    transform: translateY(-1px) scale(1.02) !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+}
+
+.letter-btn:disabled {
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e0) !important;
+    border-color: #a0aec0 !important;
+    color: #718096 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7 !important;
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.letter-btn:disabled::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: 2px !important;
+    right: 2px !important;
+    width: 16px !important;
+    height: 16px !important;
+    background: #48bb78 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    font-size: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 900 !important;
+    animation: checkmark-pop 0.3s ease-out !important;
+}
+
+@keyframes checkmark-pop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Responsive adjustments for letter buttons */
+@media (max-width: 768px) {
+    .letter-grid {
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 8px !important;
+        padding: 1.5rem !important;
+        max-width: 500px !important;
+    }
+    
+    .letter-btn {
+        padding: 12px 6px !important;
+        font-size: 1.1rem !important;
+        min-height: 50px !important;
+        border-radius: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .letter-grid {
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 6px !important;
+        padding: 1rem !important;
+        max-width: 400px !important;
+    }
+    
+    .letter-btn {
+        padding: 10px 4px !important;
+        font-size: 1rem !important;
+        min-height: 45px !important;
+        border-radius: 10px !important;
+    }
+}
