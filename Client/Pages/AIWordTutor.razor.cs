@@ -72,21 +72,25 @@ namespace BlazorApp.Client.Pages
                     var prompt = "Suggest a single, engaging English learning theme for vocabulary practice. Return only the theme word or phrase.";
                     var systemMessage = "You are an expert English language teacher.";
                     var aiTheme = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                    themeInput = aiTheme.Trim();
+                    themeInput = string.IsNullOrWhiteSpace(aiTheme) ? GetRandomTheme() : aiTheme.Trim();
                     Console.WriteLine($"Theme picked by AI: {themeInput}");
                 }
                 catch (Exception)
                 {
-                    // Fallback to static list if AI fails
-                    var themes = new[] { "nature", "travel", "food", "technology", "sports", "music", "friendship", "adventure", "school", "weather", "animals", "science", "art", "history", "health" };
-                    var random = new Random();
-                    themeInput = themes[random.Next(themes.Length)];
+                    // Always pick a random theme from the static list if AI fails
+                    themeInput = GetRandomTheme();
                     Console.WriteLine($"AI theme failed, fallback to: {themeInput}");
                 }
             }
             // Check if API key already exists
             var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
             hasApiKey = !string.IsNullOrEmpty(apiKey);
+        }
+
+        private string GetRandomTheme()
+        {
+            var themes = DefaultThemes;
+            return themes[_random.Next(themes.Length)];
         }        private void SetDifficulty(DifficultyLevel newDifficulty)
         {
             difficulty = newDifficulty;
@@ -400,11 +404,13 @@ QUESTION: [Question about the word's meaning or usage in this context]";
             
             foreach (var word in words)
             {
-                var questionTypes = new[] { "definition", "synonym", "usage", "context" };
-                var random = new Random();
-                var questionType = questionTypes[random.Next(questionTypes.Length)];
+                try
+                {
+                    var questionTypes = new[] { "definition", "synonym", "usage", "context" };
+                    var random = new Random();
+                    var questionType = questionTypes[random.Next(questionTypes.Length)];
 
-                var prompt = $@"Create a {questionType} question for the word '{word}' appropriate for {difficulty.ToString().ToLower()}-level English learners.
+                    var prompt = $@"Create a {questionType} question for the word '{word}' appropriate for {difficulty.ToString().ToLower()}-level English learners.
 
 For definition questions: Ask 'What does [word] mean?' and provide 4 definition options (A, B, C, D) with one correct definition.
 For synonym questions: Ask 'Which word means the same as [word]?' and provide 4 word options with one correct synonym.
@@ -421,11 +427,26 @@ C) [Option 3]
 D) [Option 4]
 CORRECT: [Letter of correct answer]";
 
-                var systemMessage = "You are an expert language assessment creator making engaging vocabulary questions.";
-                
-                var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                var challenge = await ParseQuizResponse(aiResponse, word);
-                currentChallenges.Add(challenge);
+                    var systemMessage = "You are an expert language assessment creator making engaging vocabulary questions.";
+                    
+                    var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+                    var challenge = await ParseQuizResponse(aiResponse, word);
+                    currentChallenges.Add(challenge);
+                    Console.WriteLine($"Generated challenge for word: {word}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error generating challenge for word '{word}': {ex.Message}");
+                    // Add fallback challenge for this word
+                    currentChallenges.Add(new WordChallenge
+                    {
+                        Type = ChallengeType.Definition,
+                        TargetWord = word,
+                        Question = $"What does '{word}' mean?",
+                        Options = new List<string> { "A basic meaning", "Something else", "Another option", "Not this one" },
+                        CorrectAnswer = "A basic meaning"
+                    });
+                }
             }
 
             currentContent = "Let's test your knowledge with some smart questions!";
@@ -777,15 +798,25 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                     {
                         case GameMode.StoryAdventure:
                             await GenerateNewStoryAdventure();
-                            break;
-                        case GameMode.PersonalizedQuiz:
-                            await GenerateNewPersonalizedQuiz();
-                            break;
+                            break;                case GameMode.PersonalizedQuiz:
+                    await GenerateNewPersonalizedQuiz();
+                    // Double-check that we have challenges after generation
+                    if (currentChallenges.Count == 0)
+                    {
+                        Console.WriteLine("Critical: No challenges after quiz generation, adding emergency fallback");
+                        currentChallenges.Add(new WordChallenge {
+                            Type = ChallengeType.Definition,
+                            TargetWord = "knowledge",
+                            Question = "What does 'knowledge' mean?",
+                            Options = new List<string> { "Information and understanding", "A building", "A tool", "A color" },
+                            CorrectAnswer = "Information and understanding"
+                        });
+                    }
+                    break;
                         case GameMode.ContextualLearning:
                             await GenerateNewContextualChallenges();
                             break;
                         case GameMode.ConversationPractice:
-                            // For conversation mode, if all words are used, generate new conversation topic
                             if (wordsUsedCorrectly >= conversationTargetWords.Count)
                             {
                                 await GenerateNewConversationTopic();
@@ -830,9 +861,45 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
 
         private async Task GenerateNewPersonalizedQuiz()
         {
-            var newWords = await GetWordsFromAI(5);
-            currentChallenges.Clear();
-            await GeneratePersonalizedQuiz(newWords);
+            try
+            {
+                var newWords = await GetWordsFromAI(5);
+                currentChallenges.Clear();
+                currentChallengeIndex = 0;
+                await GeneratePersonalizedQuiz(newWords);
+                
+                Console.WriteLine($"Generated {currentChallenges.Count} new quiz challenges");
+                
+                // Ensure at least one challenge exists
+                if (currentChallenges.Count == 0)
+                {
+                    Console.WriteLine("No challenges generated, adding fallback");
+                    var fallbackWord = newWords.FirstOrDefault() ?? "example";
+                    currentChallenges.Add(new WordChallenge
+                    {
+                        Type = ChallengeType.Definition,
+                        TargetWord = fallbackWord,
+                        Question = $"What does '{fallbackWord}' mean?",
+                        Options = new List<string> { "A sample or instance", "A mistake", "A tool", "A place" },
+                        CorrectAnswer = "A sample or instance"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating new quiz: {ex.Message}");
+                // Fallback challenge
+                currentChallenges.Clear();
+                currentChallengeIndex = 0;
+                currentChallenges.Add(new WordChallenge
+                {
+                    Type = ChallengeType.Definition,
+                    TargetWord = "learning",
+                    Question = "What does 'learning' mean?",
+                    Options = new List<string> { "The process of gaining knowledge", "A type of building", "A measurement", "A color" },
+                    CorrectAnswer = "The process of gaining knowledge"
+                });
+            }
         }
 
         private async Task GenerateNewContextualChallenges()
@@ -983,6 +1050,7 @@ Respond naturally as a conversation partner:";
             StartFeedbackTimer();
             PlayAudio = true;
             userInput = ""; // Clear input after processing
+            isLoading = false; // Reset loading state after processing answer
             StateHasChanged();
 
             // Accessibility: Focus the Continue Learning button after feedback is shown
@@ -1390,17 +1458,45 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
 
         public RenderFragment RenderCurrentChallenge => builder =>
         {
+            Console.WriteLine($"RenderCurrentChallenge: index={currentChallengeIndex}, count={currentChallenges.Count}, isLoading={isLoading}");
+            
             if (currentChallengeIndex >= currentChallenges.Count)
             {
-                builder.AddMarkupContent(0, "<p>Loading next challenge...</p>");
+                if (isLoading)
+                {
+                    builder.AddMarkupContent(0, "<p>🤖 AI is generating your next challenge...</p>");
+                }
+                else
+                {
+                    builder.AddMarkupContent(0, "<p>No more challenges available. Something went wrong.</p>");
+                }
                 return;
             }
 
             var challenge = currentChallenges[currentChallengeIndex];
+            Console.WriteLine($"Rendering challenge: {challenge.Question}");
+            
             if (challenge.IsOpenEnded)
             {
                 builder.OpenElement(0, "div");
                 builder.AddAttribute(1, "class", "challenge-section");
+
+                // Show context/scenario for contextual challenges
+                if (challenge.Type == ChallengeType.Context && !string.IsNullOrEmpty(challenge.Context))
+                {
+                    builder.OpenElement(1, "div");
+                    builder.AddAttribute(2, "class", "scenario-content");
+                    builder.AddAttribute(3, "style", "background: #f8f9fa; padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border-left: 4px solid #667eea;");
+                    builder.OpenElement(4, "h5");
+                    builder.AddAttribute(5, "style", "color: #667eea; margin-bottom: 0.5rem;");
+                    builder.AddContent(6, "📖 Scenario:");
+                    builder.CloseElement();
+                    builder.OpenElement(7, "p");
+                    builder.AddAttribute(8, "style", "margin: 0; font-style: italic; color: #555;");
+                    builder.AddContent(9, challenge.Context);
+                    builder.CloseElement();
+                    builder.CloseElement();
+                }
 
                 builder.OpenElement(2, "h4");
                 builder.AddAttribute(3, "class", "challenge-question");

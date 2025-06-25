@@ -566,12 +566,13 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.25); /* More transparent overlay */
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Show popup at top, not center */
     z-index: 1000;
     animation: fadeInOverlay 0.3s ease-out;
+    pointer-events: none; /* Allow interaction with content behind */
 }
 
 @keyframes fadeInOverlay {
@@ -587,6 +588,9 @@
     width: 90%;
     text-align: center;
     animation: scaleIn 0.3s ease-out;
+    margin-top: 3rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    pointer-events: auto; /* Only popup is interactive */
 }
 
 @keyframes scaleIn {
