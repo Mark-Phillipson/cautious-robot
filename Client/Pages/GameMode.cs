@@ -6,6 +6,7 @@ namespace BlazorApp.Client.Pages
         StoryAdventure,
         ConversationPractice,
         ContextualLearning,
-        PersonalizedQuiz
+        PersonalizedQuiz,
+        Hangman // Added Hangman mode
     }
 }

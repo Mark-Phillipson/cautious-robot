@@ -1,7 +1,7 @@
 @page "/aiwordtutor"
 @using BlazorApp.Client.Shared
 @using BlazorApp.Client.Pages
-
+<PageTitle>AI Word Tutor</PageTitle>
 <div class="ai-tutor-layout">
     @if (!gameStarted)
     {
@@ -25,10 +25,12 @@
                 
                 <!-- Theme Input Section -->
                 <div class="theme-section" style="margin: 1.5rem 0 2rem 0; display: flex; flex-direction: column; align-items: center;">
-                    <label for="themeInput" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.3rem; color: #444;">Theme (optional):</label>
+                    <label for="themeInput" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.3rem; color: #444;">
+                        Theme <span style="color: red;">*</span> (mandatory):
+                    </label>
                     <input id="themeInput" @bind="themeInput" placeholder="e.g. travel, food, sports, etc." class="theme-input"
                         style="width: 260px; padding: 0.5rem 1rem; border-radius: 8px; border: 1.5px solid #bdbdbd; font-size: 1rem; margin-bottom: 0.3rem; background: #f8f9fa; color: #333; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: border 0.2s;" />
-                    <small style="color: #666; font-size: 0.95rem;">Enter a theme for your words, or leave blank for random words.</small>
+                    <small style="color: #c00; font-size: 0.95rem; font-weight: 500;">Theme is required.  Please change if required.</small>
                 </div>
 
                 <div class="game-modes">
@@ -49,6 +51,10 @@
                         <button @onclick="() => StartGame(GameMode.PersonalizedQuiz)" class="mode-button quiz">
                             🧠 Smart Quiz
                             <small>AI adapts questions to your level</small>
+                        </button>
+                        <button @onclick="() => StartGame(GameMode.Hangman)" class="mode-button hangman">
+                            🕹️ Hangman
+                            <small>Guess the word, letter by letter!</small>
                         </button>
                     </div>
                 </div>
@@ -89,28 +95,31 @@
                     <span class="score">Score: @score</span>
                     <span class="streak">Streak: @streak</span>
                     <span class="level">Level: @GetDifficultyName(difficulty)</span>
-                </div>                <button @onclick="ExitGame" class="exit-btn">Exit Game</button>
+                </div>
+                <button @onclick="ExitGame" class="exit-btn">Exit Game</button>
             </div>
 
             <div class="game-content">
-                @if (isLoading)
+                @if (currentGameMode == GameMode.StoryAdventure)
+                {
+                    <div class="story-section">
+                        <div class="story-content">
+                            <h3>📖 Your Story</h3>
+                            <p class="story-text">@currentContent</p>
+                        </div>
+                        @RenderCurrentChallenge
+                    </div>
+                }
+                else if (isLoading)
                 {
                     <div class="loading-section">
                         <div class="loading-spinner"></div>
                         <p>🤖 AI is thinking...</p>
                     </div>
                 }
-                else
-                {                    @if (currentGameMode == GameMode.StoryAdventure)
-                    {
-                        <div class="story-section">
-                            <div class="story-content">
-                                <h3>📖 Your Story</h3>
-                                <p class="story-text">@currentContent</p>
-                            </div>                            @RenderCurrentChallenge()
-                        </div>
-                    }else if (currentGameMode == GameMode.ConversationPractice)
-                    {                        <div class="conversation-section">
+                else if (currentGameMode == GameMode.ConversationPractice)
+                {
+                    <div class="conversation-section">
                             <!-- Target Words Display -->
                             @if (conversationTargetWords.Count > 0)
                             {
@@ -139,7 +148,8 @@
                                         @message
                                     </div>
                                 }
-                            </div>                            <div class="chat-input-section">
+                            </div>                            
+                            <div class="chat-input-section">
                                 <input type="text" @bind="userInput" @onkeydown="HandleKeyPress" @ref="chatInputElement"
                                        placeholder="Type your response..." class="chat-input" />
                                 <button @onclick="SendMessage" class="send-btn">Send</button>
@@ -150,21 +160,66 @@
                     {
                         <div class="contextual-section">
                             <h3>🎯 Real-World Practice</h3>
-                            @RenderCurrentChallenge()
+                            @RenderCurrentChallenge
                         </div>
                     }
                     else if (currentGameMode == GameMode.PersonalizedQuiz)
                     {
                         <div class="quiz-section">
                             <h3>🧠 Smart Quiz</h3>
-                            @RenderCurrentChallenge()
+                            @RenderCurrentChallenge
                         </div>
                     }
-                }
-            </div>            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
+                    else if (currentGameMode == GameMode.Hangman)
+                    {
+                        <div class="hangman-section">
+                            <h3>🕹️ Hangman</h3>
+                            <HangmanFigure WrongCount="@hangmanWrongGuesses" MaxWrong="@hangmanMaxWrong" />
+                            
+                            <div class="hangman-info">
+                                <div class="hangman-card theme-display">
+                                    <h4>Theme</h4>
+                                    <p>@themeInput</p>
+                                </div>
+                                <div class="hangman-card wrong-counter @(hangmanWrongGuesses >= hangmanMaxWrong - 1 ? "danger" : "")">
+                                    <h4>Wrong Guesses</h4>
+                                    <p>@hangmanWrongGuesses / @hangmanMaxWrong</p>
+                                </div>
+                            </div>
+                            
+                            <div class="hangman-word-display">@GetHangmanDisplay()</div>
+                            
+                            @if (!string.IsNullOrWhiteSpace(hangmanDefinition))
+                            {
+                                <div class="hangman-hint">
+                                    <strong>💡 Hint:</strong> @hangmanDefinition
+                                </div>
+                            }
+                            
+                            @if (hangmanGameOver)
+                            {
+                                <BlazorApp.Client.Pages.PlaySound Play="true" AnswerState="@hangmanWin" />
+                                <div class="hangman-result @(hangmanWin ? "hangman-win" : "hangman-lose")">
+                                    @(hangmanWin ? "🎉 Congratulations! You won!" : $"💀 Game Over! The word was '{hangmanWord}'")
+                                </div>
+                                <button @onclick="() => StartGame(GameMode.Hangman)" class="restart-btn">
+                                    🎮 Play Again
+                                </button>
+                            }
+                            else
+                            {
+                                <HangmanInput OnGuess="ProcessHangmanGuess"
+                                              Disabled="@(hangmanGameOver)"
+                                              GuessedLetters="@(HangmanGuessedLettersUpper)" />
+                            }
+                        </div>
+                    }
+            </div>            
+            @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
             {
                 <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
-                    <div class="feedback-content">                        <div class="feedback-header">
+                    <div class="feedback-content">                        
+                        <div class="feedback-header">
                             <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
                             <div class="countdown-display">
                                 <span class="countdown-text">@countdownSeconds</span>
@@ -172,113 +227,23 @@
                         </div>
                           <div class="progress-container">
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: @(ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                                <div class="progress-fill" style="width: @(ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%">
+                                </div>
                             </div>
                         </div>
                         
-                        <p>@feedbackMessage</p>
+                        <p class="feedback-message">@feedbackMessage</p>
                         @if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
                         {
                             <p><strong>Correct answer:</strong> @correctAnswer</p>
                         }
-                        <button @onclick="ContinueLearning" class="continue-btn">Continue Learning</button>
+                        <button @onclick="ContinueLearning" class="continue-btn" @ref="continueBtnRef">Continue Learning</button>
                     </div>
                 </div>
             }
         </div>
     }
 </div>
-
-@{
-    RenderFragment RenderCurrentChallenge() => builder =>
-    {
-        if (currentChallengeIndex >= currentChallenges.Count) 
-        {
-            builder.AddMarkupContent(0, "<p>Loading next challenge...</p>");
-            return;
-        }
-
-        var challenge = currentChallenges[currentChallengeIndex];
-          if (challenge.IsOpenEnded)
-        {
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "challenge-section");
-            
-            builder.OpenElement(2, "h4");
-            builder.AddContent(3, challenge.Question);
-            builder.CloseElement();
-            
-            // Add a container for the text input and button
-            builder.OpenElement(4, "div");
-            builder.AddAttribute(5, "class", "text-input-container");
-              builder.OpenElement(6, "textarea");
-            builder.AddAttribute(7, "class", "answer-textarea");
-            builder.AddAttribute(8, "placeholder", "Write your answer here...");
-            builder.AddAttribute(9, "value", userInput);
-            builder.AddAttribute(10, "onchange", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.ChangeEventArgs>(this, (e) => userInput = e.Value?.ToString() ?? ""));
-            builder.AddAttribute(11, "onkeydown", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.KeyboardEventArgs>(this, HandleKeyPressForTextarea));
-            builder.CloseElement();
-              builder.OpenElement(12, "button");
-            builder.AddAttribute(13, "class", "submit-btn");
-            builder.AddAttribute(14, "onclick", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(userInput)));
-            builder.AddContent(15, "Submit Answer");
-            builder.CloseElement();
-            
-            builder.CloseElement(); // Close text-input-container
-            builder.CloseElement(); // Close challenge-section
-        }
-        else
-        {
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "challenge-section");
-            
-            builder.OpenElement(2, "h4");
-            builder.AddContent(3, challenge.Question);
-            builder.CloseElement();
-              builder.OpenElement(4, "div");
-            builder.AddAttribute(5, "class", "options-grid");
-            builder.AddAttribute(6, "style", 
-                "display: grid; " +
-                "grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); " +
-                "gap: 15px; " +
-                "margin-top: 1.5rem; " +
-                "margin-bottom: 1rem;");
-              if (challenge.Options != null)
-            {
-                var optionIndex = 7; // Start from 7 since we added style attribute
-                foreach (var option in challenge.Options)
-                {
-                    builder.OpenElement(optionIndex++, "button");
-                    builder.AddAttribute(optionIndex++, "class", "option-btn");
-                    builder.AddAttribute(optionIndex++, "style", 
-                        "background: linear-gradient(135deg, #f8f9fa, #ffffff); " +
-                        "border: 2px solid #dee2e6; " +
-                        "border-radius: 15px; " +
-                        "padding: 18px 20px; " +
-                        "cursor: pointer; " +
-                        "transition: all 0.3s ease; " +
-                        "text-align: center; " +
-                        "font-size: 1.1rem; " +
-                        "font-weight: 500; " +
-                        "color: #495057; " +
-                        "box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); " +
-                        "font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; " +
-                        "min-height: 60px; " +
-                        "width: 100%; " +
-                        "display: flex; " +                        "align-items: center; " +
-                        "justify-content: center;");
-                    builder.AddAttribute(optionIndex++, "onclick", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ProcessAnswer(option)));
-                    builder.AddContent(optionIndex++, option);
-                    builder.CloseElement();
-                }
-                
-                builder.CloseElement(); // Close options-grid
-            }
-            
-            builder.CloseElement(); // Close challenge-section
-        }
-    };
-}
 
 @if (PlayAudio && lastAnswerCorrect)
 {
@@ -292,3 +257,8 @@ else
 {
     <BlazorApp.Client.Pages.PlaySound AnswerState="false" Play="false" />
 }
+
+<!-- Disclaimer about AI accuracy -->
+<div class="disclaimer">
+    ⚠️ Disclaimer: AI-generated content may contain inaccuracies. Please verify information independently.
+</div>

@@ -49,7 +49,7 @@ This is a Blazor WebAssembly (WASM) static web application hosted on Microsoft A
 - Code-behind files: Component name + `.razor.cs` (e.g., `WordsGame.razor.cs`)
 - CSS files: Component name + `.razor.css` (e.g., `WordsGame.razor.css`)
 - Models: PascalCase (e.g., `GameOptions.cs`, `WordResult.cs`)
-
+- Do not put styles inside the Blazor component always use a separate `.razor.css` file for styles
 ## Coding Standards
 
 ### Blazor Components
