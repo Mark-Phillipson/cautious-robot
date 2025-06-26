@@ -56,12 +56,12 @@ namespace BlazorApp.Client.Pages
 
         private string? themeInput = string.Empty;        private static readonly string[] DefaultThemes = new[]
         {
-            "nature", "travel", "food", "technology", "sports", "music", "friendship", "adventure", "school", "weather", 
-            "animals", "science", "art", "history", "health", "family", "hobbies", "careers", "transportation", "clothing",
-            "emotions", "business", "environment", "culture", "entertainment", "cooking", "gardening", "literature", 
-            "photography", "fitness", "shopping", "holidays", "communication", "medicine", "architecture", "geography",
-            "movies", "books", "dance", "theater", "politics", "economics", "philosophy", "psychology", "astronomy",
-            "ocean", "mountains", "cities", "countries", "languages", "celebrations", "inventions", "discoveries"
+            "Nature", "Travel", "Food", "Technology", "Sports", "Music", "Friendship", "Adventure", "School", "Weather", 
+            "Animals", "Science", "Art", "History", "Health", "Family", "Hobbies", "Careers", "Transportation", "Clothing",
+            "Emotions", "Business", "Environment", "Culture", "Entertainment", "Cooking", "Gardening", "Literature", 
+            "Photography", "Fitness", "Shopping", "Holidays", "Communication", "Medicine", "Architecture", "Geography",
+            "Movies", "Books", "Dance", "Theater", "Politics", "Economics", "Philosophy", "Psychology", "Astronomy",
+            "Ocean", "Mountains", "Cities", "Countries", "Languages", "Celebrations", "Inventions", "Discoveries"
         };
         private static readonly Random _random = new();
 
