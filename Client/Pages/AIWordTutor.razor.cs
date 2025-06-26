@@ -56,7 +56,12 @@ namespace BlazorApp.Client.Pages
 
         private string? themeInput = string.Empty;        private static readonly string[] DefaultThemes = new[]
         {
-            "nature", "travel", "food", "technology", "sports", "music", "friendship", "adventure", "school", "weather", "animals", "science", "art", "history", "health"
+            "nature", "travel", "food", "technology", "sports", "music", "friendship", "adventure", "school", "weather", 
+            "animals", "science", "art", "history", "health", "family", "hobbies", "careers", "transportation", "clothing",
+            "emotions", "business", "environment", "culture", "entertainment", "cooking", "gardening", "literature", 
+            "photography", "fitness", "shopping", "holidays", "communication", "medicine", "architecture", "geography",
+            "movies", "books", "dance", "theater", "politics", "economics", "philosophy", "psychology", "astronomy",
+            "ocean", "mountains", "cities", "countries", "languages", "celebrations", "inventions", "discoveries"
         };
         private static readonly Random _random = new();
 
@@ -64,24 +69,13 @@ namespace BlazorApp.Client.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            // Use AI to pick a theme if not already set
+            // Always start with a random theme to ensure variety
             if (string.IsNullOrWhiteSpace(themeInput))
             {
-                try
-                {
-                    var prompt = "Suggest a single, engaging English learning theme for vocabulary practice. Return only the theme word or phrase.";
-                    var systemMessage = "You are an expert English language teacher.";
-                    var aiTheme = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                    themeInput = string.IsNullOrWhiteSpace(aiTheme) ? GetRandomTheme() : aiTheme.Trim();
-                    Console.WriteLine($"Theme picked by AI: {themeInput}");
-                }
-                catch (Exception)
-                {
-                    // Always pick a random theme from the static list if AI fails
-                    themeInput = GetRandomTheme();
-                    Console.WriteLine($"AI theme failed, fallback to: {themeInput}");
-                }
+                themeInput = GetRandomTheme();
+                Console.WriteLine($"Initial random theme selected: {themeInput}");
             }
+            
             // Check if API key already exists
             var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
             hasApiKey = !string.IsNullOrEmpty(apiKey);
@@ -91,6 +85,12 @@ namespace BlazorApp.Client.Pages
         {
             var themes = DefaultThemes;
             return themes[_random.Next(themes.Length)];
+        }
+
+        private void PickRandomTheme()
+        {
+            themeInput = GetRandomTheme();
+            StateHasChanged();
         }        private void SetDifficulty(DifficultyLevel newDifficulty)
         {
             difficulty = newDifficulty;
@@ -1432,6 +1432,12 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             await InvokeAsync(StateHasChanged);
         }
 
+        private void OnHangmanLayoutChanged(bool useKeyboard)
+        {
+            useKeyboardLayout = useKeyboard;
+            StateHasChanged();
+        }
+
         // Hangman state fields
         private string hangmanWord = string.Empty;
         private string? hangmanDefinition;
@@ -1440,6 +1446,7 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
         private int hangmanMaxWrong = 6;
         private bool hangmanGameOver = false;
         private bool hangmanWin = false;
+        private bool useKeyboardLayout = true; // Default to keyboard layout
         
         private async Task FocusAnswerTextAreaIfNeeded()
         {
