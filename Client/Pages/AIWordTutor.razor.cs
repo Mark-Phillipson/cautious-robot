@@ -160,7 +160,7 @@ namespace BlazorApp.Client.Pages
                     hangmanWrongGuesses = 0;
                     hangmanGameOver = false;
                     hangmanWin = false;
-                    hangmanDefinition = await GetSimpleDefinitionAsync(hangmanWord); // Fetch definition for answer word
+                    hangmanDefinition = await GetHangmanHintAsync(hangmanWord); // Use safer hint instead of definition
                     StateHasChanged();
                     return;
                 }
@@ -246,7 +246,17 @@ etc.";
             
             if (sections.Length >= 2)
             {
-                currentContent = sections[0].Replace("STORY:", "").Trim();
+                // Clean up the story content more thoroughly
+                var storyContent = sections[0].Replace("STORY:", "").Trim();
+                
+                // Remove any unwanted headers like "Scenario:", "Story:", etc.
+                var linesToRemove = new[] { "SCENARIO:", "STORY:", "scenario:", "story:" };
+                var lines = storyContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                var cleanedLines = lines.Where(line => 
+                    !linesToRemove.Any(header => line.Trim().StartsWith(header, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+                
+                currentContent = string.Join("\n", cleanedLines).Trim();
                 
                 // Parse questions and create challenges
                 var questionLines = sections[1].Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -266,8 +276,8 @@ etc.";
                                 Type = ChallengeType.Context,
                                 TargetWord = word,
                                 Question = cleanLine.Substring(2).Trim(),
-                                IsOpenEnded = true,
-                                Context = currentContent
+                                IsOpenEnded = true
+                                // Don't set Context for story challenges - the story is already displayed above
                             });
                         }
                     }
@@ -448,8 +458,6 @@ CORRECT: [Letter of correct answer]";
                     });
                 }
             }
-
-            currentContent = "Let's test your knowledge with some smart questions!";
         }
 
         private async Task<WordChallenge> ParseQuizResponse(string aiResponse, string word)
@@ -1415,6 +1423,9 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             var wordUpper = hangmanWord.ToUpperInvariant();
             if (!wordUpper.Contains(guess))
             {
+                // Incorrect guess - play incorrect sound
+                PlayAudio = true;
+                lastAnswerCorrect = false;
                 hangmanWrongGuesses++;
                 if (hangmanWrongGuesses >= hangmanMaxWrong)
                 {
@@ -1422,13 +1433,27 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                     hangmanWin = false;
                 }
             }
-            else if (wordUpper.All(c => !char.IsLetter(c) || hangmanGuesses.Contains(char.ToUpperInvariant(c))))
+            else
             {
-                hangmanGameOver = true;
-                hangmanWin = true;
-                score += 20; // Award points for win
+                // Correct guess - play correct sound
+                PlayAudio = true;
+                lastAnswerCorrect = true;
+                
+                // Check if all letters have been guessed (fixed win condition)
+                var allLettersGuessed = wordUpper.Where(char.IsLetter).All(c => hangmanGuesses.Contains(c));
+                if (allLettersGuessed)
+                {
+                    hangmanGameOver = true;
+                    hangmanWin = true;
+                    score += 20; // Award points for win
+                }
             }
             // Trigger UI update asynchronously to satisfy async signature
+            await InvokeAsync(StateHasChanged);
+            
+            // Reset audio after delay to allow sound to play
+            await Task.Delay(1000);
+            PlayAudio = false;
             await InvokeAsync(StateHasChanged);
         }
 
@@ -1588,5 +1613,47 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                 builder.CloseElement(); // challenge-section
             }
         };
+
+        private async Task<string> GetHangmanHintAsync(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word)) return "";
+            
+            var prompt = $@"Create a cryptic hint for the word '{word}' for a hangman game. The hint should:
+1. NOT contain the word itself or any obvious forms of it
+2. NOT be too specific or revealing
+3. Be challenging but fair - give a general category or vague description
+4. Be maximum 10 words
+5. Use synonyms and indirect references
+
+Examples:
+- For 'rhythm' -> 'Musical beat or pattern in time'
+- For 'elephant' -> 'Large gray mammal with trunk'
+- For 'computer' -> 'Electronic device for processing data'
+
+Hint for '{word}':";
+
+            var systemMessage = "You are creating challenging but fair hints for hangman games. Never use the target word directly.";
+            
+            try
+            {
+                var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+                var hint = aiResponse.Trim();
+                
+                // Double-check that the hint doesn't contain the word
+                if (hint.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    // Fallback to a very generic hint based on theme
+                    return $"A word related to {themeInput?.ToLower() ?? "this topic"}";
+                }
+                
+                return hint;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating hangman hint: {ex.Message}");
+                // Fallback to theme-based hint
+                return $"A word related to {themeInput?.ToLower() ?? "this topic"}";
+            }
+        }
     }
 }

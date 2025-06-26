@@ -1377,6 +1377,22 @@ button.option-btn:focus {
     100% { transform: scale(1); }
 }
 
+/* Quiz Section Styles */
+.quiz-section {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.quiz-section h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.75rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
 /* Theme Display */
 .theme-display {
     background: linear-gradient(135deg, #e6fffa, #b2f5ea);

@@ -172,6 +172,14 @@
                     {
                         <div class="quiz-section">
                             <h3>🧠 Smart Quiz</h3>
+                            
+                            <div class="hangman-info">
+                                <div class="hangman-card theme-display">
+                                    <h4>Theme</h4>
+                                    <p>@themeInput</p>
+                                </div>
+                            </div>
+                            
                             @RenderCurrentChallenge
                         </div>
                     }
@@ -218,6 +226,9 @@
                                               GuessedLetters="@(HangmanGuessedLettersUpper)"
                                               UseKeyboardLayout="@useKeyboardLayout"
                                               OnLayoutChanged="OnHangmanLayoutChanged" />
+                                              
+                                @* Play sound for individual hangman guesses *@
+                                <BlazorApp.Client.Pages.PlaySound Play="@PlayAudio" AnswerState="@lastAnswerCorrect" />
                             }
                         </div>
                     }
