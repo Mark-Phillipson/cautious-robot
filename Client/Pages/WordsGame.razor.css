@@ -141,17 +141,26 @@
 }
 
 .definition-item {
-	background: rgba(102, 126, 234, 0.1);
+	background: rgba(255, 255, 255, 0.9);
 	border-radius: 12px;
 	padding: 20px;
 	margin: 15px 0;
 	border-left: 4px solid #667eea;
 	transition: all 0.3s ease;
+	color: #2c3e50;
+	border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
 .definition-item:hover {
-	background: rgba(102, 126, 234, 0.15);
+	background: rgba(255, 255, 255, 0.95);
 	transform: translateX(5px);
+	border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.definition-item h4, .definition-item h6 {
+	color: #2c3e50;
+	margin-bottom: 10px;
+	font-weight: 600;
 }
 
 /* Congratulations styling */

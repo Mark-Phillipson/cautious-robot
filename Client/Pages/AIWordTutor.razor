@@ -24,18 +24,17 @@
                 }
                 
                 <!-- Theme Input Section -->
-                <div class="theme-section" style="margin: 1.5rem 0 2rem 0; display: flex; flex-direction: column; align-items: center;">
-                    <label for="themeInput" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.3rem; color: #444;">
+                <div class="theme-section">
+                    <label for="themeInput" class="theme-label">
                         Theme <span style="color: red;">*</span> (mandatory):
                     </label>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <input id="themeInput" @bind="themeInput" placeholder="e.g. travel, food, sports, etc." class="theme-input"
-                            style="width: 260px; padding: 0.5rem 1rem; border-radius: 8px; border: 1.5px solid #bdbdbd; font-size: 1rem; background: #f8f9fa; color: #333; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: border 0.2s;" />
+                    <div class="theme-input-container">
+                        <input id="themeInput" @bind="themeInput" placeholder="e.g. travel, food, sports, etc." class="theme-input" />
                         <button @onclick="PickRandomTheme" class="random-theme-btn" type="button">
                             🎲 Random
                         </button>
                     </div>
-                    <small style="color: #c00; font-size: 0.95rem; font-weight: 500; margin-top: 0.3rem;">Theme is required. Please change if required.</small>
+                    <small class="theme-required-text">Theme is required. Please change if required.</small>
                 </div>
 
                 <div class="game-modes">
