@@ -16,7 +16,7 @@
                 🎯 <u>1</u> New Word
             </button>
         </div>
-        <div class="col-auto">
+        <div class="col-auto d-none d-md-block">
             <div class="header-stats">
                 <div class="header-stat correct">
                     <span class="stat-number">@(CorrectGuesses?.Count ?? 0)</span>
@@ -28,6 +28,21 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Mobile header with just stats -->
+        <div class="col d-md-none mobile-header-content">
+            <div class="mobile-stats">
+                <div class="mobile-stat correct">
+                    <span class="mobile-stat-number">@(CorrectGuesses?.Count ?? 0)</span>
+                    <span class="mobile-stat-label">✅</span>
+                </div>
+                <div class="mobile-stat incorrect">
+                    <span class="mobile-stat-number">@(IncorrectGuesses?.Count ?? 0)</span>
+                    <span class="mobile-stat-label">❌</span>
+                </div>
+            </div>
+        </div>
+        
         @if (GameStatus.Contains("You lose!") || GameStatus == "You win!")
         {
             <div class="col-auto">
@@ -117,8 +132,8 @@
             }
         </div>
         
-        <!-- Hangman SVG Section -->
-        <div class='col-lg-4'>
+        <!-- Hangman SVG Section - Hidden on mobile -->
+        <div class='col-lg-4 d-none d-md-block'>
             <div class="hangman-section compact">
                 <HangmanSvg Stage="@(IncorrectGuesses != null ? IncorrectGuesses.Count : 0)" />
             </div>

@@ -3,10 +3,46 @@
 
 @code {
     [Parameter] public int Stage { get; set; }
+    [Parameter] public string? Width { get; set; }
+    [Parameter] public string? Height { get; set; }
+
+    private string GetContainerStyles()
+    {
+        var styles = new List<string>();
+        
+        if (!string.IsNullOrEmpty(Width))
+        {
+            styles.Add($"width: {Width}");
+        }
+        
+        if (!string.IsNullOrEmpty(Height))
+        {
+            styles.Add($"height: {Height}");
+        }
+        
+        return string.Join("; ", styles);
+    }
+
+    private string GetSvgStyles()
+    {
+        var styles = new List<string>();
+        
+        if (!string.IsNullOrEmpty(Width))
+        {
+            styles.Add($"max-width: {Width}");
+        }
+        
+        if (!string.IsNullOrEmpty(Height))
+        {
+            styles.Add($"max-height: {Height}");
+        }
+        
+        return string.Join("; ", styles);
+    }
 }
 
-<div class="hangman-svg-container">
-    <svg class="hangman-svg" viewBox="0 0 120 180">
+<div class="hangman-svg-container" style="@(GetContainerStyles())">
+    <svg class="hangman-svg" viewBox="0 0 120 180" style="@(GetSvgStyles())">
     <!-- Gallows -->
     <line x1="20" y1="170" x2="100" y2="170" stroke="#c0c0c0" stroke-width="6" />
     <line x1="40" y1="170" x2="40" y2="20" stroke="#c0c0c0" stroke-width="6" />

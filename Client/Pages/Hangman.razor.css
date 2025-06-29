@@ -380,6 +380,70 @@
 	width: 100%;
 }
 
+/* Mobile header with stats only */
+.mobile-header-content {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+.mobile-stats {
+	display: flex;
+	gap: 8px;
+}
+
+.mobile-stat {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 4px 8px;
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 8px;
+	backdrop-filter: blur(5px);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	min-width: 45px;
+}
+
+.mobile-stat .mobile-stat-number {
+	font-size: 1.1rem;
+	font-weight: bold;
+	margin-bottom: 1px;
+}
+
+.mobile-stat .mobile-stat-label {
+	font-size: 0.7rem;
+	font-weight: 600;
+	opacity: 0.9;
+}
+
+.mobile-stat.correct .mobile-stat-number {
+	color: #4caf50;
+}
+
+.mobile-stat.incorrect .mobile-stat-number {
+	color: #f44336;
+}
+
+/* Mobile stats for very small screens */
+@media (max-width: 576px) {
+	.mobile-stats {
+		gap: 6px;
+	}
+	
+	.mobile-stat {
+		padding: 4px 6px;
+		min-width: 50px;
+	}
+	
+	.mobile-stat .mobile-stat-number {
+		font-size: 1rem;
+	}
+	
+	.mobile-stat .mobile-stat-label {
+		font-size: 0.6rem;
+	}
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
 	.background {
@@ -458,6 +522,23 @@
 	}
 	
 	.header-stat .stat-label {
+		font-size: 0.7rem;
+	}
+	
+	.mobile-stats {
+		gap: 10px;
+	}
+	
+	.mobile-stat {
+		padding: 6px 8px;
+		min-width: 60px;
+	}
+	
+	.mobile-stat .mobile-stat-number {
+		font-size: 1.2rem;
+	}
+	
+	.mobile-stat .mobile-stat-label {
 		font-size: 0.7rem;
 	}
 }
