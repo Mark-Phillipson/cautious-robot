@@ -1,125 +1,170 @@
 @page "/hangman"
 @using BlazorApp.Client.Shared
-<div class="background p-3">
-<h1 class='hide-on-mobile'>Hangman </h1>
-<PageTitle>Hangman</PageTitle>
-<div class='row'>
-    <div class='col-md-8'>
-        <h2 class='hide-on-mobile'>Guess the word by selecting letters.</h2> @if (!ApiKeyAvailable)
-                {
-            <div class="alert alert-info mt-3">
-                <strong>Optional:</strong> Enter your Words API key for more word variety, or play with built-in words.
+<div class="background">
+<div class="container-fluid">
+
+<PageTitle>Hangman Game</PageTitle>
+
+<!-- Game Header Card -->
+<div class="game-header">
+    <div class="row align-items-center g-3">
+        <div class="col-auto">
+            <h1 class="game-title">🎪 Hangman</h1>
+        </div>
+        <div class="col-auto">
+            <button accesskey='1' class='btn control-btn' @onclick="(() => StartNewGame())">
+                🎯 <u>1</u> New Word
+            </button>
+        </div>
+        <div class="col-auto">
+            <div class="header-stats">
+                <div class="header-stat correct">
+                    <span class="stat-number">@(CorrectGuesses?.Count ?? 0)</span>
+                    <span class="stat-label">✅ Correct</span>
+                </div>
+                <div class="header-stat incorrect">
+                    <span class="stat-number">@(IncorrectGuesses?.Count ?? 0)</span>
+                    <span class="stat-label">❌ Incorrect</span>
+                </div>
+            </div>
+        </div>
+        @if (GameStatus.Contains("You lose!") || GameStatus == "You win!")
+        {
+            <div class="col-auto">
+                <button accesskey='2' class='btn control-btn btn-secondary' @onclick="(() => StartNewGame())">
+                    🔄 <u>2</u> Play Again
+                </button>
+            </div>
+        }
+    </div>
+    
+    @if (!ApiKeyAvailable)
+    {
+        <div class="api-key-section mt-3">
+            <div class="alert alert-info">
+                <strong>🔑 Optional:</strong> Enter your Words API key for more word variety, or play with built-in words.
             </div>
             <ApiKeyEntry OnApiKeySaved="OnApiKeySaved" />
-        }
+        </div>
+    }
+</div>
 
-        <!-- Game section - always visible -->
-        <div class='row'>
-            <div class='col-md-8'>
-                <button accesskey='1' class='btn btn-primary btn-sm' @onclick="(() => StartNewGame())"><u>1</u> Load
-                    New Word</button>
-                <div>
-                    <br class='hide-on-mobile' />
-                    @if (CurrentWord != null)
-                    {
+<!-- Game Content Card -->
+<div class="game-content">
+    <div class='row g-4'>
+        <div class='col-lg-8'>
+            <!-- Word Display Section -->
+            <div class="word-section">
+                <h2 class="section-title">🎯 Guess the Word</h2>
+                @if (loading)
+                {
+                    <div class="loading-section">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading new word...</p>
+                    </div>
+                }
+                else if (CurrentWord != null)
+                {
+                    <div class="word-display">
                         @foreach (char letter in CurrentWord)
                         {
                             if (CorrectGuesses.Contains(letter))
                             {
-                                <button class='btn btn-sm btn-success m-1' disabled>@letter</button>
+                                <span class='word-letter revealed'>@letter</span>
                             }
                             else if (letter == ' ')
                             {
-                                <button disabled class='btn btn-sm btn-outline-secondary m-1'>/</button>
+                                <span class='word-letter space'>/</span>
                             }
                             else
                             {
-                                <button disabled class='btn btn-sm btn-outline-danger m-1'>_</button>
+                                <span class='word-letter hidden'>_</span>
                             }
                         }
-                    }
-                    <br class='hide-on-mobile' />
-                    <br class='hide-on-mobile' />
-                </div>
-                <div>
-                    <h2 class='fs-3 text-success hide-on-mobile'>@WordDescription</h2>
-                    <h6 class='fs-6 text-success show-on-mobile'>@WordDescription</h6>
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(WordDescription))
+                {
+                    <div class="word-description">
+                        <h3 class="description-text">💡 @WordDescription</h3>
+                    </div>
+                }
 
-                    @if (!string.IsNullOrEmpty(CurrentWord))
-                    {
-                        <small class="text-muted">
-                            @if (UsingApiWords)
-                            {
-                                <span class="badge bg-primary">🌐 Words API</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">📚 Built-in Words</span>
-                            }
-                        </small>
-                    }
-
-                    @if (loading)
-                    {
-                        <div class="text-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                    }
-                    <p>
-                        <span class='text-success'> Correct: @(CorrectGuesses?.Count ?? 0)</span><span
-                            class='text-danger'> Incorrect: @(IncorrectGuesses?.Count ?? 0) </span>
-                    </p>
-                    @if (GameStatus.Contains("You lose!") || GameStatus == "You win!")
-                    {
-                        <h1 class='text-info'>@GameStatus</h1>
-                        <button accesskey='2' class='btn btn-sm btn-success' @onclick="(() => StartNewGame())"><u>2</u> Play
-                            Again</button>
-                    }
-                </div>
-                <br class='hide-on-mobile' />
-                <br class='hide-on-mobile' />
-                <div>
-                    @if (CorrectGuesses != null && IncorrectGuesses != null)
-                    {
-                        <div class='letters-container'>
-                            @foreach (var letter in Alphabet.OrderBy(x => x))
-                            {
-                                if (CorrectGuesses.Contains(letter) || IncorrectGuesses.Contains(letter))
-                                {
-                                    <button class='hide-on-mobile letter btn btn-lg btn-secondary m-1' disabled>@letter</button>
-                                    <button class='show-on-mobile letter text-right btn btn-sm btn-secondary m-1'
-                                        disabled>@letter</button>
-                                }
-                                else
-                                {
-                                    <button accesskey='@letter' class='hide-on-mobile letter btn btn-lg btn-outline-info m-1'
-                                        @onclick="(() => MakeGuess(letter))">@TalonAlphabet[letter.ToString()]</button>
-                                    <button accesskey='@letter'
-                                        class='show-on-mobile letter btn btn-sm btn-outline-info text-right m-1'
-                                        @onclick="(() => MakeGuess(letter))">@TalonAlphabet[letter.ToString()]</button>
-                                }
-                            }
-                        </div>
-                    }
-                </div>
+                @if (!string.IsNullOrEmpty(CurrentWord))
+                {
+                    <div class="word-source">
+                        @if (UsingApiWords)
+                        {
+                            <span class="badge source-badge api">🌐 Words API</span>
+                        }
+                        else
+                        {
+                            <span class="badge source-badge builtin">📚 Built-in Words</span>
+                        }
+                    </div>
+                }
             </div>
-            <div class='col-md-4'>
+
+            <!-- Game Status Section -->
+            @if (GameStatus.Contains("You lose!") || GameStatus == "You win!")
+            {
+                <div class="game-status @(GameStatus == "You win!" ? "win" : "lose")">
+                    <h1 class="status-text">@GameStatus</h1>
+                </div>
+            }
+        </div>
+        
+        <!-- Hangman SVG Section -->
+        <div class='col-lg-4'>
+            <div class="hangman-section compact">
                 <HangmanSvg Stage="@(IncorrectGuesses != null ? IncorrectGuesses.Count : 0)" />
             </div>
         </div>
-        @if (GameStatus == "You win!")
-        {
-            <PlaySound AnswerState=true Play=true />
-        }
-        else if (GameStatus.Contains("You lose!"))
-        {
-            <PlaySound AnswerState=false Play=true />
-        }        else
-        {
-            <PlaySound AnswerState=false Play=false />
-        }
     </div>
+    
+    <!-- Letter Selection Section - Now Full Width -->
+    @if (CorrectGuesses != null && IncorrectGuesses != null)
+    {
+        <div class="letters-section full-width">
+            <h3 class="section-title">🔤 Select a Letter</h3>
+            <div class='letters-grid'>
+                @foreach (var letter in Alphabet.OrderBy(x => x))
+                {
+                    if (CorrectGuesses.Contains(letter) || IncorrectGuesses.Contains(letter))
+                    {
+                        <button class='letter-btn used' disabled>
+                            @letter
+                        </button>
+                    }
+                    else
+                    {
+                        <button accesskey='@letter' class='letter-btn available'
+                            @onclick="(() => MakeGuess(letter))">
+                            @letter
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Sound Effects -->
+@if (GameStatus == "You win!")
+{
+    <PlaySound AnswerState=true Play=true />
+}
+else if (GameStatus.Contains("You lose!"))
+{
+    <PlaySound AnswerState=false Play=true />
+}
+else
+{
+    <PlaySound AnswerState=false Play=false />
+}
+
 </div>
 </div>

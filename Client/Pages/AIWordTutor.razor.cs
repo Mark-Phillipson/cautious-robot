@@ -301,8 +301,7 @@ etc.";
         {
             foreach (var word in words)
             {
-                var random = new Random();
-                var challengeType = random.Next(3) switch
+                var challengeType = _random.Next(3) switch
                 {
                     0 => ChallengeType.Comprehension,
                     1 => ChallengeType.Usage,
@@ -417,8 +416,7 @@ QUESTION: [Question about the word's meaning or usage in this context]";
                 try
                 {
                     var questionTypes = new[] { "definition", "synonym", "usage", "context" };
-                    var random = new Random();
-                    var questionType = questionTypes[random.Next(questionTypes.Length)];
+                    var questionType = questionTypes[_random.Next(questionTypes.Length)];
 
                     var prompt = $@"Create a {questionType} question for the word '{word}' appropriate for {difficulty.ToString().ToLower()}-level English learners.
 
@@ -711,8 +709,7 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                 "The study of living organisms",
                 "A large body of water surrounded by land"
             };
-            var random = new Random();
-            return definitions[random.Next(definitions.Count)];
+            return definitions[_random.Next(definitions.Count)];
         }
 
         private string GetRandomWord()
@@ -721,8 +718,7 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
             {
                 "triangle", "thermometer", "biology", "lake", "mountain", "telephone", "computer", "elephant"
             };
-            var random = new Random();
-            return words[random.Next(words.Count)];
+            return words[_random.Next(words.Count)];
         }
 
         // Missing UI helper methods
@@ -733,8 +729,8 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                 GameMode.StoryAdventure => "📚 Story Adventure",
                 GameMode.ConversationPractice => "💬 Conversation Practice",
                 GameMode.ContextualLearning => "🎯 Contextual Learning",
-                GameMode.PersonalizedQuiz => "🧠 Smart Quiz",
-                GameMode.Hangman => "🪄 Hangman",
+                GameMode.PersonalizedQuiz => "🧠 Personalized Quiz",
+                GameMode.Hangman => "🎪 Hangman",
                 _ => "Learning Mode"
             };
         }        private string GetDifficultyName(DifficultyLevel level)
@@ -993,8 +989,7 @@ Respond naturally as a conversation partner:";
                     "That's fascinating! What else can you tell me about it?"
                 };
                 
-                var random = new Random();
-                return fallbackResponses[random.Next(fallbackResponses.Length)];
+                return fallbackResponses[_random.Next(fallbackResponses.Length)];
             }
         }
 
