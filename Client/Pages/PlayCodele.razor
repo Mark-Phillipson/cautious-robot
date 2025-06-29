@@ -1,92 +1,106 @@
 ﻿@page "/playcodele"
 @inject HttpClient Http
 @using CodeleLogic
-<div class="background p-5">
-    <div class='row'>
-        <div class='col-md-6'>
-            <h3>Play Codele</h3>
-            <p>Guess the 5 letter, coding-related word in 5 tries or less!</p>
+<div class="background">
+    <div class='container-fluid'>
+        <div class='row'>
+            <div class='col-lg-8'>
+                <div class="game-header">
+                    <h1 class="game-title">Codele</h1>
+                    <p class="game-description">Guess the 5-letter, coding-related word in 5 tries or less!</p>
+                    
+                    <div class="attempt-counter">
+                        Attempt #: @attempts
+                    </div>
+                </div>
 
-            <br>
-
-            <p><strong>Attempt #: @attempts</strong></p>
-
-            <!-- display the player's guesses -->
-            <table>
-                @foreach (var guess in guesses)
-                {
-                    List<(char, LetterStatus)>? statuses = guess.GuessStatus;
-                    <tr>
-                        <div class="btn-group" role="group" aria-label="Basic example">
+                <!-- Display the player's guesses -->
+                <div class="guess-grid">
+                    @foreach (var guess in guesses)
+                    {
+                        List<(char, LetterStatus)>? statuses = guess.GuessStatus;
+                        <div class="guess-row">
                             @if (statuses != null)
                             {
-                                foreach (var status in statuses)
+                                @foreach (var status in statuses)
                                 {
                                     char letter = Char.ToUpper(status.Item1);
-                                    if (status.Item2 == LetterStatus.Correct)
-                                    {
-                                        <button type="button" class="btn btn-success btn-lg">@letter</button>
-                                    }
-                                    else if (status.Item2 == LetterStatus.IncorrectPosition)
-                                    {
-                                        <button type="button" class="btn btn-warning btn-lg">@letter</button>
-                                    }
-                                    else
-                                    {
-                                        <button type="button" class="btn btn-secondary btn-lg">@letter</button>
-                                    }
+                                    <div class="letter-tile @GetLetterTileClass(status.Item2)">
+                                        @letter
+                                    </div>
                                 }
                             }
                         </div>
-                    </tr>
-                    <br>
-                }
-            </table>
-            <br>
-            <!-- display message if guess is not 5 characters long -->
-            @if (displayGuessSizeMsg == true)
-            {
-                <p style="color: rgb(197, 3, 3);">Guess must be 5 characters long @message</p>
-            }
-            <!-- input box for the player to type and submit a guess -->
-            <label class='m-2' for='guess'><u>G</u>uess</label>
-            <input class='form-control form-control-lg m-2' style='width:200px' @ref="guess" maxlength="5" required
-                id="guess" autofocus accesskey="g" placeholder="Type your guess" @bind="newGuess" />
-            @if (!showModal)
-            {
-                <button class='btn btn-lg btn-primary m-2' accesskey="s"
-                    @onclick="SubmitGuess"><u>S</u>ubmit</button>
-            }
+                    }
+                </div>
 
-            @if (showModal && answer != null)
-            {
-                <div>
-                    <h4 class="modal-title">@gameStatusMessage</h4>
-                </div>
-                <div>
-                    <p><strong>Correct Answer: </strong> @answer.ToUpper()</p>
-                </div>
-                <div>
-                    <button accesskey="n" type="button" class="btn btn-outline-success btn-lg"
-                        @onclick="StartNewGame"><u>N</u>ew
-                        Game?</button>
-                </div>
-                @if (gameStatusMessage == "You Won!") { 
-                    <PlaySound AnswerState=true Play=true />
-                }
-                else
+                <!-- Display message if guess is not 5 characters long -->
+                @if (displayGuessSizeMsg == true)
                 {
-                    <PlaySound AnswerState=false Play=true />
+                    <div class="error-message">
+                        Guess must be 5 characters long @message
+                    </div>
                 }
-            }
 
-        </div>
-        <div class='col-md-6'>
-            @if (answers != null)
-            {
-                <table class="table table-bordered table-striped" id="table1">
-                    <tr>
-                        <td style='font-weight:bold;font-size:40px;color:white'>
+                <!-- Input section for the player to type and submit a guess -->
+                <div class="input-section">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="guess">
+                            <u>G</u>uess
+                        </label>
+                        <input class="form-control guess-input" 
+                               style="max-width: 300px; margin: 0 auto;"
+                               @ref="guess" 
+                               maxlength="5" 
+                               required
+                               id="guess" 
+                               autofocus 
+                               accesskey="g" 
+                               placeholder="Enter 5 letters" 
+                               @bind="newGuess" />
+                    </div>
+                    
+                    @if (!showModal)
+                    {
+                        <button class="submit-btn" accesskey="s" @onclick="SubmitGuess">
+                            <u>S</u>ubmit Guess
+                        </button>
+                    }
+                </div>
+
+                <!-- Game over modal -->
+                @if (showModal && answer != null)
+                {
+                    <div class="game-over-modal">
+                        <h2 class="game-over-title @(gameStatusMessage == "You Won!" ? "win" : "lose")">
+                            @gameStatusMessage
+                        </h2>
+                        
+                        <div class="correct-answer">
+                            <strong>Correct Answer:</strong> @answer.ToUpper()
+                        </div>
+                        
+                        <button accesskey="n" type="button" class="new-game-btn" @onclick="StartNewGame">
+                            <u>N</u>ew Game
+                        </button>
+                        
+                        @if (gameStatusMessage == "You Won!") { 
+                            <PlaySound AnswerState=true Play=true />
+                        }
+                        else
+                        {
+                            <PlaySound AnswerState=false Play=true />
+                        }
+                    </div>
+                }
+            </div>
+            
+            <div class='col-lg-4'>
+                @if (answers != null)
+                {
+                    <div class="word-list-card">
+                        <h3 class="mb-3 text-center">Available Words</h3>
+                        <div class="word-list">
                             @{
                                 counter = 0;
                             }
@@ -99,10 +113,10 @@
                                     <text>, </text>
                                 }
                             }
-                        </td>
-                    </tr>
-                </table>
-            }
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>

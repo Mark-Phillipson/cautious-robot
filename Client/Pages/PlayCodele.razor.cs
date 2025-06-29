@@ -142,4 +142,15 @@ public partial class PlayCodele : ComponentBase
         }
         await guess.FocusAsync();
     }
+
+    // Method to determine CSS class for letter tiles based on their status
+    private string GetLetterTileClass(LetterStatus status)
+    {
+        return status switch
+        {
+            LetterStatus.Correct => "correct",
+            LetterStatus.IncorrectPosition => "incorrect-position",
+            _ => "incorrect"
+        };
+    }
 }
