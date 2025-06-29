@@ -4,5 +4,41 @@
 			"path": "Client"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"saveEditorLayout.list": [
+			{
+				"name": "AI word tutor",
+				"documents": [
+					{
+						"fsPath": "c:\\Users\\MPhil\\source\\repos\\Words\\cautious-robot\\Client\\Pages\\AIWordTutor.razor",
+						"column": 1,
+						"pinned": false
+					},
+					{
+						"fsPath": "c:\\Users\\MPhil\\source\\repos\\Words\\cautious-robot\\Client\\Pages\\AIWordTutor.razor.cs",
+						"column": 1,
+						"pinned": false
+					},
+					{
+						"fsPath": "c:\\Users\\MPhil\\source\\repos\\Words\\cautious-robot\\Client\\Pages\\AIWordTutor.razor.css",
+						"column": 1,
+						"pinned": false
+					},
+					{
+						"fsPath": "c:\\Users\\MPhil\\source\\repos\\Words\\cautious-robot\\Client\\Pages\\HangmanInput.razor.css",
+						"column": 1,
+						"pinned": false
+					}
+				],
+				"layout": {
+					"orientation": 1,
+					"groups": [
+						{
+							"size": 975
+						}
+					]
+				}
+			}
+		]
+	}
 }
