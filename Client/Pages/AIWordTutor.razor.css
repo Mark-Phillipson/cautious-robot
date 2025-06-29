@@ -1361,6 +1361,7 @@ button.option-btn:focus {
     margin: 1rem 0;
     border-left: 5px solid #667eea;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    color: #333333;
 }
 
 .hangman-hint strong {
