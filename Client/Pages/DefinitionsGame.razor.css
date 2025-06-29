@@ -185,19 +185,71 @@
 
 /* Loading spinner */
 .loader {
-	background: rgba(255, 255, 255, 0.95);
-	border-radius: 20px;
-	padding: 50px;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+	border-radius: 25px;
+	padding: 60px;
 	margin: 50px auto;
-	max-width: 300px;
-	backdrop-filter: blur(10px);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	max-width: 350px;
+	backdrop-filter: blur(15px);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 15px rgba(255, 107, 107, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	text-align: center;
+	animation: loaderPulse 2s ease-in-out infinite;
+}
+
+/* Override spinner-border directly */
+.spinner-border {
+	color: #ff6b6b !important;
+	border-color: #ff6b6b transparent #ff6b6b transparent !important;
+	border-width: 4px !important;
+	width: 4rem !important;
+	height: 4rem !important;
+	filter: drop-shadow(0 0 15px rgba(255, 107, 107, 0.6)) !important;
+}
+
+.loader .spinner-border,
+.loader .spinner-border.text-primary {
+	color: #ff6b6b !important;
+	border-width: 4px !important;
+	width: 4rem !important;
+	height: 4rem !important;
+	filter: drop-shadow(0 0 15px rgba(255, 107, 107, 0.6)) !important;
+	border-color: #ff6b6b transparent #ff6b6b transparent !important;
+	border-top-color: #ff6b6b !important;
+	border-right-color: rgba(255, 107, 107, 0.2) !important;
+	border-bottom-color: rgba(255, 107, 107, 0.8) !important;
+	border-left-color: rgba(255, 107, 107, 0.2) !important;
+	animation: spinner-border 0.75s linear infinite !important;
 }
 
 .loader h4 {
 	color: #ff6b6b;
-	font-weight: 600;
-	letter-spacing: 2px;
+	font-weight: 700;
+	letter-spacing: 3px;
+	margin-top: 20px;
+	text-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
+	background: linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+.loader p {
+	color: #666;
+	font-weight: 500;
+	margin-top: 10px;
+	font-size: 0.9rem;
+}
+
+@keyframes loaderPulse {
+	0%, 100% {
+		transform: scale(1);
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 15px rgba(255, 107, 107, 0.2);
+	}
+	50% {
+		transform: scale(1.02);
+		box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(255, 107, 107, 0.3);
+	}
 }
 
 /* Error messages */
