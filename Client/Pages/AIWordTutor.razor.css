@@ -327,6 +327,100 @@
     font-size: 1.5rem;
 }
 
+.story-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.story-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.play-story-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    min-width: 120px;
+    justify-content: center;
+}
+
+.play-story-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.play-story-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.play-story-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.play-story-btn.reading {
+    background: linear-gradient(45deg, #dc3545, #bd2130);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.play-story-btn .icon {
+    font-size: 1rem;
+}
+
+.speech-note {
+    color: #666;
+    font-size: 0.8rem;
+    font-style: italic;
+    text-align: right;
+    max-width: 200px;
+    line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+    .story-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .story-controls {
+        align-items: flex-start;
+        width: 100%;
+    }
+    
+    .play-story-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .speech-note {
+        text-align: left;
+        max-width: 100%;
+    }
+}
+
 .story-text {
     font-size: 1.1rem;
     line-height: 1.8;
@@ -523,6 +617,80 @@
     border: 2px solid #90caf9;
 }
 /* === End Improved Readability === */
+
+/* === Chat Message Controls === */
+.message-with-controls {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.message-content {
+    flex: 1;
+    min-width: 0; /* Prevents flex item from overflowing */
+}
+
+.chat-play-btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.chat-play-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+}
+
+.chat-play-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.chat-play-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.chat-play-btn.reading {
+    background: linear-gradient(45deg, #dc3545, #bd2130);
+    animation: pulse-chat 2s infinite;
+}
+
+@keyframes pulse-chat {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.chat-play-btn .icon {
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+/* Mobile adjustments for chat controls */
+@media (max-width: 768px) {
+    .message-with-controls {
+        gap: 0.5rem;
+    }
+    
+    .chat-play-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+}
+/* === End Chat Message Controls === */
 
 .chat-input-section {
     display: flex;

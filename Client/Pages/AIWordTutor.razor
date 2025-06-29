@@ -108,7 +108,34 @@
                 {
                     <div class="story-section">
                         <div class="story-content">
-                            <h3>📖 Your Story</h3>
+                            <div class="story-header">
+                                <h3>📖 Your Story</h3>
+                                <div class="story-controls">
+                                    <button @onclick="ToggleTextToSpeech" 
+                                            class="play-story-btn @(isReading ? "reading" : "")"
+                                            disabled="@(string.IsNullOrEmpty(currentContent) || !speechSupported)"
+                                            title="@(isReading ? "Stop reading" : "Read story aloud")">
+                                        @if (isReading)
+                                        {
+                                            <span class="icon">⏸️</span>
+                                            <span>Stop</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="icon">▶️</span>
+                                            <span>Read Aloud</span>
+                                        }
+                                    </button>
+                                    @if (!speechSupported)
+                                    {
+                                        <small class="speech-note">Text-to-speech not supported in this browser</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="speech-note">💡 Tip: In Microsoft Edge, try F9 for Immersive Reader</small>
+                                    }
+                                </div>
+                            </div>
                             <p class="story-text">@currentContent</p>
                         </div>
                         @RenderCurrentChallenge
@@ -149,7 +176,33 @@
                                 @foreach (var (message, index) in conversationHistory.Select((msg, i) => (msg, i)))
                                 {
                                     <div class="chat-message @(index % 2 == 0 ? "ai" : "user")">
-                                        @message
+                                        @if (index % 2 == 0)
+                                        {
+                                            <!-- AI message -->
+                                            <div class="message-with-controls">
+                                                <div class="message-content">
+                                                    @message
+                                                </div>
+                                                <button @onclick="() => ToggleChatMessageSpeech(message)" 
+                                                        class="chat-play-btn @(isReadingChat && currentReadingMessage == message ? "reading" : "")"
+                                                        disabled="@(!speechSupported)"
+                                                        title="@(isReadingChat && currentReadingMessage == message ? "Stop reading" : "Read message aloud")">
+                                                    @if (isReadingChat && currentReadingMessage == message)
+                                                    {
+                                                        <span class="icon">⏸️</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="icon">▶️</span>
+                                                    }
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <!-- User message -->
+                                            @message
+                                        }
                                     </div>
                                 }
                             </div>                            

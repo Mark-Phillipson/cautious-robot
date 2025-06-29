@@ -54,6 +54,14 @@ namespace BlazorApp.Client.Pages
         private HashSet<string> usedTargetWords = new();
         private int wordsUsedCorrectly = 0;
 
+        // Text-to-speech state
+        private bool isReading = false;
+        private bool speechSupported = true;
+
+        // Chat message text-to-speech state
+        private bool isReadingChat = false;
+        private string currentReadingMessage = "";
+
         private string? themeInput = string.Empty;        private static readonly string[] DefaultThemes = new[]
         {
             "Nature", "Travel", "Food", "Technology", "Sports", "Music", "Friendship", "Adventure", "School", "Weather", 
@@ -241,8 +249,13 @@ etc.";
             
             var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
             
+            Console.WriteLine($"AI Response for story: {aiResponse}");
+            Console.WriteLine($"AI Response length: {aiResponse.Length}");
+            
             // Parse the response to extract story and questions
             var sections = aiResponse.Split(new[] { "QUESTIONS:" }, StringSplitOptions.RemoveEmptyEntries);
+            
+            Console.WriteLine($"Sections found: {sections.Length}");
             
             if (sections.Length >= 2)
             {
@@ -258,10 +271,15 @@ etc.";
                 
                 currentContent = string.Join("\n", cleanedLines).Trim();
                 
+                Console.WriteLine($"Story content set: {currentContent}");
+                
                 // Parse questions and create challenges
                 var questionLines = sections[1].Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                Console.WriteLine($"Question lines found: {questionLines.Length}");
+                
                 foreach (var line in questionLines.Where(l => l.Trim().Length > 0))
                 {
+                    Console.WriteLine($"Processing line: {line}");
                     var cleanLine = line.Trim();
                     if (cleanLine.StartsWith("1.") || cleanLine.StartsWith("2.") || 
                         cleanLine.StartsWith("3.") || cleanLine.StartsWith("4.") || 
@@ -269,6 +287,7 @@ etc.";
                     {
                         // Extract the word this question is about
                         var word = ExtractWordFromQuestion(cleanLine, words);
+                        Console.WriteLine($"Extracted word: {word} from line: {cleanLine}");
                         if (!string.IsNullOrEmpty(word))
                         {
                             currentChallenges.Add(new WordChallenge
@@ -279,16 +298,43 @@ etc.";
                                 IsOpenEnded = true
                                 // Don't set Context for story challenges - the story is already displayed above
                             });
+                            Console.WriteLine($"Added challenge for word: {word}");
                         }
                     }
+                }
+                
+                Console.WriteLine($"Total challenges created: {currentChallenges.Count}");
+                
+                // Fallback: if no challenges were created from parsing, create some basic ones
+                if (currentChallenges.Count == 0)
+                {
+                    Console.WriteLine("No challenges parsed from AI response, creating fallback challenges");
+                    await GenerateSimpleChallenges(words);
                 }
             }
             else
             {
+                Console.WriteLine("Could not split AI response into story and questions sections");
                 currentContent = aiResponse;
                 // Fallback: create simple challenges
-                 await GenerateSimpleChallenges(words);
+                await GenerateSimpleChallenges(words);
             }
+            
+            // Final safety check: ensure we have at least one challenge
+            if (currentChallenges.Count == 0)
+            {
+                Console.WriteLine("CRITICAL: No challenges created, adding emergency challenge");
+                var firstWord = words.FirstOrDefault() ?? "learning";
+                currentChallenges.Add(new WordChallenge
+                {
+                    Type = ChallengeType.Context,
+                    TargetWord = firstWord,
+                    Question = $"How would you use the word '{firstWord}' in your own sentence?",
+                    IsOpenEnded = true
+                });
+            }
+            
+            Console.WriteLine($"Final challenge count: {currentChallenges.Count}");
         }
 
         private string ExtractWordFromQuestion(string question, List<string> words)
@@ -1330,9 +1376,122 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             });
         }
 
+        // Text-to-speech methods
+        private async Task ToggleTextToSpeech()
+        {
+            try
+            {
+                if (isReading)
+                {
+                    await JSRuntime.InvokeVoidAsync("stopSpeech");
+                    isReading = false;
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(currentContent))
+                    {
+                        // Check if speech synthesis is supported
+                        speechSupported = await JSRuntime.InvokeAsync<bool>("checkSpeechSupport");
+                        
+                        if (speechSupported)
+                        {
+                            await JSRuntime.InvokeVoidAsync("speakText", currentContent);
+                            isReading = true;
+                        }
+                        else
+                        {
+                            errorMessage = "Text-to-speech is not supported in this browser.";
+                        }
+                    }
+                }
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error with text-to-speech: {ex.Message}");
+                errorMessage = "Error occurred while using text-to-speech.";
+                isReading = false;
+                StateHasChanged();
+            }
+        }
+
+        private async Task ToggleChatMessageSpeech(string message)
+        {
+            try
+            {
+                if (isReadingChat && currentReadingMessage == message)
+                {
+                    // Stop reading if this message is currently being read
+                    await JSRuntime.InvokeVoidAsync("stopSpeech");
+                    isReadingChat = false;
+                    currentReadingMessage = "";
+                }
+                else
+                {
+                    // Stop any currently playing speech first
+                    if (isReading)
+                    {
+                        await JSRuntime.InvokeVoidAsync("stopSpeech");
+                        isReading = false;
+                    }
+                    if (isReadingChat)
+                    {
+                        await JSRuntime.InvokeVoidAsync("stopSpeech");
+                    }
+
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        // Check if speech synthesis is supported
+                        speechSupported = await JSRuntime.InvokeAsync<bool>("checkSpeechSupport");
+                        
+                        if (speechSupported)
+                        {
+                            await JSRuntime.InvokeVoidAsync("speakText", message);
+                            isReadingChat = true;
+                            currentReadingMessage = message;
+                        }
+                        else
+                        {
+                            errorMessage = "Text-to-speech is not supported in this browser.";
+                        }
+                    }
+                }
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error with chat text-to-speech: {ex.Message}");
+                errorMessage = "Error occurred while using text-to-speech.";
+                isReadingChat = false;
+                currentReadingMessage = "";
+                StateHasChanged();
+            }
+        }
+
+        private void OnSpeechEnd()
+        {
+            isReading = false;
+            isReadingChat = false;
+            currentReadingMessage = "";
+            StateHasChanged();
+        }
+
         public void Dispose()
         {
             StopFeedbackTimer();
+            
+            // Stop any ongoing speech synthesis
+            try
+            {
+                JSRuntime.InvokeVoidAsync("stopSpeech");
+                isReading = false;
+                isReadingChat = false;
+                currentReadingMessage = "";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error stopping speech on dispose: {ex.Message}");
+            }
         }        private async Task GenerateNewConversationTopic()
         {
             // Reset conversation state for new topic
@@ -1486,22 +1645,25 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
         public RenderFragment RenderCurrentChallenge => builder =>
         {
             Console.WriteLine($"RenderCurrentChallenge: index={currentChallengeIndex}, count={currentChallenges.Count}, isLoading={isLoading}");
+            Console.WriteLine($"Challenges: {string.Join(", ", currentChallenges.Select(c => c.Question))}");
             
             if (currentChallengeIndex >= currentChallenges.Count)
             {
                 if (isLoading)
                 {
+                    Console.WriteLine("Showing loading message");
                     builder.AddMarkupContent(0, "<p>🤖 AI is generating your next challenge...</p>");
                 }
                 else
                 {
+                    Console.WriteLine("Showing no challenges message");
                     builder.AddMarkupContent(0, "<p>No more challenges available. Something went wrong.</p>");
                 }
                 return;
             }
 
             var challenge = currentChallenges[currentChallengeIndex];
-            Console.WriteLine($"Rendering challenge: {challenge.Question}");
+            Console.WriteLine($"Rendering challenge: {challenge.Question}, IsOpenEnded: {challenge.IsOpenEnded}");
             
             if (challenge.IsOpenEnded)
             {
