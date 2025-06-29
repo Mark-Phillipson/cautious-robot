@@ -39,7 +39,7 @@ namespace BlazorApp.Client.Pages
         };
 
         private string CurrentWord = "";
-        private string WordDescription = "Please click Load New Word to begin.";
+        private string WordDescription = "Loading your first word...";
         private List<char> CorrectGuesses = new List<char>();
         private List<char> IncorrectGuesses = new List<char>();
 
@@ -47,7 +47,11 @@ namespace BlazorApp.Client.Pages
         {
             get
             {
-                if (CurrentWord.Length > 0 && CurrentWord.Replace(" ", "").All(letter => CorrectGuesses.Contains(letter)))
+                if (loading)
+                {
+                    return "Loading new word...";
+                }
+                else if (CurrentWord.Length > 0 && CurrentWord.Replace(" ", "").All(letter => CorrectGuesses.Contains(letter)))
                 {
                     return "You win!";
                 }
@@ -57,7 +61,7 @@ namespace BlazorApp.Client.Pages
                 }
                 else if (CurrentWord.Length == 0)
                 {
-                    return "First word not yet loaded.";
+                    return "Getting your first word ready...";
                 }
                 else if (CorrectGuesses.Count > 0 || IncorrectGuesses.Count > 0)
                 {
@@ -88,6 +92,8 @@ namespace BlazorApp.Client.Pages
         protected override async Task OnInitializedAsync()
         {
             apiKey = await ApiKeyService.GetApiKeyAsync();
+            // Automatically load the first word when the page loads
+            await StartNewGame();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -158,6 +164,7 @@ namespace BlazorApp.Client.Pages
             CorrectGuesses.Clear();
             IncorrectGuesses.Clear();
             loading = false;
+            StateHasChanged(); // Ensure UI updates after loading
         }
 
         private void MakeGuess(char letter)
