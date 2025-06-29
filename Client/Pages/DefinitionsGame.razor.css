@@ -1,42 +1,271 @@
-/* Ensure Bootstrap display utilities are not overridden */
-.d-none {
-	display: none !important;
-}
-.d-lg-block {
-	display: none !important;
-}
-@media (min-width: 992px) {
-	.d-lg-block {
-		display: block !important;
-	}
-	.d-lg-none {
-		display: none !important;
-	}
-}
-@media (max-width: 991.98px) {
-	.d-lg-none {
-		display: block !important;
-	}
-}
-.custom-layout {
-	display: flex !important;
-	align-content: center;
-	justify-content: space-around;
-	flex-direction: column;
-	flex-wrap: nowrap;
-	align-items: stretch;
-}
+/* Modern container with vibrant gradient */
 .background {
-	background-image: url("images/dictionary.png");
-	background-color: rgba(0, 0, 0, 0.8);
-	/* white with 60% opacity */
-	background-blend-mode: darken;
-	/* blend the image and the color */
-	object-fit: cover;
-	/* fill the container */
-	width: 100%;
-	height: 100vh;
+	background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+	min-height: 100vh;
+	padding: 20px;
+}
 
-	background-repeat: no-repeat;
-	background-size: cover;
+/* Game header card */
+.game-header {
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(10px);
+	border-radius: 20px;
+	padding: 20px;
+	margin-bottom: 30px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Control buttons with modern styling */
+.control-btn {
+	background: linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%);
+	border: none;
+	border-radius: 12px;
+	color: white;
+	font-weight: 600;
+	padding: 12px 24px;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.control-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+	color: white;
+}
+
+.control-btn.btn-secondary {
+	background: linear-gradient(45deg, #4ecdc4 0%, #44a08d 100%);
+	box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+}
+
+.control-btn.btn-secondary:hover {
+	box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+}
+
+/* Level badge */
+.level-badge {
+	background: linear-gradient(45deg, #ffeaa7 0%, #fdcb6e 100%);
+	color: #e17055;
+	border: none;
+	border-radius: 20px;
+	padding: 8px 16px;
+	font-weight: bold;
+	margin-left: 10px;
+}
+
+/* Options panel */
+.options-panel {
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 15px;
+	padding: 20px;
+	margin: 20px 0;
+	backdrop-filter: blur(5px);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Word display area */
+.word-display-area {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 20px;
+	padding: 40px 30px;
+	margin: 20px 0;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	text-align: center;
+}
+
+.current-word {
+	background: linear-gradient(45deg, #ff6b6b 0%, #4ecdc4 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	font-weight: 800;
+	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+	margin: 20px 0;
+}
+
+.current-word-desktop {
+	font-size: 6rem;
+	line-height: 1.1;
+}
+
+.current-word-mobile {
+	font-size: 2.5rem;
+	line-height: 1.2;
+}
+
+/* Definition selection area */
+.definitions-selection-area {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 20px;
+	padding: 30px;
+	margin: 20px 0;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Definition buttons */
+.definition-btn {
+	background: linear-gradient(45deg, #74b9ff 0%, #0984e3 100%);
+	border: none;
+	border-radius: 15px;
+	padding: 20px 25px;
+	margin: 8px 0;
+	font-weight: 500;
+	color: white;
+	text-align: left;
+	width: 100%;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+	min-height: 80px;
+	display: flex;
+	align-items: center;
+}
+
+.definition-btn:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 8px 25px rgba(116, 185, 255, 0.4);
+	color: white;
+}
+
+.definition-btn.btn-success {
+	background: linear-gradient(45deg, #00b894 0%, #00cec9 100%);
+	box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+}
+
+.definition-btn.btn-success:hover {
+	box-shadow: 0 8px 25px rgba(0, 184, 148, 0.4);
+}
+
+.definition-btn.btn-danger {
+	background: linear-gradient(45deg, #e84393 0%, #fd79a8 100%);
+	box-shadow: 0 4px 15px rgba(232, 67, 147, 0.3);
+}
+
+.definition-btn.btn-danger:hover {
+	box-shadow: 0 8px 25px rgba(232, 67, 147, 0.4);
+}
+
+.definition-number {
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 8px;
+	padding: 4px 8px;
+	margin-right: 12px;
+	font-weight: bold;
+	min-width: 30px;
+	text-align: center;
+}
+
+.part-of-speech {
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 12px;
+	padding: 3px 8px;
+	margin-left: 8px;
+	font-size: 0.85em;
+	font-weight: 600;
+}
+
+/* Congratulations styling */
+.congratulations {
+	background: linear-gradient(45deg, #a29bfe 0%, #6c5ce7 100%);
+	border-radius: 20px;
+	padding: 30px;
+	text-align: center;
+	margin: 20px 0;
+	box-shadow: 0 8px 32px rgba(162, 155, 254, 0.3);
+	color: white;
+}
+
+.congratulations h1, .congratulations h5 {
+	color: white;
+	margin-bottom: 20px;
+	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading spinner */
+.loader {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 20px;
+	padding: 50px;
+	margin: 50px auto;
+	max-width: 300px;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.loader h4 {
+	color: #ff6b6b;
+	font-weight: 600;
+	letter-spacing: 2px;
+}
+
+/* Error messages */
+.error-card {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 15px;
+	padding: 20px;
+	margin: 20px 0;
+	border-left: 4px solid #e84393;
+	backdrop-filter: blur(5px);
+}
+
+/* API Key entry styling */
+.api-key-section {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 15px;
+	padding: 25px;
+	margin: 20px 0;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Form controls */
+.modern-input {
+	border: 2px solid rgba(255, 107, 107, 0.3);
+	border-radius: 10px;
+	padding: 12px;
+	transition: all 0.3s ease;
+	background: rgba(255, 255, 255, 0.9);
+}
+
+.modern-input:focus {
+	border-color: #ff6b6b;
+	box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+	outline: none;
+}
+
+/* Instruction text */
+.instruction-text {
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 12px;
+	padding: 15px 20px;
+	margin: 15px 0;
+	color: #2d3436;
+	font-weight: 600;
+	text-align: center;
+	backdrop-filter: blur(5px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.background {
+		padding: 10px;
+	}
+	
+	.game-header {
+		padding: 15px;
+		margin-bottom: 20px;
+	}
+	
+	.word-display-area,
+	.definitions-selection-area {
+		padding: 20px;
+		margin: 15px 0;
+	}
+	
+	.definition-btn {
+		padding: 15px 20px;
+		min-height: 70px;
+	}
 }

@@ -1,23 +1,244 @@
-.custom-layout {
-	display: flex !important;
-	align-content: center;
-	justify-content: space-around;
-	flex-direction: column;
-	flex-wrap: nowrap;
-	align-items: stretch;
+/* Modern container with subtle gradient */
+.background {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	min-height: 100vh;
+	padding: 20px;
 }
 
-.background {
-	background-image: url("images/dictionary.png");
-	background-color: rgba(0, 0, 0, 0.8);
-	/* white with 60% opacity */
-	background-blend-mode: darken;
-	/* blend the image and the color */
-	object-fit: cover;
-	/* fill the container */
-	width: 100%;
-	height: 100vh;
+/* Game header card */
+.game-header {
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(10px);
+	border-radius: 20px;
+	padding: 20px;
+	margin-bottom: 30px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+}
 
-	background-repeat: no-repeat;
-	background-size: cover;
+/* Control buttons with modern styling */
+.control-btn {
+	background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+	border: none;
+	border-radius: 12px;
+	color: white;
+	font-weight: 600;
+	padding: 12px 24px;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.control-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+	color: white;
+}
+
+.control-btn.btn-secondary {
+	background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+	box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+}
+
+.control-btn.btn-secondary:hover {
+	box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+}
+
+/* Level badge */
+.level-badge {
+	background: linear-gradient(45deg, #ffecd2 0%, #fcb69f 100%);
+	color: #8b4513;
+	border: none;
+	border-radius: 20px;
+	padding: 8px 16px;
+	font-weight: bold;
+	margin-left: 10px;
+}
+
+/* Options panel */
+.options-panel {
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 15px;
+	padding: 20px;
+	margin: 20px 0;
+	backdrop-filter: blur(5px);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Word selection area */
+.word-selection-area {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 20px;
+	padding: 30px;
+	margin: 20px 0;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Word buttons for desktop */
+.word-btn {
+	background: linear-gradient(45deg, #a8edea 0%, #fed6e3 100%);
+	border: none;
+	border-radius: 15px;
+	padding: 15px 25px;
+	margin: 8px;
+	font-weight: 600;
+	color: #2c3e50;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 15px rgba(168, 237, 234, 0.3);
+	min-width: 150px;
+}
+
+.word-btn:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 8px 25px rgba(168, 237, 234, 0.4);
+	color: #2c3e50;
+}
+
+.word-btn.btn-success {
+	background: linear-gradient(45deg, #56ab2f 0%, #a8e6cf 100%);
+	color: white;
+}
+
+.word-btn.btn-danger {
+	background: linear-gradient(45deg, #ff416c 0%, #ff4b2b 100%);
+	color: white;
+}
+
+/* Mobile word buttons */
+.word-btn-mobile {
+	background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+	border: none;
+	border-radius: 12px;
+	padding: 12px 20px;
+	margin: 5px;
+	color: white;
+	font-weight: 500;
+	width: 100%;
+	transition: all 0.3s ease;
+	box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.word-btn-mobile:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+	color: white;
+}
+
+/* Definitions area */
+.definitions-area {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 20px;
+	padding: 30px;
+	margin-top: 20px;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.definitions-area h2, .definitions-area h5 {
+	color: #2c3e50;
+	font-weight: 700;
+	margin-bottom: 20px;
+}
+
+.definition-item {
+	background: rgba(102, 126, 234, 0.1);
+	border-radius: 12px;
+	padding: 20px;
+	margin: 15px 0;
+	border-left: 4px solid #667eea;
+	transition: all 0.3s ease;
+}
+
+.definition-item:hover {
+	background: rgba(102, 126, 234, 0.15);
+	transform: translateX(5px);
+}
+
+/* Congratulations styling */
+.congratulations {
+	background: linear-gradient(45deg, #ffecd2 0%, #fcb69f 100%);
+	border-radius: 20px;
+	padding: 30px;
+	text-align: center;
+	margin: 20px 0;
+	box-shadow: 0 8px 32px rgba(252, 182, 159, 0.3);
+}
+
+.congratulations h1, .congratulations h5 {
+	color: #e8750a;
+	margin-bottom: 20px;
+}
+
+/* Loading spinner */
+.loader {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 20px;
+	padding: 50px;
+	margin: 50px auto;
+	max-width: 300px;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.loader h4 {
+	color: #667eea;
+	font-weight: 600;
+	letter-spacing: 2px;
+}
+
+/* Error messages */
+.error-card {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 15px;
+	padding: 20px;
+	margin: 20px 0;
+	border-left: 4px solid #e74c3c;
+	backdrop-filter: blur(5px);
+}
+
+/* API Key entry styling */
+.api-key-section {
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 15px;
+	padding: 25px;
+	margin: 20px 0;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Form controls */
+.modern-input {
+	border: 2px solid rgba(102, 126, 234, 0.3);
+	border-radius: 10px;
+	padding: 12px;
+	transition: all 0.3s ease;
+	background: rgba(255, 255, 255, 0.9);
+}
+
+.modern-input:focus {
+	border-color: #667eea;
+	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+	outline: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.background {
+		padding: 10px;
+	}
+	
+	.game-header {
+		padding: 15px;
+		margin-bottom: 20px;
+	}
+	
+	.word-selection-area,
+	.definitions-area {
+		padding: 20px;
+		margin: 15px 0;
+	}
+	
+	.definition-item {
+		padding: 15px;
+	}
 }
