@@ -1,33 +1,47 @@
 ﻿@inherits LayoutComponentBase
 @namespace BlazorApp.Client.Shared
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">
-            WORDS
-            <span class="text-info" style="font-size:xx-small"></span>
-        </a>
-        <button accesskey="-" title="Navigation menu (-)" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<div class="modern-layout">
+    <header class="modern-header">
+        <div class="header-content">
+            <a class="brand-logo" href="">
+                <span class="brand-icon">🎯</span>
+                <span class="brand-text">WORDS</span>
+                <span class="brand-subtitle">Game Hub</span>
+            </a>
+            <button accesskey="-" 
+                    title="Navigation menu (-)" 
+                    class="menu-toggle @(collapseNavMenu ? "" : "active")" 
+                    @onclick="ToggleNavMenu">
+                <span class="menu-icon">
+                    <span class="menu-line"></span>
+                    <span class="menu-line"></span>
+                    <span class="menu-line"></span>
+                </span>
+            </button>
+        </div>
+    </header>
+
+    <div class="layout-body @(collapseNavMenu ? "" : "menu-open")">
+        <aside class="modern-sidebar @(collapseNavMenu ? "collapsed" : "expanded")">
+            <NavMenu NavMenuCssClass="nav-menu" ToggleNavMenu="ToggleNavMenu" />
+        </aside>
+        
+        <main class="main-content">
+            <div class="content-wrapper">
+                @Body
+            </div>
+        </main>
     </div>
-</div>
-<div class="page @(collapseNavMenu ? "" : "menu-open")">
-    <div class="sidebar collapse @(collapseNavMenu ? "" : "show")">
-        <NavMenu />
-    </div>
-    <main>
-        <article class="content">
-            @Body
-        </article>
-    </main>
+
+    <div class="sidebar-overlay @(collapseNavMenu ? "" : "visible")" @onclick="ToggleNavMenu"></div>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
+    
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
-
     }
 }
