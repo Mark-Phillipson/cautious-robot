@@ -80,15 +80,6 @@ namespace BlazorApp.Client.Pages
                          'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L' ,
                          'Z', 'X', 'C', 'V', 'B', 'N', 'M'
                     };
-        private Dictionary<string, string> TalonAlphabet = new Dictionary<string, string>
-        {
-            { "Q", "Quench" }, { "W", "Whale" }, { "E", "Eve" }, { "R", "Red" }, { "T", "Trap" },
-            { "Y", "Yank" }, { "U", "Urge" }, { "I", "sIt" }, { "O", "Odd" }, { "P", "Pit" },
-            { "A", "Act" }, { "S", "Sun" }, { "D", "Drum" }, { "F", "Fox" }, { "G", "Golf" },
-            { "H", "Hot" }, { "J", "Jury" }, { "K", "crunch" }, { "L", "Look" },
-            { "Z", "Zip" }, { "X", "pleX" }, { "C", "Cat" }, { "V", "Vest" }, { "B", "Bat" },
-            { "N", "Near" }, { "M", "Mike" }
-        };
         protected override async Task OnInitializedAsync()
         {
             apiKey = await ApiKeyService.GetApiKeyAsync();

@@ -592,13 +592,244 @@
     background: #4a5568;
 }
 
+/* Mobile Responsive Design */
 @media (max-width: 768px) {
-    .input-group {
-        flex-direction: column;
+    .scrabble-layout {
+        padding: 0.5rem;
+        gap: 1rem;
     }
-    
+
+    .game-section {
+        padding: 1rem 0.5rem;
+        border-radius: 8px;
+    }
+
+    /* Score Display - Mobile */
+    .score-display {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .score-info {
+        order: 1;
+    }
+
+    .word-definition {
+        order: 2;
+        max-width: 100%;
+        margin: 0;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .reset-game-btn {
+        order: 3;
+        margin: 0;
+        align-self: center;
+    }
+
+    /* Board - Mobile */
+    .scrabble-board {
+        min-width: unset;
+        width: 100%;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .board-table {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .board-cell {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+        border: 1px solid #444;
+    }
+
+    .board-cell.center-cell {
+        font-size: 2.2rem;
+        box-shadow: 0 0 8px 1px #ffd70099, 0 0 0 2px #23272a;
+    }
+
+    /* Tile Rack - Mobile */
+    .tile-rack {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 1rem;
+        gap: 0.5rem;
+        margin: 0.5rem 0;
+    }
+
+    .tile-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .letter-score {
+        font-size: 0.7rem;
+        bottom: 2px;
+        right: 4px;
+    }
+
+    /* Selected Word - Mobile */
+    .selected-word {
+        min-width: unset;
+        width: 100%;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .selected-word-label {
+        font-size: 1rem;
+    }
+
+    .selected-word-value {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2px;
+    }
+
+    .built-word-tile {
+        font-size: 1rem;
+        padding: 0.4rem;
+        min-width: 32px;
+        margin: 1px;
+    }
+
+    /* Controls - Mobile */
+    .scrabble-controls {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .scrabble-controls button {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1rem;
+    }
+
+    /* Instructions - Mobile */
+    .instructions-section {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .instructions-section h2 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .instructions-content {
+        font-size: 0.9rem;
+    }
+
+    .instructions-content li {
+        margin-bottom: 0.75rem;
+    }
+
+    /* Validation Messages - Mobile */
+    .validation-message {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .validation-loading {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+
+    /* API Key Setup - Mobile */
     .setup-card {
-        padding: 2rem;
-        margin: 1rem;
+        padding: 1.5rem;
+        margin: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .setup-card h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .api-key-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .api-key-info ol {
+        padding-left: 1.2rem;
+    }
+
+    .api-key-info li {
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Extra Small Mobile Devices */
+@media (max-width: 480px) {
+    .scrabble-layout {
+        padding: 0.25rem;
+    }
+
+    .game-section {
+        padding: 0.5rem 0.25rem;
+    }
+
+    .board-cell {
+        width: 45px;
+        height: 45px;
+        font-size: 1.5rem;
+    }
+
+    .board-cell.center-cell {
+        font-size: 1.7rem;
+    }
+
+    .tile-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+    }
+
+    .letter-score {
+        font-size: 0.6rem;
+        bottom: 1px;
+        right: 2px;
+    }
+
+    .tile-rack {
+        padding: 0.75rem;
+        gap: 0.25rem;
+    }
+
+    .built-word-tile {
+        font-size: 0.9rem;
+        padding: 0.3rem;
+        min-width: 28px;
+    }
+
+    .score-display h3 {
+        font-size: 1.2rem;
+    }
+
+    .score-display h4 {
+        font-size: 1rem;
+    }
+
+    .word-definition h4 {
+        font-size: 0.9rem;
+    }
+
+    .word-definition p {
+        font-size: 0.8rem;
     }
 }
