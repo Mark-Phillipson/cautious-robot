@@ -62,6 +62,9 @@ namespace BlazorApp.Client.Pages
         private bool isReadingChat = false;
         private string currentReadingMessage = "";
 
+        // Browser detection
+        private bool isEdgeBrowser = false;
+
         private string? themeInput = string.Empty;        private static readonly string[] DefaultThemes = new[]
         {
             "Nature", "Travel", "Food", "Technology", "Sports", "Music", "Friendship", "Adventure", "School", "Weather", 
@@ -87,12 +90,31 @@ namespace BlazorApp.Client.Pages
             // Check if API key already exists
             var apiKey = await OpenAIApiKeyService.GetApiKeyAsync();
             hasApiKey = !string.IsNullOrEmpty(apiKey);
+            
+            // Detect browser type
+            await DetectBrowser();
         }
 
         private string GetRandomTheme()
         {
             var themes = DefaultThemes;
             return themes[_random.Next(themes.Length)];
+        }
+
+        private async Task DetectBrowser()
+        {
+            try
+            {
+                var userAgent = await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+                // Check for both the new Edge (Edg/) and legacy Edge (Edge/)
+                isEdgeBrowser = userAgent.Contains("Edg/") || userAgent.Contains("Edge/");
+                Console.WriteLine($"Browser detected - User Agent: {userAgent}, Is Edge: {isEdgeBrowser}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error detecting browser: {ex.Message}");
+                isEdgeBrowser = false; // Default to false if detection fails
+            }
         }
 
         private void PickRandomTheme()
