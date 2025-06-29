@@ -61,9 +61,9 @@ namespace BlazorApp.Client.Pages
             "Emotions", "Business", "Environment", "Culture", "Entertainment", "Cooking", "Gardening", "Literature", 
             "Photography", "Fitness", "Shopping", "Holidays", "Communication", "Medicine", "Architecture", "Geography",
             "Movies", "Books", "Dance", "Theater", "Politics", "Economics", "Philosophy", "Psychology", "Astronomy",
-            "Ocean", "Mountains", "Cities", "Countries", "Languages", "Celebrations", "Inventions", "Discoveries"
+            "Ocean", "Mountains", "Cities", "Countries", "Languages", "Celebrations", "Inventions", "Discoveries","Military","Navy","Army","Airforce","Drones","Cyber","Code","Encryption"
         };
-        private static readonly Random _random = new();
+        private static readonly Random _random = new(Environment.TickCount);
 
         private HashSet<char> HangmanGuessedLettersUpper => new HashSet<char>(hangmanGuesses.Select(c => char.ToUpperInvariant(c)));
 
