@@ -257,7 +257,30 @@
                             @if (!string.IsNullOrWhiteSpace(hangmanDefinition))
                             {
                                 <div class="hangman-hint">
-                                    <strong>💡 Hint:</strong> @hangmanDefinition
+                                    <div class="hint-content">
+                                        <strong>💡 Hint:</strong> @hangmanDefinition
+                                    </div>
+                                    <div class="hint-controls">
+                                        <button @onclick="ToggleHangmanHintSpeech" 
+                                                class="hint-play-btn @(isReadingHangmanHint ? "reading" : "")"
+                                                disabled="@(!speechSupported)"
+                                                title="@(isReadingHangmanHint ? "Stop reading hint" : "Read hint aloud")">
+                                            @if (isReadingHangmanHint)
+                                            {
+                                                <span class="icon">⏸️</span>
+                                                <span>Stop</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="icon">▶️</span>
+                                                <span>Read Hint</span>
+                                            }
+                                        </button>
+                                        @if (!speechSupported)
+                                        {
+                                            <small class="speech-note">Text-to-speech not supported in this browser</small>
+                                        }
+                                    </div>
                                 </div>
                             }
                             

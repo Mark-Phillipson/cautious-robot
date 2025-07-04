@@ -62,6 +62,9 @@ namespace BlazorApp.Client.Pages
         private bool isReadingChat = false;
         private string currentReadingMessage = "";
 
+        // Hangman hint text-to-speech state
+        private bool isReadingHangmanHint = false;
+
         // Browser detection
         private bool isEdgeBrowser = false;
 
@@ -952,7 +955,7 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                         Type = ChallengeType.Definition,
                         TargetWord = fallbackWord,
                         Question = $"What does '{fallbackWord}' mean?",
-                        Options = new List<string> { "A sample or instance", "A mistake", "A tool", "A place" },
+                        Options = new List<string> { "A sample or instance", "A mistake", "A tool", "A color" },
                         CorrectAnswer = "A sample or instance"
                     });
                 }
@@ -1490,14 +1493,65 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             }
         }
 
+        private async Task ToggleHangmanHintSpeech()
+        {
+            try
+            {
+                if (isReadingHangmanHint)
+                {
+                    await JSRuntime.InvokeVoidAsync("stopSpeech");
+                    isReadingHangmanHint = false;
+                }
+                else
+                {
+                    // Stop any currently playing speech first
+                    if (isReading)
+                    {
+                        await JSRuntime.InvokeVoidAsync("stopSpeech");
+                        isReading = false;
+                    }
+                    if (isReadingChat)
+                    {
+                        await JSRuntime.InvokeVoidAsync("stopSpeech");
+                        isReadingChat = false;
+                        currentReadingMessage = "";
+                    }
+
+                    if (!string.IsNullOrEmpty(hangmanDefinition))
+                    {
+                        // Check if speech synthesis is supported
+                        speechSupported = await JSRuntime.InvokeAsync<bool>("checkSpeechSupport");
+                        
+                        if (speechSupported)
+                        {
+                            await JSRuntime.InvokeVoidAsync("speakText", hangmanDefinition);
+                            isReadingHangmanHint = true;
+                        }
+                        else
+                        {
+                            errorMessage = "Text-to-speech is not supported in this browser.";
+                        }
+                    }
+                }
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error with hangman hint text-to-speech: {ex.Message}");
+                errorMessage = "Error occurred while using text-to-speech.";
+                isReadingHangmanHint = false;
+                StateHasChanged();
+            }
+        }
+
         private void OnSpeechEnd()
         {
             isReading = false;
             isReadingChat = false;
             currentReadingMessage = "";
+            isReadingHangmanHint = false;
             StateHasChanged();
         }
-
         public void Dispose()
         {
             StopFeedbackTimer();
@@ -1509,6 +1563,7 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                 isReading = false;
                 isReadingChat = false;
                 currentReadingMessage = "";
+                isReadingHangmanHint = false;
             }
             catch (Exception ex)
             {
