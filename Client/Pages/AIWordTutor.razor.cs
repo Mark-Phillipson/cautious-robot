@@ -185,9 +185,13 @@ namespace BlazorApp.Client.Pages
                     {
                         var words = await GetWordsFromAI(1);
                         newWord = words.FirstOrDefault() ?? "example";
+                        Console.WriteLine($"Generated hangman word candidate: '{newWord}' (length: {newWord.Length})");
                     }
                     while (!string.IsNullOrEmpty(previousHangmanWord) && newWord.Equals(previousHangmanWord, StringComparison.OrdinalIgnoreCase));
+                    
                     hangmanWord = newWord;
+                    Console.WriteLine($"Final hangman word set: '{hangmanWord}' (length: {hangmanWord.Length})");
+                    Console.WriteLine($"Hangman word characters: {string.Join(", ", hangmanWord.Select(c => $"'{c}' ({(int)c})"))}");
 
                     hangmanGuesses.Clear();
                     hangmanWrongGuesses = 0;
@@ -233,16 +237,121 @@ namespace BlazorApp.Client.Pages
         {
             var theme = themeInput!.Trim(); // Always use the current theme, which is mandatory
             var difficultyText = difficulty.ToString().ToLower();
-            var prompt = $"Generate a list of {count} English vocabulary words about '{theme}' appropriate for {difficultyText}-level learners. Return only a comma-separated list.";
-            var systemMessage = "You are an expert English language teacher.";
+            
+            // Add randomization elements to ensure varied word selection
+            var randomSeed = DateTime.Now.Ticks % 10000; // Use current time as seed for variety
+            var varietyInstructions = new[]
+            {
+                "Focus on varied vocabulary including verbs, nouns, and adjectives.",
+                "Include both common and less common words to provide variety.",
+                "Mix different aspects and subtopics within the theme.",
+                "Choose diverse words that cover different facets of the topic.",
+                "Select words from various categories and contexts within this theme."
+            };
+            var varietyInstruction = varietyInstructions[_random.Next(varietyInstructions.Length)];
+            
+            var prompt = $@"Generate exactly {count} English vocabulary words about '{theme}' appropriate for {difficultyText}-level learners. 
+
+IMPORTANT: 
+- Generate DIFFERENT words each time - avoid repeating the same common words
+- {varietyInstruction}
+- Each word must be separated by a comma and space
+- Use only single words (no phrases)
+- Return ONLY the words separated by commas
+
+Example format: word1, word2, word3, word4, word5
+
+For fitness theme examples: exercise, strength, cardio, flexibility, endurance
+For travel theme examples: journey, adventure, explore, destination, culture
+
+Random seed: {randomSeed}";
+            
+            var systemMessage = "You are an expert English language teacher. Return ONLY a comma-separated list of vocabulary words. Format: word1, word2, word3, word4, word5. No other text or explanations.";
             var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-            var words = aiResponse.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                  .Select(w => w.Trim())
-                                  .Where(w => !string.IsNullOrWhiteSpace(w))
-                                  .Distinct(StringComparer.OrdinalIgnoreCase)
-                                  .Take(count)
-                                  .ToList();
+            
+            Console.WriteLine($"AI Response for words: '{aiResponse}'");
+            
+            // Try multiple splitting methods to handle different response formats
+            var words = new List<string>();
+            
+            // First try comma separation
+            var commaSplit = aiResponse.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            if (commaSplit.Length >= count)
+            {
+                words = commaSplit.Select(w => CleanWord(w.Trim()))
+                                 .Where(w => !string.IsNullOrWhiteSpace(w) && w.All(char.IsLetter) && w.Length > 1)
+                                 .Distinct(StringComparer.OrdinalIgnoreCase)
+                                 .Take(count)
+                                 .ToList();
+            }
+            
+            // If comma splitting didn't work, try whitespace/newline splitting
+            if (words.Count < count)
+            {
+                var whitespaceSplit = aiResponse.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                words = whitespaceSplit.Select(w => CleanWord(w.Trim()))
+                                      .Where(w => !string.IsNullOrWhiteSpace(w) && w.All(char.IsLetter) && w.Length > 1)
+                                      .Distinct(StringComparer.OrdinalIgnoreCase)
+                                      .Take(count)
+                                      .ToList();
+            }
+            
+            // Fallback to predefined words if AI response parsing fails
+            if (words.Count < count)
+            {
+                Console.WriteLine($"AI response parsing failed, using fallback words. AI Response was: '{aiResponse}'");
+                words = GetFallbackWords(theme, count);
+            }
+            
+            Console.WriteLine($"Final words generated: {string.Join(", ", words)}");
             return words;
+        }
+
+        private List<string> GetFallbackWords(string theme, int count)
+        {
+            var fallbackWordsByTheme = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["fitness"] = new() { "Exercise", "Strength", "Cardio", "Flexibility", "Endurance", "Stamina", "Workout", "Training", "Muscle", "Health", "Nutrition", "Diet", "Running", "Jogging", "Weights" },
+                ["travel"] = new() { "Journey", "Adventure", "Destination", "Explore", "Culture", "Tourist", "Vacation", "Trip", "Flight", "Hotel", "Passport", "Luggage", "Guide", "Map", "Tour" },
+                ["food"] = new() { "Recipe", "Ingredient", "Cooking", "Delicious", "Flavor", "Taste", "Meal", "Breakfast", "Lunch", "Dinner", "Restaurant", "Kitchen", "Chef", "Spice", "Fresh" },
+                ["technology"] = new() { "Computer", "Software", "Internet", "Digital", "Innovation", "Programming", "Data", "Network", "Device", "Application", "System", "Algorithm", "Artificial", "Intelligence", "Machine" },
+                ["nature"] = new() { "Forest", "Mountain", "River", "Ocean", "Wildlife", "Environment", "Ecosystem", "Plants", "Animals", "Trees", "Flowers", "Birds", "Conservation", "Natural", "Landscape" },
+                ["education"] = new() { "Learning", "Student", "Teacher", "Knowledge", "Study", "School", "University", "Research", "Book", "Library", "Classroom", "Lesson", "Exam", "Homework", "Graduation" },
+                ["business"] = new() { "Company", "Market", "Economy", "Profit", "Investment", "Strategy", "Management", "Leadership", "Customer", "Service", "Product", "Sales", "Marketing", "Finance", "Budget" },
+                ["health"] = new() { "Medicine", "Doctor", "Hospital", "Treatment", "Wellness", "Prevention", "Therapy", "Healing", "Recovery", "Diagnosis", "Symptoms", "Patient", "Nurse", "Surgery", "Medication" }
+            };
+
+            // Try to find matching theme or use general words
+            var themeWords = fallbackWordsByTheme.GetValueOrDefault(theme.ToLower()) ?? 
+                           fallbackWordsByTheme.Values.SelectMany(x => x).Take(15).ToList();
+
+            // Shuffle and take requested count
+            var shuffled = themeWords.OrderBy(x => _random.Next()).Take(count).ToList();
+            
+            // If we still don't have enough, pad with generic words
+            while (shuffled.Count < count)
+            {
+                var genericWords = new[] { "Example", "Learning", "Practice", "Study", "Knowledge", "Skill", "Progress", "Success", "Challenge", "Goal" };
+                shuffled.Add(genericWords[_random.Next(genericWords.Length)]);
+            }
+
+            return shuffled.Take(count).ToList();
+        }
+
+        private string CleanWord(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word)) return "";
+            
+            // Remove any non-letter characters and convert to proper case
+            var cleanedWord = new string(word.Where(char.IsLetter).ToArray());
+            
+            // Convert to proper case (first letter uppercase, rest lowercase)
+            if (cleanedWord.Length > 0)
+            {
+                cleanedWord = char.ToUpperInvariant(cleanedWord[0]) + cleanedWord.Substring(1).ToLowerInvariant();
+            }
+            
+            return cleanedWord;
         }
 
         private async Task GenerateStoryAdventure(List<string> words)
@@ -838,11 +947,8 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
             return Task.CompletedTask;
         }        private async Task HandleKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
         {
-            if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(userInput))
+            if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(userInput) && !isLoading)
             {
-                // Prevent multiple rapid Enter key presses during message sending
-                if (isLoading) return;
-                
                 await SendMessage();
             }
         }private async Task HandleKeyPressForTextarea(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
@@ -1652,12 +1758,16 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             if (!char.IsLetter(guess) || hangmanGuesses.Contains(guess)) return;
             hangmanGuesses.Add(guess);
             var wordUpper = hangmanWord.ToUpperInvariant();
+            
+            Console.WriteLine($"Processing guess '{guess}' for word '{hangmanWord}' (length: {hangmanWord.Length})");
+            
             if (!wordUpper.Contains(guess))
             {
                 // Incorrect guess - play incorrect sound
                 PlayAudio = true;
                 lastAnswerCorrect = false;
                 hangmanWrongGuesses++;
+                Console.WriteLine($"Incorrect guess. Wrong guesses: {hangmanWrongGuesses}/{hangmanMaxWrong}");
                 if (hangmanWrongGuesses >= hangmanMaxWrong)
                 {
                     hangmanGameOver = true;
@@ -1669,14 +1779,21 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
                 // Correct guess - play correct sound
                 PlayAudio = true;
                 lastAnswerCorrect = true;
+                Console.WriteLine($"Correct guess! Guessed letters so far: {string.Join(", ", hangmanGuesses.OrderBy(c => c))}");
                 
                 // Check if all letters have been guessed (fixed win condition)
-                var allLettersGuessed = wordUpper.Where(char.IsLetter).All(c => hangmanGuesses.Contains(c));
+                var lettersInWord = wordUpper.Where(char.IsLetter).ToList();
+                var allLettersGuessed = lettersInWord.All(c => hangmanGuesses.Contains(c));
+                
+                Console.WriteLine($"Letters in word: {string.Join(", ", lettersInWord)}");
+                Console.WriteLine($"All letters guessed: {allLettersGuessed}");
+                
                 if (allLettersGuessed)
                 {
                     hangmanGameOver = true;
                     hangmanWin = true;
                     score += 20; // Award points for win
+                    Console.WriteLine($"HANGMAN WIN! Word was '{hangmanWord}'");
                 }
             }
             // Trigger UI update asynchronously to satisfy async signature

@@ -207,7 +207,8 @@
                                 }
                             </div>                            
                             <div class="chat-input-section">
-                                <input type="text" @bind="userInput" @onkeydown="HandleKeyPress" @ref="chatInputElement"
+                                <input type="text" @bind="userInput" @bind:event="oninput" 
+                                       @onkeypress="HandleKeyPress" @ref="chatInputElement"
                                        placeholder="Type your response..." class="chat-input" />
                                 <button @onclick="SendMessage" class="send-btn">Send</button>
                             </div>
