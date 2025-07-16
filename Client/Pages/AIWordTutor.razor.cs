@@ -961,6 +961,7 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
             StopFeedbackTimer();
             showFeedback = false;
             feedbackMessage = "";
+            PlayAudio = false; // Reset audio flag to prevent unwanted sounds when clicking continue
 
             // Only move to next challenge if the last answer was correct
             if (lastAnswerCorrect)
