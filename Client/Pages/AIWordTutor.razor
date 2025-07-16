@@ -308,30 +308,39 @@
                             }
                         </div>
                     }
-            </div>            
+            </div>
+            
+            <!-- Inline Feedback Section -->
             @if (showFeedback && !string.IsNullOrEmpty(feedbackMessage))
             {
-                <div class="feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")">
-                    <div class="feedback-content">                        
-                        <div class="feedback-header">
-                            <h4>@(lastAnswerCorrect ? "🎉 Excellent!" : "🤔 Not quite...")</h4>
-                            <div class="countdown-display">
-                                <span class="countdown-text">@countdownSeconds</span>
-                            </div>
-                        </div>
-                          <div class="progress-container">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: @(ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%">
+                <div class="inline-feedback-section @(lastAnswerCorrect ? "correct" : "incorrect")" @ref="feedbackSectionRef">
+                    <div class="inline-feedback-content">
+                        <div class="inline-feedback-header">
+                            <h4>@(lastAnswerCorrect ? "✅ Excellent!" : "❌ Not quite right")</h4>
+                            @if (!isMobileDevice && countdownSeconds > 0)
+                            {
+                                <div class="countdown-display">
+                                    <div class="countdown-text">@countdownSeconds</div>
                                 </div>
-                            </div>
+                            }
                         </div>
                         
-                        <p class="feedback-message">@feedbackMessage</p>
-                        @if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
+                        @if (showProgress)
                         {
-                            <p><strong>Correct answer:</strong> @correctAnswer</p>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: @(ProgressPercentage)%"></div>
+                                </div>
+                            </div>
                         }
-                        <button @onclick="ContinueLearning" class="continue-btn" @ref="continueBtnRef">Continue Learning</button>
+                        
+                        <div class="inline-feedback-message">
+                            @GetFullFeedbackMessage()
+                        </div>
+                        
+                        <button @onclick="ContinueLearning" class="continue-btn">
+                            Continue Learning
+                        </button>
                     </div>
                 </div>
             }

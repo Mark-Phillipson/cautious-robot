@@ -1,0 +1,51 @@
+@using BlazorApp.Client.Pages
+
+<div class="feedback-display @(IsMobile ? "mobile-fullscreen" : "desktop-popup") @(IsCorrect ? "correct" : "incorrect")">
+    @if (!IsMobile)
+    {
+        <!-- Desktop popup overlay -->
+        <div class="feedback-overlay" @onclick="OnContinue"></div>
+    }
+    
+    <div class="feedback-content">
+        <div class="feedback-header">
+            <h4>@(IsCorrect ? "🎉 Excellent!" : "❌ Not quite right")</h4>
+            @if (!IsMobile && ShowCountdown && CountdownSeconds > 0)
+            {
+                <div class="countdown-display">
+                    <span class="countdown-text">@CountdownSeconds</span>
+                </div>
+            }
+        </div>
+
+        @if (ShowProgress)
+        {
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: @(ProgressPercentage)%"></div>
+                </div>
+            </div>
+        }
+
+        <div class="feedback-message">
+            @FeedbackMessage
+        </div>
+
+        <div class="feedback-actions">
+            <button @onclick="OnContinue" class="continue-btn">
+                @(IsMobile ? "Continue Learning" : "Continue")
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsCorrect { get; set; }
+    [Parameter] public bool IsMobile { get; set; }
+    [Parameter] public bool ShowCountdown { get; set; } = true;
+    [Parameter] public int CountdownSeconds { get; set; }
+    [Parameter] public bool ShowProgress { get; set; }
+    [Parameter] public int ProgressPercentage { get; set; }
+    [Parameter] public string FeedbackMessage { get; set; } = "";
+    [Parameter] public EventCallback OnContinue { get; set; }
+}

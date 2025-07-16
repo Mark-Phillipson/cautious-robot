@@ -14,8 +14,8 @@ namespace BlazorApp.Client.Pages
         [Inject] private IJSRuntime JSRuntime { get; set; } = default!;        // UI references
         private ElementReference chatHistoryContainer;
         private ElementReference chatInputElement;
-        private ElementReference continueBtnRef;
         private ElementReference answerTextAreaRef;
+        private ElementReference feedbackSectionRef;
 
         // Game state
         private bool gameStarted = false;
@@ -39,6 +39,7 @@ namespace BlazorApp.Client.Pages
         private bool lastAnswerCorrect = false;
         private string correctAnswer = "";
         private Timer? feedbackTimer;
+        private bool showProgress = true;
         
         // Countdown timer for feedback popup
         private int countdownSeconds = 10;
@@ -67,6 +68,7 @@ namespace BlazorApp.Client.Pages
 
         // Browser detection
         private bool isEdgeBrowser = false;
+        private bool isMobileDevice = false;
 
         private string? themeInput = string.Empty;        private static readonly string[] DefaultThemes = new[]
         {
@@ -111,12 +113,55 @@ namespace BlazorApp.Client.Pages
                 var userAgent = await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
                 // Check for both the new Edge (Edg/) and legacy Edge (Edge/)
                 isEdgeBrowser = userAgent.Contains("Edg/") || userAgent.Contains("Edge/");
-                Console.WriteLine($"Browser detected - User Agent: {userAgent}, Is Edge: {isEdgeBrowser}");
+                
+                // Detect mobile devices - improved detection
+                isMobileDevice = userAgent.Contains("Mobile") || 
+                                userAgent.Contains("Android") || 
+                                userAgent.Contains("iPhone") || 
+                                userAgent.Contains("iPad") || 
+                                userAgent.Contains("iPod") ||
+                                userAgent.Contains("Windows Phone") ||
+                                userAgent.Contains("BlackBerry");
+                
+                // Also check screen width as a fallback
+                try
+                {
+                    var screenWidth = await JSRuntime.InvokeAsync<int>("eval", "window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth");
+                    if (screenWidth <= 768)
+                    {
+                        isMobileDevice = true;
+                    }
+                }
+                catch
+                {
+                    // Fallback if screen width detection fails
+                }
+                
+                Console.WriteLine($"Browser detected - User Agent: {userAgent}, Is Edge: {isEdgeBrowser}, Is Mobile: {isMobileDevice}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error detecting browser: {ex.Message}");
                 isEdgeBrowser = false; // Default to false if detection fails
+                isMobileDevice = false; // Default to false if detection fails
+            }
+        }
+
+        private async Task EnsureMobileDetection()
+        {
+            try
+            {
+                // Quick mobile detection check using screen width
+                var screenWidth = await JSRuntime.InvokeAsync<int>("eval", "window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth");
+                if (screenWidth <= 768)
+                {
+                    isMobileDevice = true;
+                    Console.WriteLine($"Mobile device detected via screen width: {screenWidth}px");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in mobile detection: {ex.Message}");
             }
         }
 
@@ -1034,6 +1079,16 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
             }
         }
 
+        private string GetFullFeedbackMessage()
+        {
+            var message = feedbackMessage;
+            if (!lastAnswerCorrect && !string.IsNullOrEmpty(correctAnswer))
+            {
+                message += $"\n\nCorrect answer: {correctAnswer}";
+            }
+            return message;
+        }
+
         private async Task GenerateNewStoryAdventure()
         {
             var newWords = await GetWordsFromAI(5);
@@ -1227,23 +1282,21 @@ Respond naturally as a conversation partner:";
                 {
                     feedbackMessage = $"Not quite right. The correct answer is: {correctAnswer}";
                 }
-            }            showFeedback = true;
+            }            
+            // Re-check mobile status before showing feedback (in case initial detection failed)
+            await EnsureMobileDetection();
+            
+            Console.WriteLine($"Showing feedback - isMobileDevice: {isMobileDevice}");
+            
+            showFeedback = true;
             StartFeedbackTimer();
             PlayAudio = true;
             userInput = ""; // Clear input after processing
             isLoading = false; // Reset loading state after processing answer
             StateHasChanged();
-
-            // Accessibility: Focus the Continue Learning button after feedback is shown
-            try
-            {
-                await Task.Delay(100); // Allow UI to render feedback popup
-                await continueBtnRef.FocusAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error focusing Continue Learning button: {ex.Message}");
-            }
+            
+            // Scroll to the feedback section after a brief delay to ensure it's rendered
+            await ScrollToFeedback();
 
             // Debug logging
             Console.WriteLine($"AIWordTutor: PlayAudio set to true, lastAnswerCorrect: {lastAnswerCorrect}");
@@ -1460,19 +1513,29 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             
             // Show final state
             Console.WriteLine($"After test - Score: {score}, Words used: {wordsUsedCorrectly}/{conversationTargetWords.Count}");
-        }private void StartFeedbackTimer()
+        }        private void StartFeedbackTimer()
         {
             StopFeedbackTimer(); // Stop any existing timer
             
             // Reset countdown
             countdownSeconds = totalCountdownSeconds;
-            Console.WriteLine($"Starting feedback timer - countdown reset to {countdownSeconds}");
+            Console.WriteLine($"Starting feedback timer - countdown reset to {countdownSeconds}, Mobile: {isMobileDevice}");
             
-            // Start countdown timer that updates every second
-            countdownTimer = new Timer(UpdateCountdown, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
-            
-            // Start the main feedback timer for auto-hide
-            feedbackTimer = new Timer(AutoHideFeedback, null, TimeSpan.FromSeconds(totalCountdownSeconds), Timeout.InfiniteTimeSpan);
+            // On mobile devices, don't start the auto-close timer to allow full-screen reading
+            if (!isMobileDevice)
+            {
+                // Start countdown timer that updates every second
+                countdownTimer = new Timer(UpdateCountdown, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+                
+                // Start the main feedback timer for auto-hide
+                feedbackTimer = new Timer(AutoHideFeedback, null, TimeSpan.FromSeconds(totalCountdownSeconds), Timeout.InfiniteTimeSpan);
+            }
+            else
+            {
+                // On mobile, set countdown to 0 to hide the countdown display
+                countdownSeconds = 0;
+                Console.WriteLine("Mobile device detected - disabling auto-close timer for full-screen feedback");
+            }
         }
 
         private void StopFeedbackTimer()
@@ -1482,6 +1545,23 @@ Examples: 'Excellent! You really understand how to use '{word}' correctly.' or '
             countdownTimer?.Dispose();
             countdownTimer = null;
             Console.WriteLine("Stopped feedback timers");
+        }
+
+        private async Task ScrollToFeedback()
+        {
+            try
+            {
+                // Wait a brief moment for the DOM to update
+                await Task.Delay(100);
+                
+                // Scroll the feedback section into view
+                await JSRuntime.InvokeVoidAsync("scrollToElement", feedbackSectionRef);
+                Console.WriteLine("Scrolled to feedback section");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error scrolling to feedback: {ex.Message}");
+            }
         }        private async void UpdateCountdown(object? state)
         {
             await InvokeAsync(() =>

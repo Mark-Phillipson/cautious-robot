@@ -22,3 +22,14 @@ window.focusChatInput = () => {
         chatInput.focus();
     }
 };
+
+// Scroll to any element smoothly
+window.scrollToElement = (element) => {
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
+        });
+    }
+};
