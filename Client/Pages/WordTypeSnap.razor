@@ -11,7 +11,7 @@
     </div>
 
     <div class="snap-instructions">
-        <p>💡 Click <strong>Snap!</strong> when both words are the same type (e.g., both nouns or both verbs)</p>
+        <p>💡 Click <strong>SNAP!</strong> when both words are the same type, or <strong>NO MATCH</strong> when they're different types</p>
         @if (DifficultyLevel == DifficultyLevel.Beginner)
         {
             <p><small>🎓 <strong>Beginner Mode:</strong> Word types and example sentences are shown to help you learn!</small></p>
@@ -77,34 +77,61 @@
     else
     {
         <div class="words-display">
-        <div class="word-card @GetWordCardClass(currentWords[0])">
-            <div class="word-text @GetWordSizeClass(currentWords[0].Text)">@currentWords[0].Text</div>
-            @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
-            {
-                <div class="word-type-info">
-                    <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
-                    @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
-                    {
-                        <span class="word-type-label">@currentWords[0].Type.GetDisplayName()</span>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="word-type-info">
-                    <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
-                </div>
-            }
-            @if (DifficultyLevel == DifficultyLevel.Beginner && !string.IsNullOrEmpty(currentWords[0].ExampleSentence))
-            {
-                <div class="example-sentence">
-                    <em>"@currentWords[0].ExampleSentence"</em>
-                </div>
-            }
+            <div class="word-card @GetWordCardClass(currentWords[0])">
+                <div class="word-text @GetWordSizeClass(currentWords[0].Text)">@currentWords[0].Text</div>
+                @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
+                {
+                    <div class="word-type-info">
+                        <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
+                        @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
+                        {
+                            <span class="word-type-label">@currentWords[0].Type.GetDisplayName()</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="word-type-info">
+                        <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
+                    </div>
+                }
+                @if (DifficultyLevel == DifficultyLevel.Beginner && !string.IsNullOrEmpty(currentWords[0].ExampleSentence))
+                {
+                    <div class="example-sentence">
+                        <em>"@currentWords[0].ExampleSentence"</em>
+                    </div>
+                }
+            </div>
+
+            <div class="word-card @GetWordCardClass(currentWords[1])">
+                <div class="word-text @GetWordSizeClass(currentWords[1].Text)">@currentWords[1].Text</div>
+                @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
+                {
+                    <div class="word-type-info">
+                        <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
+                        @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
+                        {
+                            <span class="word-type-label">@currentWords[1].Type.GetDisplayName()</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="word-type-info">
+                        <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
+                    </div>
+                }
+                @if (DifficultyLevel == DifficultyLevel.Beginner && !string.IsNullOrEmpty(currentWords[1].ExampleSentence))
+                {
+                    <div class="example-sentence">
+                        <em>"@currentWords[1].ExampleSentence"</em>
+                    </div>
+                }
+            </div>
         </div>
 
         <div class="snap-button-container">
-            <button @onclick="SnapAttempt" class="snap-button @(isProcessing ? "processing" : "")" disabled="@isProcessing">
+            <button @onclick="() => HandleUserChoice(true)" class="snap-button match-button @(isProcessing ? "processing" : "")" disabled="@isProcessing">
                 @if (isProcessing)
                 {
                     <span class="processing-text">⏳</span>
@@ -112,36 +139,23 @@
                 else
                 {
                     <span class="snap-text">⚡ SNAP!</span>
+                    <small class="button-hint">Match!</small>
+                }
+            </button>
+            
+            <button @onclick="() => HandleUserChoice(false)" class="snap-button no-match-button @(isProcessing ? "processing" : "")" disabled="@isProcessing">
+                @if (isProcessing)
+                {
+                    <span class="processing-text">⏳</span>
+                }
+                else
+                {
+                    <span class="snap-text">❌ NO MATCH</span>
+                    <small class="button-hint">Different!</small>
                 }
             </button>
         </div>
-
-        <div class="word-card @GetWordCardClass(currentWords[1])">
-            <div class="word-text @GetWordSizeClass(currentWords[1].Text)">@currentWords[1].Text</div>
-            @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
-            {
-                <div class="word-type-info">
-                    <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
-                    @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
-                    {
-                        <span class="word-type-label">@currentWords[1].Type.GetDisplayName()</span>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="word-type-info">
-                    <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
-                </div>
-            }
-            @if (DifficultyLevel == DifficultyLevel.Beginner && !string.IsNullOrEmpty(currentWords[1].ExampleSentence))
-            {
-                <div class="example-sentence">
-                    <em>"@currentWords[1].ExampleSentence"</em>
-                </div>
-            }
-        </div>
-    </div>
+    }
 
     @if (showResult)
     {
@@ -150,21 +164,37 @@
                 @if (lastSnapCorrect)
                 {
                     <span class="result-icon">🎉</span>
-                    <span class="result-text">Perfect Match!</span>
+                    <span class="result-text">Correct!</span>
                 }
                 else
                 {
                     <span class="result-icon">❌</span>
-                    <span class="result-text">Not a match!</span>
+                    <span class="result-text">Incorrect!</span>
                 }
             </div>
             <div class="result-explanation">
-                @if (lastSnapCorrect)
+                @{
+                    bool actualMatch = currentWords[0].Type == currentWords[1].Type;
+                }
+                @if (lastSnapCorrect && actualMatch)
                 {
-                    <p>Both words are <strong>@currentWords[0].Type.GetDisplayName()s</strong>! +@pointsEarned points</p>
+                    <p>Great job! Both words are <strong>@currentWords[0].Type.GetDisplayName()s</strong>! +@pointsEarned points</p>
+                }
+                else if (lastSnapCorrect && !actualMatch)
+                {
+                    <p>Excellent! You correctly identified these are different types! +@pointsEarned points</p>
+                    <p>
+                        <strong>@currentWords[0].Text</strong> is a @currentWords[0].Type.GetDisplayName() @currentWords[0].Type.GetEmoji(),
+                        but <strong>@currentWords[1].Text</strong> is a @currentWords[1].Type.GetDisplayName() @currentWords[1].Type.GetEmoji()
+                    </p>
+                }
+                else if (!lastSnapCorrect && actualMatch)
+                {
+                    <p>Actually, both words ARE the same type - they're both <strong>@currentWords[0].Type.GetDisplayName()s</strong>!</p>
                 }
                 else
                 {
+                    <p>Actually, these words are different types:</p>
                     <p>
                         <strong>@currentWords[0].Text</strong> is a @currentWords[0].Type.GetDisplayName() @currentWords[0].Type.GetEmoji(),
                         but <strong>@currentWords[1].Text</strong> is a @currentWords[1].Type.GetDisplayName() @currentWords[1].Type.GetEmoji()
@@ -212,10 +242,6 @@
     private string? loadingMessage = null;
     private bool usingFallbackWordBank = false; // Track if we're using fallback words
 
-    // Auto-change timer variables
-    private System.Threading.Timer? autoChangeTimer;
-    private const int AUTO_CHANGE_DELAY_MS = 5000; // 5 seconds
-
     protected override async Task OnInitializedAsync()
     {
         await InitializeWordBankAsync();
@@ -225,7 +251,7 @@
 
     public void Dispose()
     {
-        autoChangeTimer?.Dispose();
+        // No cleanup needed anymore since we removed the timer
     }
 
     private async Task InitializeWordBankAsync()
@@ -1214,65 +1240,31 @@
         currentWords[1] = shuffled[1];
         showResult = false;
         isProcessing = false;
-        
-        // Start auto-change timer
-        StartAutoChangeTimer();
     }
 
-    private void StartAutoChangeTimer()
-    {
-        // Dispose existing timer if any
-        autoChangeTimer?.Dispose();
-        
-        // Only start timer if words don't match (no snap needed)
-        if (currentWords[0].Type != currentWords[1].Type)
-        {
-            autoChangeTimer = new System.Threading.Timer(async _ =>
-            {
-                // Auto-change words after delay
-                await InvokeAsync(() =>
-                {
-                    if (!showResult && !isProcessing) // Only if user hasn't interacted
-                    {
-                        LoadNewWords();
-                        StateHasChanged();
-                    }
-                });
-            }, null, AUTO_CHANGE_DELAY_MS, Timeout.Infinite);
-        }
-    }
-
-    private void StopAutoChangeTimer()
-    {
-        autoChangeTimer?.Dispose();
-        autoChangeTimer = null;
-    }
-
-    private async Task SnapAttempt()
+    private async Task HandleUserChoice(bool userSaysMatch)
     {
         if (isProcessing) return;
-
-        // Stop auto-change timer since user is interacting
-        StopAutoChangeTimer();
 
         isProcessing = true;
         StateHasChanged();
 
         await Task.Delay(300); // Brief pause for effect
 
-        bool isMatch = currentWords[0].Type == currentWords[1].Type;
-        lastSnapCorrect = isMatch;
+        bool actualMatch = currentWords[0].Type == currentWords[1].Type;
+        bool userCorrect = (userSaysMatch && actualMatch) || (!userSaysMatch && !actualMatch);
+        lastSnapCorrect = userCorrect;
 
-        if (isMatch)
+        if (userCorrect)
         {
-            // Correct match
+            // Correct choice
             pointsEarned = Math.Max(10, 10 + (Streak * 2)); // Base 10 points, bonus for streak
             mainGameScore += pointsEarned;
             Streak++;
         }
         else
         {
-            // Incorrect match
+            // Incorrect choice
             pointsEarned = 0;
             mainGameScore = Math.Max(0, mainGameScore - 5); // Lose 5 points, but don't go below 0
             Streak = 0; // Reset streak
@@ -1293,7 +1285,6 @@
 
     private async Task StartNewGame()
     {
-        StopAutoChangeTimer(); // Clean up any existing timer
         mainGameScore = 0;
         Streak = 0;
         showResult = false;
