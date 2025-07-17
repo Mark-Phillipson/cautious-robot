@@ -5,12 +5,6 @@
 <div class="word-type-snap-container">
     <div class="snap-game-header">
         <h3>🎯 Word Type Snap</h3>
-        <div class="snap-stats">
-            <div class="stat-item">
-                <span class="stat-label">Streak:</span>
-                <span class="stat-value">@Streak</span>
-            </div>
-        </div>
     </div>
 
     <div class="snap-instructions">
@@ -31,7 +25,7 @@
 
     <div class="words-display">
         <div class="word-card @GetWordCardClass(currentWords[0])">
-            <div class="word-text">@currentWords[0].Text</div>
+            <div class="word-text @GetWordSizeClass(currentWords[0].Text)">@currentWords[0].Text</div>
             @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
             {
                 <div class="word-type-info">
@@ -70,7 +64,7 @@
         </div>
 
         <div class="word-card @GetWordCardClass(currentWords[1])">
-            <div class="word-text">@currentWords[1].Text</div>
+            <div class="word-text @GetWordSizeClass(currentWords[1].Text)">@currentWords[1].Text</div>
             @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
             {
                 <div class="word-type-info">
@@ -380,6 +374,17 @@
             WordType.Conjunction => "conjunction",
             WordType.Interjection => "interjection",
             _ => "default"
+        };
+    }
+
+    private string GetWordSizeClass(string wordText)
+    {
+        return wordText.Length switch
+        {
+            <= 4 => "word-size-small",
+            <= 8 => "word-size-medium",
+            <= 12 => "word-size-large",
+            _ => "word-size-extra-large"
         };
     }
 }

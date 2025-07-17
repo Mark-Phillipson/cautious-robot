@@ -179,6 +179,23 @@
     letter-spacing: 1px;
 }
 
+/* Dynamic font sizes based on word length */
+.word-text.word-size-small {
+    font-size: 2.5rem; /* Larger for short words (1-4 chars) */
+}
+
+.word-text.word-size-medium {
+    font-size: 2rem; /* Standard size for medium words (5-8 chars) */
+}
+
+.word-text.word-size-large {
+    font-size: 1.6rem; /* Smaller for long words (9-12 chars) */
+}
+
+.word-text.word-size-extra-large {
+    font-size: 1.3rem; /* Smallest for very long words (13+ chars) */
+}
+
 .snap-button-container {
     display: flex;
     align-items: center;
@@ -330,6 +347,23 @@
     
     .word-text {
         font-size: 1.5rem;
+    }
+    
+    /* Mobile responsive dynamic font sizes */
+    .word-text.word-size-small {
+        font-size: 1.8rem; /* Larger for short words on mobile */
+    }
+
+    .word-text.word-size-medium {
+        font-size: 1.5rem; /* Standard size for medium words on mobile */
+    }
+
+    .word-text.word-size-large {
+        font-size: 1.2rem; /* Smaller for long words on mobile */
+    }
+
+    .word-text.word-size-extra-large {
+        font-size: 1rem; /* Smallest for very long words on mobile */
     }
     
     .snap-button {
