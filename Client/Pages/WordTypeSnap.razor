@@ -25,15 +25,16 @@
             <p><small>🏆 <strong>Advanced Mode:</strong> Only word type icons are shown - use your knowledge!</small></p>
         }
         
-        @if (usingFallbackWordBank && !string.IsNullOrEmpty(Category))
+        @if (usingFallbackWordBank && !string.IsNullOrEmpty(Category) && !isFallbackAlertDismissed)
         {
             <div class="fallback-notice">
                 <div class="alert alert-warning d-flex align-items-center" role="alert">
                     <span class="me-2">⚠️</span>
-                    <div>
+                    <div class="flex-grow-1">
                         <strong>Category Not Found:</strong> The category "<em>@Category</em>" isn't available yet, so we're using general words instead.
                         <br><small>Available categories: clothing, food, animals, nature, sports, languages, military, air force, technology, science, school, music, travel, weather, family, health, transportation, business, hobbies, entertainment</small>
                     </div>
+                    <button type="button" class="btn-close ms-2" @onclick="DismissFallbackAlert" aria-label="Close alert"></button>
                 </div>
             </div>
         }
@@ -241,6 +242,7 @@
     private bool isLoadingWords = false;
     private string? loadingMessage = null;
     private bool usingFallbackWordBank = false; // Track if we're using fallback words
+    private bool isFallbackAlertDismissed = false; // Track if user dismissed the fallback alert
 
     protected override async Task OnInitializedAsync()
     {
@@ -252,6 +254,12 @@
     public void Dispose()
     {
         // No cleanup needed anymore since we removed the timer
+    }
+
+    private void DismissFallbackAlert()
+    {
+        isFallbackAlertDismissed = true;
+        StateHasChanged();
     }
 
     private async Task InitializeWordBankAsync()

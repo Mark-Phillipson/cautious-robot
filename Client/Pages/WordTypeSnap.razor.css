@@ -126,6 +126,40 @@
     font-size: 0.8rem;
 }
 
+.fallback-notice .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #856404;
+    opacity: 0.7;
+    cursor: pointer;
+    padding: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.fallback-notice .btn-close:hover {
+    opacity: 1;
+    background: rgba(133, 100, 4, 0.1);
+    transform: scale(1.1);
+}
+
+.fallback-notice .btn-close:focus {
+    outline: 2px solid #856404;
+    outline-offset: 2px;
+}
+
+.fallback-notice .btn-close::before {
+    content: "×";
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
 .words-display {
     display: flex;
     justify-content: space-between;
