@@ -1,6 +1,9 @@
 @using BlazorApp.Client.Models
 @using BlazorApp.Client.Pages
+@using BlazorApp.Client.Helper
+@using System.Text.Json
 @implements IDisposable
+@inject HttpClient HttpClient
 
 <div class="word-type-snap-container">
     <div class="snap-game-header">
@@ -21,9 +24,59 @@
         {
             <p><small>🏆 <strong>Advanced Mode:</strong> Only word type icons are shown - use your knowledge!</small></p>
         }
+        
+        @if (usingFallbackWordBank && !string.IsNullOrEmpty(Category))
+        {
+            <div class="fallback-notice">
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <span class="me-2">⚠️</span>
+                    <div>
+                        <strong>Category Not Found:</strong> The category "<em>@Category</em>" isn't available yet, so we're using general words instead.
+                        <br><small>Available categories: clothing, food, animals, nature, sports, languages, military, air force, technology, science, school, music (cooking maps to food)</small>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 
-    <div class="words-display">
+    @if (isLoadingWords)
+    {
+        <div class="loading-section">
+            <div class="text-center">
+                <div class="spinner-border mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h4>🎯 Loading Words...</h4>
+                @if (!string.IsNullOrEmpty(loadingMessage))
+                {
+                    <p class="text-muted">@loadingMessage</p>
+                }
+            </div>
+        </div>
+    }
+    else if (wordBank.Count == 0)
+    {
+        <div class="error-section">
+            <div class="text-center">
+                <h4>⚠️ No Words Available</h4>
+                <p class="text-muted">Unable to load words. Please try again or check your settings.</p>
+            </div>
+        </div>
+    }
+    else if (!isInitialized || currentWords[0] == null || currentWords[1] == null)
+    {
+        <div class="loading-section">
+            <div class="text-center">
+                <div class="spinner-border mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h4>🎯 Initializing Game...</h4>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="words-display">
         <div class="word-card @GetWordCardClass(currentWords[0])">
             <div class="word-text @GetWordSizeClass(currentWords[0].Text)">@currentWords[0].Text</div>
             @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
@@ -129,20 +182,24 @@
             </button>
         </div>
     }
-</div>
+}
 
 @* Play sound for snap results *@
 <BlazorApp.Client.Pages.PlaySound Play="@PlayAudio" AnswerState="@lastSnapCorrect" />
 
+</div>
 @code {
     [Parameter] public EventCallback<int> OnScoreChanged { get; set; }
     [Parameter] public EventCallback<int> OnStreakChanged { get; set; }
     [Parameter] public bool PlayAudio { get; set; } = true;
     [Parameter] public DifficultyLevel DifficultyLevel { get; set; } = DifficultyLevel.Intermediate;
+    [Parameter] public string? Category { get; set; } = null; // New parameter for category-based words
+    [Parameter] public string? ApiKey { get; set; } = null; // API key for Words API
 
     private List<Word> wordBank = new();
     private Word[] currentWords = new Word[2];
     private Random random = new();
+    private bool isInitialized = false;
     
     private int mainGameScore = 0; // Track the main game score to update parent
     private int Streak = 0;
@@ -151,15 +208,19 @@
     private bool isProcessing = false;
     private bool showNewGameButton = false;
     private int pointsEarned = 0;
+    private bool isLoadingWords = false;
+    private string? loadingMessage = null;
+    private bool usingFallbackWordBank = false; // Track if we're using fallback words
 
     // Auto-change timer variables
     private System.Threading.Timer? autoChangeTimer;
     private const int AUTO_CHANGE_DELAY_MS = 5000; // 5 seconds
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        InitializeWordBank();
+        await InitializeWordBankAsync();
         LoadNewWords();
+        isInitialized = true;
     }
 
     public void Dispose()
@@ -167,7 +228,541 @@
         autoChangeTimer?.Dispose();
     }
 
-    private void InitializeWordBank()
+    private async Task InitializeWordBankAsync()
+    {
+        isLoadingWords = true;
+        loadingMessage = "Loading word bank...";
+        StateHasChanged();
+
+        // Debug output
+        Console.WriteLine($"=== WordTypeSnap Debug ===");
+        Console.WriteLine($"Category: '{Category}' (IsNullOrEmpty: {string.IsNullOrEmpty(Category)})");
+        Console.WriteLine($"ApiKey: '{ApiKey}' (IsNullOrEmpty: {string.IsNullOrEmpty(ApiKey)})");
+
+        try
+        {
+            if (!string.IsNullOrEmpty(Category))
+            {
+                Console.WriteLine($"Using category-based loading for: {Category}");
+                await LoadCategoryWordsAsync();
+            }
+            else
+            {
+                Console.WriteLine("No category specified, using static word bank");
+                usingFallbackWordBank = false; // Not a fallback, intentionally using static
+                LoadStaticWordBank();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading words: {ex.Message}");
+            // Fall back to static word bank on error
+            usingFallbackWordBank = !string.IsNullOrEmpty(Category); // Only mark as fallback if category was specified
+            LoadStaticWordBank();
+        }
+        finally
+        {
+            isLoadingWords = false;
+            loadingMessage = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadCategoryWordsAsync()
+    {
+        loadingMessage = $"Loading {Category} words...";
+        StateHasChanged();
+
+        Console.WriteLine($"Loading category words for: {Category}");
+        
+        // Use fallback themed words instead of API since Words API doesn't support semantic categories
+        var categoryWords = GetFallbackThemeWords(Category!);
+        
+        if (categoryWords.Count >= 12) // Minimum viable word bank
+        {
+            wordBank = categoryWords;
+            usingFallbackWordBank = false; // Successfully loaded category words
+            Console.WriteLine($"✅ Successfully loaded {categoryWords.Count} category-based words for {Category}");
+        }
+        else
+        {
+            Console.WriteLine($"❌ Not enough category words found for '{Category}', falling back to static bank");
+            usingFallbackWordBank = true; // Mark that we're using fallback
+            LoadStaticWordBank();
+        }
+
+        // Add small delay to make it feel more responsive
+        await Task.Delay(100);
+    }
+
+    private List<Word> GetFallbackThemeWords(string theme)
+    {
+        var fallbackWordsByTheme = new Dictionary<string, List<(string word, WordType type, string example)>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["clothing"] = new()
+            {
+                // Nouns
+                ("Shirt", WordType.Noun, "He wore a clean white shirt to the meeting."),
+                ("Dress", WordType.Noun, "She bought a beautiful dress for the party."),
+                ("Pants", WordType.Noun, "These pants are very comfortable to wear."),
+                ("Jacket", WordType.Noun, "The jacket kept him warm in the cold weather."),
+                ("Shoes", WordType.Noun, "Her new shoes are perfect for running."),
+                ("Hat", WordType.Noun, "The hat protected her from the sun."),
+                ("Scarf", WordType.Noun, "The colorful scarf added style to her outfit."),
+                ("Gloves", WordType.Noun, "He put on gloves before going outside."),
+                ("Socks", WordType.Noun, "Warm socks are essential in winter."),
+                ("Sweater", WordType.Noun, "The wool sweater was cozy and warm."),
+                ("Coat", WordType.Noun, "The long coat protected her from the rain."),
+                ("Jeans", WordType.Noun, "Blue jeans are a classic wardrobe staple."),
+                
+                // Verbs
+                ("Wear", WordType.Verb, "I wear this shirt to work every day."),
+                ("Dress", WordType.Verb, "She likes to dress elegantly for special occasions."),
+                ("Fit", WordType.Verb, "These shoes fit perfectly on my feet."),
+                ("Match", WordType.Verb, "The belt matches the color of her shoes."),
+                ("Wash", WordType.Verb, "Please wash the delicate clothes by hand."),
+                ("Iron", WordType.Verb, "He will iron his shirt before the interview."),
+                ("Try", WordType.Verb, "She wants to try on that dress before buying it."),
+                ("Remove", WordType.Verb, "Please remove your shoes at the entrance."),
+                
+                // Adjectives
+                ("Stylish", WordType.Adjective, "Her stylish outfit caught everyone's attention."),
+                ("Comfortable", WordType.Adjective, "These comfortable shoes are perfect for walking."),
+                ("Elegant", WordType.Adjective, "The elegant dress was perfect for the gala."),
+                ("Casual", WordType.Adjective, "He prefers casual clothes for weekend activities."),
+                ("Formal", WordType.Adjective, "Formal attire is required for the ceremony."),
+                ("Colorful", WordType.Adjective, "The colorful scarf brightened her entire outfit."),
+                ("Tight", WordType.Adjective, "The tight jeans were uncomfortable to wear."),
+                ("Loose", WordType.Adjective, "She prefers loose clothing for exercising."),
+            },
+            
+            ["food"] = new()
+            {
+                // Nouns
+                ("Apple", WordType.Noun, "The red apple was sweet and crispy."),
+                ("Bread", WordType.Noun, "Fresh bread smells wonderful in the morning."),
+                ("Cheese", WordType.Noun, "The cheese melted perfectly on the pizza."),
+                ("Soup", WordType.Noun, "Hot soup is perfect on a cold day."),
+                ("Salad", WordType.Noun, "The garden salad was fresh and healthy."),
+                ("Pizza", WordType.Noun, "They ordered pizza for the party."),
+                ("Pasta", WordType.Noun, "The pasta was cooked to perfection."),
+                ("Rice", WordType.Noun, "Rice is a staple food in many cultures."),
+                
+                // Verbs
+                ("Eat", WordType.Verb, "We eat dinner together every evening."),
+                ("Cook", WordType.Verb, "She loves to cook traditional recipes."),
+                ("Bake", WordType.Verb, "They bake fresh bread every morning."),
+                ("Taste", WordType.Verb, "The chef will taste the sauce before serving."),
+                ("Serve", WordType.Verb, "Please serve the soup while it's hot."),
+                ("Prepare", WordType.Verb, "It takes time to prepare a good meal."),
+                
+                // Adjectives
+                ("Delicious", WordType.Adjective, "The delicious cake was everyone's favorite."),
+                ("Fresh", WordType.Adjective, "Fresh vegetables make the best salads."),
+                ("Sweet", WordType.Adjective, "The sweet strawberries were perfectly ripe."),
+                ("Spicy", WordType.Adjective, "The spicy curry made our mouths burn."),
+                ("Healthy", WordType.Adjective, "Healthy food gives us energy and nutrients."),
+                ("Hot", WordType.Adjective, "The hot coffee warmed us on the cold morning."),
+            },
+            
+            ["animals"] = new()
+            {
+                // Nouns
+                ("Dog", WordType.Noun, "The friendly dog wagged its tail happily."),
+                ("Cat", WordType.Noun, "The cat slept peacefully in the sunshine."),
+                ("Bird", WordType.Noun, "The colorful bird sang a beautiful melody."),
+                ("Fish", WordType.Noun, "The fish swam gracefully in the clear water."),
+                ("Horse", WordType.Noun, "The brown horse galloped across the field."),
+                ("Lion", WordType.Noun, "The mighty lion roared in the distance."),
+                ("Elephant", WordType.Noun, "The elephant used its trunk to pick up food."),
+                ("Tiger", WordType.Noun, "The tiger's stripes help it hide in tall grass."),
+                
+                // Verbs
+                ("Run", WordType.Verb, "The deer run swiftly through the forest."),
+                ("Fly", WordType.Verb, "Eagles can fly high above the mountains."),
+                ("Swim", WordType.Verb, "Dolphins swim playfully in the ocean."),
+                ("Hunt", WordType.Verb, "Cats hunt mice using their sharp instincts."),
+                ("Roar", WordType.Verb, "Lions roar to communicate with their pride."),
+                ("Chirp", WordType.Verb, "Birds chirp melodiously in the morning."),
+                
+                // Adjectives
+                ("Wild", WordType.Adjective, "Wild animals live freely in nature."),
+                ("Domestic", WordType.Adjective, "Domestic pets live happily with families."),
+                ("Large", WordType.Adjective, "The large elephant impressed all the visitors."),
+                ("Small", WordType.Adjective, "The small kitten fit in the palm of her hand."),
+                ("Fast", WordType.Adjective, "The fast cheetah is the world's speediest animal."),
+                ("Gentle", WordType.Adjective, "The gentle lamb was loved by all the children."),
+            },
+
+            ["nature"] = new()
+            {
+                // Nouns
+                ("Tree", WordType.Noun, "The old tree provided shade for the picnic."),
+                ("Flower", WordType.Noun, "The beautiful flower bloomed in spring."),
+                ("Mountain", WordType.Noun, "The snow-capped mountain was majestic."),
+                ("River", WordType.Noun, "The river flowed gently through the valley."),
+                ("Ocean", WordType.Noun, "The vast ocean stretched to the horizon."),
+                ("Forest", WordType.Noun, "The dense forest was home to many animals."),
+                ("Sky", WordType.Noun, "The blue sky was dotted with white clouds."),
+                ("Sun", WordType.Noun, "The bright sun warmed the earth below."),
+                
+                // Verbs
+                ("Grow", WordType.Verb, "Plants grow stronger with sunlight and water."),
+                ("Bloom", WordType.Verb, "Flowers bloom beautifully in the garden."),
+                ("Flow", WordType.Verb, "Rivers flow naturally toward the sea."),
+                ("Shine", WordType.Verb, "Stars shine brightly in the clear night sky."),
+                ("Rustle", WordType.Verb, "Leaves rustle gently in the evening breeze."),
+                ("Whisper", WordType.Verb, "Trees seem to whisper secrets in the wind."),
+                
+                // Adjectives
+                ("Natural", WordType.Adjective, "The natural beauty of the park was breathtaking."),
+                ("Green", WordType.Adjective, "Green leaves covered the branches completely."),
+                ("Peaceful", WordType.Adjective, "The peaceful meadow was perfect for relaxation."),
+                ("Beautiful", WordType.Adjective, "The beautiful sunset painted the sky orange."),
+                ("Fresh", WordType.Adjective, "Fresh mountain air filled our lungs."),
+                ("Calm", WordType.Adjective, "The calm lake reflected the surrounding mountains."),
+            },
+
+            ["sports"] = new()
+            {
+                // Nouns
+                ("Ball", WordType.Noun, "The soccer ball flew into the goal."),
+                ("Game", WordType.Noun, "The exciting game lasted three hours."),
+                ("Team", WordType.Noun, "Our team practiced every day after school."),
+                ("Player", WordType.Noun, "The skilled player scored the winning goal."),
+                ("Field", WordType.Noun, "The grass field was perfect for playing."),
+                ("Goal", WordType.Noun, "Scoring a goal requires skill and practice."),
+                ("Coach", WordType.Noun, "The experienced coach helped improve our skills."),
+                ("Victory", WordType.Noun, "The sweet victory was worth all the effort."),
+                
+                // Verbs
+                ("Play", WordType.Verb, "Children love to play sports together."),
+                ("Run", WordType.Verb, "Athletes run fast during track competitions."),
+                ("Jump", WordType.Verb, "Basketball players jump high to reach the basket."),
+                ("Kick", WordType.Verb, "Soccer players kick the ball with precision."),
+                ("Score", WordType.Verb, "The team hopes to score many points."),
+                ("Win", WordType.Verb, "Every team wants to win the championship."),
+                
+                // Adjectives
+                ("Athletic", WordType.Adjective, "The athletic student excelled at every sport."),
+                ("Fast", WordType.Adjective, "The fast runner won the race easily."),
+                ("Strong", WordType.Adjective, "Strong muscles help athletes perform better."),
+                ("Competitive", WordType.Adjective, "The competitive spirit drives athletes to excel."),
+                ("Skilled", WordType.Adjective, "Skilled players make the game exciting to watch."),
+                ("Energetic", WordType.Adjective, "Energetic fans cheered loudly for their team."),
+            },
+
+            ["languages"] = new()
+            {
+                // Nouns
+                ("English", WordType.Noun, "English is spoken in many countries worldwide."),
+                ("Spanish", WordType.Noun, "Spanish is the second most spoken language."),
+                ("French", WordType.Noun, "French is known as the language of love."),
+                ("German", WordType.Noun, "German has many compound words."),
+                ("Chinese", WordType.Noun, "Chinese uses characters instead of letters."),
+                ("Japanese", WordType.Noun, "Japanese has three writing systems."),
+                ("Italian", WordType.Noun, "Italian is spoken throughout Italy."),
+                ("Portuguese", WordType.Noun, "Portuguese is spoken in Brazil and Portugal."),
+                ("Russian", WordType.Noun, "Russian uses the Cyrillic alphabet."),
+                ("Arabic", WordType.Noun, "Arabic is written from right to left."),
+                ("Dictionary", WordType.Noun, "The dictionary contains thousands of words."),
+                ("Grammar", WordType.Noun, "Grammar rules help us communicate clearly."),
+                ("Vocabulary", WordType.Noun, "Building vocabulary improves communication skills."),
+                ("Translation", WordType.Noun, "The translation helped us understand the text."),
+                
+                // Verbs
+                ("Speak", WordType.Verb, "I speak three languages fluently."),
+                ("Learn", WordType.Verb, "Students learn new languages in school."),
+                ("Translate", WordType.Verb, "Please translate this sentence into English."),
+                ("Practice", WordType.Verb, "We practice pronunciation every day."),
+                ("Study", WordType.Verb, "She likes to study foreign languages."),
+                ("Communicate", WordType.Verb, "Languages help people communicate globally."),
+                ("Express", WordType.Verb, "Words help us express our thoughts."),
+                ("Understand", WordType.Verb, "Children understand language through listening."),
+                
+                // Adjectives
+                ("Fluent", WordType.Adjective, "She is fluent in four different languages."),
+                ("Foreign", WordType.Adjective, "Learning foreign languages opens new opportunities."),
+                ("Native", WordType.Adjective, "English is my native language."),
+                ("Ancient", WordType.Adjective, "Latin is an ancient language."),
+                ("Modern", WordType.Adjective, "Modern languages evolve constantly."),
+                ("Complex", WordType.Adjective, "Some languages have complex grammar rules."),
+                ("Beautiful", WordType.Adjective, "Italian is considered a beautiful language."),
+                ("Universal", WordType.Adjective, "Music is a universal language."),
+            },
+
+            ["military"] = new()
+            {
+                // Nouns
+                ("Soldier", WordType.Noun, "The brave soldier served his country with honor."),
+                ("Officer", WordType.Noun, "The officer led his troops into battle."),
+                ("General", WordType.Noun, "The general planned the strategic operation."),
+                ("Captain", WordType.Noun, "The captain commanded the naval vessel."),
+                ("Lieutenant", WordType.Noun, "The lieutenant received new orders from headquarters."),
+                ("Sergeant", WordType.Noun, "The sergeant trained the new recruits."),
+                ("Admiral", WordType.Noun, "The admiral oversaw the entire naval fleet."),
+                ("Colonel", WordType.Noun, "The colonel reviewed the mission briefing."),
+                ("Major", WordType.Noun, "The major coordinated the rescue operation."),
+                ("Pilot", WordType.Noun, "The fighter pilot flew missions over enemy territory."),
+                ("Tank", WordType.Noun, "The armored tank rolled across the battlefield."),
+                ("Helicopter", WordType.Noun, "The rescue helicopter saved stranded civilians."),
+                ("Aircraft", WordType.Noun, "The military aircraft performed reconnaissance missions."),
+                ("Base", WordType.Noun, "The military base housed thousands of personnel."),
+                
+                // Verbs
+                ("Serve", WordType.Verb, "Military personnel serve their country with dedication."),
+                ("Deploy", WordType.Verb, "The unit will deploy to the mission area."),
+                ("Command", WordType.Verb, "Officers command troops in the field."),
+                ("Patrol", WordType.Verb, "Guards patrol the perimeter for security."),
+                ("Defend", WordType.Verb, "Soldiers defend their homeland from threats."),
+                ("Train", WordType.Verb, "Recruits train daily to improve their skills."),
+                ("March", WordType.Verb, "Troops march in formation during parades."),
+                ("Salute", WordType.Verb, "Soldiers salute their commanding officers."),
+                
+                // Adjectives
+                ("Brave", WordType.Adjective, "The brave soldiers faced danger without fear."),
+                ("Strategic", WordType.Adjective, "Strategic planning is essential for military success."),
+                ("Tactical", WordType.Adjective, "Tactical maneuvers helped win the battle."),
+                ("Disciplined", WordType.Adjective, "Disciplined troops follow orders precisely."),
+                ("Courageous", WordType.Adjective, "Courageous actions saved many lives."),
+                ("Elite", WordType.Adjective, "Elite forces handle the most difficult missions."),
+                ("Honorable", WordType.Adjective, "Military service is an honorable profession."),
+                ("Skilled", WordType.Adjective, "Skilled pilots navigate challenging conditions."),
+            },
+
+            ["air force"] = new()
+            {
+                // Nouns
+                ("Pilot", WordType.Noun, "The air force pilot flew combat missions."),
+                ("Fighter", WordType.Noun, "The fighter jet reached supersonic speeds."),
+                ("Bomber", WordType.Noun, "The bomber carried out strategic missions."),
+                ("Squadron", WordType.Noun, "The squadron completed their training exercises."),
+                ("Airfield", WordType.Noun, "The airfield buzzed with activity."),
+                ("Runway", WordType.Noun, "The aircraft landed safely on the runway."),
+                ("Hangar", WordType.Noun, "Mechanics worked on planes in the hangar."),
+                ("Radar", WordType.Noun, "The radar detected incoming aircraft."),
+                ("Mission", WordType.Noun, "The reconnaissance mission provided valuable intelligence."),
+                ("Formation", WordType.Noun, "The jets flew in tight formation."),
+                ("Engine", WordType.Noun, "The jet engine roared to life."),
+                ("Cockpit", WordType.Noun, "The pilot checked instruments in the cockpit."),
+                
+                // Verbs
+                ("Fly", WordType.Verb, "Air force pilots fly advanced aircraft."),
+                ("Navigate", WordType.Verb, "Pilots navigate using sophisticated instruments."),
+                ("Launch", WordType.Verb, "The squadron will launch at dawn."),
+                ("Land", WordType.Verb, "Aircraft land carefully on the carrier deck."),
+                ("Patrol", WordType.Verb, "Fighter jets patrol the airspace."),
+                ("Intercept", WordType.Verb, "Fighters intercept unknown aircraft."),
+                ("Refuel", WordType.Verb, "Planes refuel during long missions."),
+                ("Communicate", WordType.Verb, "Pilots communicate with ground control."),
+                
+                // Adjectives
+                ("Supersonic", WordType.Adjective, "Supersonic jets break the sound barrier."),
+                ("Advanced", WordType.Adjective, "Advanced aircraft use cutting-edge technology."),
+                ("Precision", WordType.Adjective, "Precision bombing requires careful planning."),
+                ("High-altitude", WordType.Adjective, "High-altitude flights require special equipment."),
+                ("Strategic", WordType.Adjective, "Strategic bombing targets key installations."),
+                ("Swift", WordType.Adjective, "Swift fighters respond to threats quickly."),
+                ("Stealth", WordType.Adjective, "Stealth aircraft avoid enemy detection."),
+                ("Powerful", WordType.Adjective, "Powerful engines propel jets at incredible speeds."),
+            },
+
+            ["technology"] = new()
+            {
+                // Nouns
+                ("Computer", WordType.Noun, "The computer processed data at lightning speed."),
+                ("Software", WordType.Noun, "The software simplified complex calculations."),
+                ("Internet", WordType.Noun, "The internet connects people worldwide."),
+                ("Smartphone", WordType.Noun, "The smartphone has become essential for communication."),
+                ("Robot", WordType.Noun, "The robot performed tasks with precision."),
+                ("Algorithm", WordType.Noun, "The algorithm solved the problem efficiently."),
+                ("Database", WordType.Noun, "The database stored millions of records."),
+                ("Network", WordType.Noun, "The network enabled global communication."),
+                
+                // Verbs
+                ("Program", WordType.Verb, "Developers program applications for users."),
+                ("Download", WordType.Verb, "Users download apps from the store."),
+                ("Upload", WordType.Verb, "Please upload your files to the cloud."),
+                ("Connect", WordType.Verb, "Devices connect to the wireless network."),
+                ("Process", WordType.Verb, "Computers process information rapidly."),
+                ("Install", WordType.Verb, "Install the latest security updates."),
+                
+                // Adjectives
+                ("Digital", WordType.Adjective, "Digital technology revolutionized communication."),
+                ("Advanced", WordType.Adjective, "Advanced systems improve efficiency."),
+                ("Smart", WordType.Adjective, "Smart devices learn user preferences."),
+                ("Wireless", WordType.Adjective, "Wireless connections provide mobility."),
+                ("Innovative", WordType.Adjective, "Innovative solutions solve modern problems."),
+                ("Efficient", WordType.Adjective, "Efficient algorithms save processing time."),
+            },
+
+            ["science"] = new()
+            {
+                // Nouns
+                ("Experiment", WordType.Noun, "The experiment tested the new hypothesis."),
+                ("Laboratory", WordType.Noun, "Scientists conducted research in the laboratory."),
+                ("Microscope", WordType.Noun, "The microscope revealed cellular structures."),
+                ("Theory", WordType.Noun, "Einstein's theory changed our understanding of physics."),
+                ("Discovery", WordType.Noun, "The discovery led to medical breakthroughs."),
+                ("Molecule", WordType.Noun, "Each molecule contains multiple atoms."),
+                ("Element", WordType.Noun, "Hydrogen is the lightest chemical element."),
+                ("Research", WordType.Noun, "Medical research saves countless lives."),
+                
+                // Verbs
+                ("Observe", WordType.Verb, "Scientists observe natural phenomena carefully."),
+                ("Analyze", WordType.Verb, "Researchers analyze data to find patterns."),
+                ("Hypothesize", WordType.Verb, "Scientists hypothesize about possible outcomes."),
+                ("Investigate", WordType.Verb, "Teams investigate unusual occurrences."),
+                ("Discover", WordType.Verb, "Researchers discover new species regularly."),
+                ("Measure", WordType.Verb, "Instruments measure precise quantities."),
+                
+                // Adjectives
+                ("Scientific", WordType.Adjective, "Scientific methods ensure accurate results."),
+                ("Empirical", WordType.Adjective, "Empirical evidence supports the conclusion."),
+                ("Theoretical", WordType.Adjective, "Theoretical physics explores fundamental questions."),
+                ("Precise", WordType.Adjective, "Precise measurements are crucial for experiments."),
+                ("Analytical", WordType.Adjective, "Analytical thinking solves complex problems."),
+                ("Innovative", WordType.Adjective, "Innovative research opens new possibilities."),
+            },
+
+            ["school"] = new()
+            {
+                // Nouns
+                ("Student", WordType.Noun, "The student studied hard for the test."),
+                ("Teacher", WordType.Noun, "The teacher explained the lesson clearly."),
+                ("Principal", WordType.Noun, "The principal welcomed new students to school."),
+                ("Classroom", WordType.Noun, "The classroom was filled with eager learners."),
+                ("Textbook", WordType.Noun, "Students opened their textbook to chapter five."),
+                ("Homework", WordType.Noun, "Homework helps students practice what they learned."),
+                ("Test", WordType.Noun, "The math test covered all the week's lessons."),
+                ("Library", WordType.Noun, "The library contains thousands of books."),
+                ("Cafeteria", WordType.Noun, "Students ate lunch in the busy cafeteria."),
+                ("Playground", WordType.Noun, "Children played games on the playground."),
+                ("Assignment", WordType.Noun, "The assignment was due next Friday."),
+                ("Grade", WordType.Noun, "She received an excellent grade on her project."),
+                ("Pencil", WordType.Noun, "Students used a pencil to write their answers."),
+                ("Notebook", WordType.Noun, "Each student needs a notebook for taking notes."),
+                
+                // Verbs
+                ("Study", WordType.Verb, "Students study different subjects each day."),
+                ("Learn", WordType.Verb, "Children learn new things every day at school."),
+                ("Teach", WordType.Verb, "Teachers teach students important skills."),
+                ("Read", WordType.Verb, "Students read books to improve their knowledge."),
+                ("Write", WordType.Verb, "Students write essays about their favorite topics."),
+                ("Listen", WordType.Verb, "Good students listen carefully to instructions."),
+                ("Practice", WordType.Verb, "Students practice math problems to improve."),
+                ("Research", WordType.Verb, "Students research topics for their projects."),
+                
+                // Adjectives
+                ("Smart", WordType.Adjective, "The smart student answered all questions correctly."),
+                ("Curious", WordType.Adjective, "Curious students ask many interesting questions."),
+                ("Hardworking", WordType.Adjective, "Hardworking students achieve their goals."),
+                ("Creative", WordType.Adjective, "Creative students express ideas in unique ways."),
+                ("Organized", WordType.Adjective, "Organized students keep their materials neat."),
+                ("Attentive", WordType.Adjective, "Attentive students focus during lessons."),
+                ("Respectful", WordType.Adjective, "Respectful students treat everyone kindly."),
+                ("Academic", WordType.Adjective, "Academic success requires dedication and effort."),
+            },
+
+            ["music"] = new()
+            {
+                // Nouns
+                ("Piano", WordType.Noun, "The piano produced beautiful melodies."),
+                ("Guitar", WordType.Noun, "He played his favorite song on the guitar."),
+                ("Violin", WordType.Noun, "The violin's sweet sound filled the concert hall."),
+                ("Song", WordType.Noun, "The song reminded her of childhood memories."),
+                ("Orchestra", WordType.Noun, "The orchestra performed a magnificent symphony."),
+                ("Concert", WordType.Noun, "The concert attracted music lovers from everywhere."),
+                ("Melody", WordType.Noun, "The melody was both haunting and beautiful."),
+                ("Rhythm", WordType.Noun, "The rhythm made everyone want to dance."),
+                
+                // Verbs
+                ("Sing", WordType.Verb, "Children love to sing their favorite songs."),
+                ("Play", WordType.Verb, "Musicians play instruments with great skill."),
+                ("Dance", WordType.Verb, "People dance to the rhythm of the music."),
+                ("Compose", WordType.Verb, "Artists compose music to express their feelings."),
+                ("Listen", WordType.Verb, "We listen to music for relaxation and joy."),
+                ("Perform", WordType.Verb, "Musicians perform on stage for audiences."),
+                
+                // Adjectives
+                ("Melodic", WordType.Adjective, "The melodic tune stayed in her mind all day."),
+                ("Harmonious", WordType.Adjective, "The harmonious voices blended perfectly together."),
+                ("Rhythmic", WordType.Adjective, "The rhythmic beat got everyone moving."),
+                ("Musical", WordType.Adjective, "Her musical talent was evident from an early age."),
+                ("Soothing", WordType.Adjective, "The soothing music helped him fall asleep."),
+                ("Energetic", WordType.Adjective, "The energetic song made everyone feel happy."),
+            }
+        };
+
+        // Get theme words or use general words as fallback
+        var themeData = fallbackWordsByTheme.GetValueOrDefault(theme.ToLower());
+        
+        // Try partial matching if exact match not found
+        if (themeData == null || themeData.Count == 0)
+        {
+            // Look for partial matches (e.g., "air force" matches "military" or contains "air")
+            var partialMatch = fallbackWordsByTheme.FirstOrDefault(kvp => 
+                theme.ToLower().Contains(kvp.Key) || 
+                kvp.Key.Contains(theme.ToLower()) ||
+                (theme.ToLower().Contains("air") && kvp.Key == "air force") ||
+                (theme.ToLower().Contains("force") && kvp.Key == "air force") ||
+                (theme.ToLower().Contains("military") && kvp.Key == "air force") ||
+                (theme.ToLower().Contains("army") && kvp.Key == "military") ||
+                (theme.ToLower().Contains("navy") && kvp.Key == "military") ||
+                (theme.ToLower().Contains("tech") && kvp.Key == "technology") ||
+                (theme.ToLower().Contains("computer") && kvp.Key == "technology") ||
+                (theme.ToLower().Contains("digital") && kvp.Key == "technology") ||
+                (theme.ToLower().Contains("education") && kvp.Key == "school") ||
+                (theme.ToLower().Contains("student") && kvp.Key == "school") ||
+                (theme.ToLower().Contains("classroom") && kvp.Key == "school") ||
+                (theme.ToLower().Contains("learning") && kvp.Key == "school") ||
+                (theme.ToLower().Contains("instrument") && kvp.Key == "music") ||
+                (theme.ToLower().Contains("song") && kvp.Key == "music") ||
+                (theme.ToLower().Contains("sound") && kvp.Key == "music") ||
+                (theme.ToLower().Contains("cook") && kvp.Key == "food") ||
+                (theme.ToLower().Contains("recipe") && kvp.Key == "food") ||
+                (theme.ToLower().Contains("kitchen") && kvp.Key == "food"));
+            
+            if (partialMatch.Key != null)
+            {
+                themeData = partialMatch.Value;
+                Console.WriteLine($"Found partial match for '{theme}' using category '{partialMatch.Key}'");
+            }
+        }
+        
+        if (themeData == null || themeData.Count == 0)
+        {
+            // If no specific theme found, return empty list to trigger static fallback
+            Console.WriteLine($"No predefined words found for theme: {theme}. Available categories: {string.Join(", ", fallbackWordsByTheme.Keys)}");
+            return new List<Word>(); // This will trigger the fallback flag in LoadCategoryWordsAsync
+        }
+
+        // Convert to Word objects and shuffle
+        var words = themeData.Select(item => new Word(item.word, item.type, item.example))
+                            .OrderBy(x => random.Next())
+                            .ToList();
+
+        Console.WriteLine($"Found {words.Count} themed words for '{theme}': {string.Join(", ", words.Take(5).Select(w => w.Text))}...");
+        return words;
+    }
+
+    private WordType MapPartOfSpeechToWordType(string partOfSpeech)
+    {
+        return partOfSpeech?.ToLower() switch
+        {
+            "noun" => WordType.Noun,
+            "verb" => WordType.Verb,
+            "adjective" => WordType.Adjective,
+            "adverb" => WordType.Adverb,
+            "preposition" => WordType.Preposition,
+            "pronoun" => WordType.Pronoun,
+            "conjunction" => WordType.Conjunction,
+            "interjection" => WordType.Interjection,
+            _ => WordType.Noun // Default fallback
+        };
+    }
+
+    private void LoadStaticWordBank()
     {
         wordBank = new List<Word>
         {
@@ -369,6 +964,8 @@
 
     private string GetWordCardClass(Word word)
     {
+        if (word == null) return "default";
+        
         return word.Type switch
         {
             WordType.Noun => "noun",
@@ -385,6 +982,8 @@
 
     private string GetWordSizeClass(string wordText)
     {
+        if (string.IsNullOrEmpty(wordText)) return "word-size-medium";
+        
         return wordText.Length switch
         {
             <= 4 => "word-size-small",
