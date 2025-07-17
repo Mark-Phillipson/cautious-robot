@@ -70,11 +70,12 @@ namespace BlazorApp.Client.Pages
         private bool isEdgeBrowser = false;
         private bool isMobileDevice = false;
 
-        private string? themeInput = string.Empty;        private static readonly string[] DefaultThemes = new[]
+        private string? themeInput = string.Empty;
+        private static readonly string[] DefaultThemes = new[]
         {
-            "Nature", "Travel", "Food", "Technology", "Sports", "Music", "Friendship", "Adventure", "School", "Weather", 
+            "Nature", "Travel", "Food", "Technology", "Sports", "Music", "Friendship", "Adventure", "School", "Weather",
             "Animals", "Science", "Art", "History", "Health", "Family", "Hobbies", "Careers", "Transportation", "Clothing",
-            "Emotions", "Business", "Environment", "Culture", "Entertainment", "Cooking", "Gardening", "Literature", 
+            "Emotions", "Business", "Environment", "Culture", "Entertainment", "Cooking", "Gardening", "Literature",
             "Photography", "Fitness", "Shopping", "Holidays", "Communication", "Medicine", "Architecture", "Geography",
             "Movies", "Books", "Dance", "Theater", "Politics", "Economics", "Philosophy", "Psychology", "Astronomy",
             "Ocean", "Mountains", "Cities", "Countries", "Languages", "Celebrations", "Inventions", "Discoveries","Military","Navy","Army","Airforce","Drones","Cyber","Code","Encryption"

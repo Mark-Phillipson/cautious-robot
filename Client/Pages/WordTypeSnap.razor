@@ -32,7 +32,7 @@
                     <span class="me-2">⚠️</span>
                     <div>
                         <strong>Category Not Found:</strong> The category "<em>@Category</em>" isn't available yet, so we're using general words instead.
-                        <br><small>Available categories: clothing, food, animals, nature, sports, languages, military, air force, technology, science, school, music (cooking maps to food)</small>
+                        <br><small>Available categories: clothing, food, animals, nature, sports, languages, military, air force, technology, science, school, music, travel, weather, family, health, transportation, business, hobbies, entertainment</small>
                     </div>
                 </div>
             </div>
@@ -301,7 +301,7 @@
         {
             ["clothing"] = new()
             {
-                // Nouns
+                // Nouns (expanded)
                 ("Shirt", WordType.Noun, "He wore a clean white shirt to the meeting."),
                 ("Dress", WordType.Noun, "She bought a beautiful dress for the party."),
                 ("Pants", WordType.Noun, "These pants are very comfortable to wear."),
@@ -314,6 +314,12 @@
                 ("Sweater", WordType.Noun, "The wool sweater was cozy and warm."),
                 ("Coat", WordType.Noun, "The long coat protected her from the rain."),
                 ("Jeans", WordType.Noun, "Blue jeans are a classic wardrobe staple."),
+                ("Tie", WordType.Noun, "The businessman adjusted his silk tie."),
+                ("Belt", WordType.Noun, "The leather belt matched his shoes perfectly."),
+                ("Skirt", WordType.Noun, "The skirt was perfect for the summer weather."),
+                ("Blouse", WordType.Noun, "Her white blouse looked professional."),
+                ("Boots", WordType.Noun, "The hiking boots were waterproof and sturdy."),
+                ("Uniform", WordType.Noun, "The school uniform was navy blue."),
                 
                 // Verbs
                 ("Wear", WordType.Verb, "I wear this shirt to work every day."),
@@ -322,8 +328,6 @@
                 ("Match", WordType.Verb, "The belt matches the color of her shoes."),
                 ("Wash", WordType.Verb, "Please wash the delicate clothes by hand."),
                 ("Iron", WordType.Verb, "He will iron his shirt before the interview."),
-                ("Try", WordType.Verb, "She wants to try on that dress before buying it."),
-                ("Remove", WordType.Verb, "Please remove your shoes at the entrance."),
                 
                 // Adjectives
                 ("Stylish", WordType.Adjective, "Her stylish outfit caught everyone's attention."),
@@ -332,8 +336,6 @@
                 ("Casual", WordType.Adjective, "He prefers casual clothes for weekend activities."),
                 ("Formal", WordType.Adjective, "Formal attire is required for the ceremony."),
                 ("Colorful", WordType.Adjective, "The colorful scarf brightened her entire outfit."),
-                ("Tight", WordType.Adjective, "The tight jeans were uncomfortable to wear."),
-                ("Loose", WordType.Adjective, "She prefers loose clothing for exercising."),
             },
             
             ["food"] = new()
@@ -691,6 +693,274 @@
                 ("Musical", WordType.Adjective, "Her musical talent was evident from an early age."),
                 ("Soothing", WordType.Adjective, "The soothing music helped him fall asleep."),
                 ("Energetic", WordType.Adjective, "The energetic song made everyone feel happy."),
+            },
+
+            ["travel"] = new()
+            {
+                // Nouns
+                ("Journey", WordType.Noun, "The long journey took us across three countries."),
+                ("Destination", WordType.Noun, "Paris was their dream destination for years."),
+                ("Tourist", WordType.Noun, "The tourist asked for directions to the museum."),
+                ("Vacation", WordType.Noun, "They planned a vacation to the beach."),
+                ("Trip", WordType.Noun, "The business trip lasted only two days."),
+                ("Flight", WordType.Noun, "The flight was delayed due to bad weather."),
+                ("Hotel", WordType.Noun, "The hotel room had a beautiful ocean view."),
+                ("Passport", WordType.Noun, "Don't forget your passport at the airport."),
+                ("Luggage", WordType.Noun, "Her luggage was lost during the connection."),
+                ("Guide", WordType.Noun, "The tour guide spoke five languages fluently."),
+                ("Map", WordType.Noun, "The old map showed routes through ancient cities."),
+                ("Tour", WordType.Noun, "The walking tour revealed hidden city gems."),
+                ("Airport", WordType.Noun, "The airport was crowded with travelers."),
+                ("Adventure", WordType.Noun, "Their mountain adventure lasted three weeks."),
+                
+                // Verbs
+                ("Travel", WordType.Verb, "We travel to different countries every summer."),
+                ("Explore", WordType.Verb, "Adventurers explore remote jungle regions."),
+                ("Visit", WordType.Verb, "They plan to visit ancient ruins."),
+                ("Discover", WordType.Verb, "Travelers discover new cultures and foods."),
+                ("Journey", WordType.Verb, "Pilgrims journey to sacred places."),
+                ("Wander", WordType.Verb, "She loves to wander through old neighborhoods."),
+                
+                // Adjectives
+                ("Exotic", WordType.Adjective, "The exotic location attracted many visitors."),
+                ("Remote", WordType.Adjective, "The remote village had no internet."),
+                ("Cultural", WordType.Adjective, "Cultural experiences enrich every journey."),
+                ("Scenic", WordType.Adjective, "The scenic route took longer but was beautiful."),
+                ("International", WordType.Adjective, "International travel requires proper documentation."),
+                ("Local", WordType.Adjective, "Local customs fascinated the visiting students."),
+            },
+
+            ["weather"] = new()
+            {
+                // Nouns
+                ("Rain", WordType.Noun, "The gentle rain watered the garden naturally."),
+                ("Snow", WordType.Noun, "Fresh snow covered the mountain peaks."),
+                ("Sun", WordType.Noun, "The bright sun warmed the cold morning."),
+                ("Wind", WordType.Noun, "Strong wind shook the tall trees."),
+                ("Cloud", WordType.Noun, "Dark clouds gathered before the storm."),
+                ("Storm", WordType.Noun, "The fierce storm lasted all night."),
+                ("Thunder", WordType.Noun, "Loud thunder frightened the small children."),
+                ("Lightning", WordType.Noun, "Bright lightning illuminated the dark sky."),
+                ("Temperature", WordType.Noun, "The temperature dropped below freezing."),
+                ("Forecast", WordType.Noun, "The weather forecast predicted sunny skies."),
+                ("Hurricane", WordType.Noun, "The hurricane caused widespread damage."),
+                ("Tornado", WordType.Noun, "The tornado touched down near town."),
+                
+                // Verbs
+                ("Rain", WordType.Verb, "It will rain heavily this afternoon."),
+                ("Snow", WordType.Verb, "Weather reports say it might snow."),
+                ("Shine", WordType.Verb, "The sun will shine tomorrow morning."),
+                ("Blow", WordType.Verb, "Strong winds blow across the plains."),
+                ("Freeze", WordType.Verb, "Water pipes freeze in winter temperatures."),
+                ("Storm", WordType.Verb, "Dark clouds storm across the horizon."),
+                
+                // Adjectives
+                ("Sunny", WordType.Adjective, "The sunny day was perfect for picnics."),
+                ("Cloudy", WordType.Adjective, "Cloudy skies blocked the bright sunlight."),
+                ("Windy", WordType.Adjective, "The windy afternoon made kites soar."),
+                ("Stormy", WordType.Adjective, "Stormy weather kept everyone indoors."),
+                ("Hot", WordType.Adjective, "Hot summer days require plenty of water."),
+                ("Cold", WordType.Adjective, "Cold winter nights need warm blankets."),
+            },
+
+            ["family"] = new()
+            {
+                // Nouns
+                ("Mother", WordType.Noun, "My mother always gives the best advice."),
+                ("Father", WordType.Noun, "His father taught him to ride bicycles."),
+                ("Sister", WordType.Noun, "My sister and I share many memories."),
+                ("Brother", WordType.Noun, "Her younger brother loves playing soccer."),
+                ("Grandmother", WordType.Noun, "Grandmother tells wonderful old stories."),
+                ("Grandfather", WordType.Noun, "Grandfather built this house with care."),
+                ("Aunt", WordType.Noun, "My aunt lives in a different state."),
+                ("Uncle", WordType.Noun, "Uncle Jim brings gifts every Christmas."),
+                ("Cousin", WordType.Noun, "My cousin is studying at university."),
+                ("Parent", WordType.Noun, "Every parent wants their children happy."),
+                ("Child", WordType.Noun, "Each child has unique talents and gifts."),
+                ("Baby", WordType.Noun, "The baby slept peacefully in mother's arms."),
+                ("Family", WordType.Noun, "Our family gathers every Sunday evening."),
+                ("Home", WordType.Noun, "Home is where the heart feels safe."),
+                
+                // Verbs
+                ("Love", WordType.Verb, "Families love each other through difficulties."),
+                ("Care", WordType.Verb, "Parents care for their children daily."),
+                ("Support", WordType.Verb, "Family members support each other always."),
+                ("Share", WordType.Verb, "Siblings share toys and special moments."),
+                ("Protect", WordType.Verb, "Parents protect their children from harm."),
+                ("Celebrate", WordType.Verb, "We celebrate birthdays and achievements together."),
+                
+                // Adjectives
+                ("Loving", WordType.Adjective, "A loving family supports each member."),
+                ("Close", WordType.Adjective, "Close families spend quality time together."),
+                ("Caring", WordType.Adjective, "Caring relatives help during tough times."),
+                ("Supportive", WordType.Adjective, "Supportive families encourage individual dreams."),
+                ("United", WordType.Adjective, "United families face challenges together."),
+                ("Loyal", WordType.Adjective, "Loyal family bonds last through generations."),
+            },
+
+            ["health"] = new()
+            {
+                // Nouns
+                ("Doctor", WordType.Noun, "The doctor examined the patient carefully."),
+                ("Hospital", WordType.Noun, "The hospital treated emergency patients."),
+                ("Medicine", WordType.Noun, "This medicine will help reduce pain."),
+                ("Nurse", WordType.Noun, "The nurse checked vital signs regularly."),
+                ("Patient", WordType.Noun, "The patient followed all medical instructions."),
+                ("Treatment", WordType.Noun, "The treatment improved her condition significantly."),
+                ("Surgery", WordType.Noun, "The surgery was completely successful."),
+                ("Therapy", WordType.Noun, "Physical therapy helped restore mobility."),
+                ("Exercise", WordType.Noun, "Regular exercise improves overall health."),
+                ("Diet", WordType.Noun, "A balanced diet provides essential nutrients."),
+                ("Vitamins", WordType.Noun, "Vitamins support healthy body functions."),
+                ("Checkup", WordType.Noun, "Annual checkups help prevent serious diseases."),
+                
+                // Verbs
+                ("Heal", WordType.Verb, "Time and rest help wounds heal."),
+                ("Recover", WordType.Verb, "Patients recover faster with proper care."),
+                ("Exercise", WordType.Verb, "People should exercise at least daily."),
+                ("Prevent", WordType.Verb, "Vaccines prevent many serious diseases."),
+                ("Diagnose", WordType.Verb, "Doctors diagnose illnesses using various tests."),
+                ("Treat", WordType.Verb, "Medical professionals treat patients with compassion."),
+                
+                // Adjectives
+                ("Healthy", WordType.Adjective, "Healthy habits improve quality of life."),
+                ("Sick", WordType.Adjective, "Sick patients need rest and medication."),
+                ("Strong", WordType.Adjective, "Strong muscles support good posture."),
+                ("Fit", WordType.Adjective, "Fit individuals have more daily energy."),
+                ("Medical", WordType.Adjective, "Medical advances save countless lives."),
+                ("Nutritious", WordType.Adjective, "Nutritious foods fuel body functions."),
+            },
+
+            ["transportation"] = new()
+            {
+                // Nouns
+                ("Car", WordType.Noun, "The red car drove down the highway."),
+                ("Bus", WordType.Noun, "The school bus arrived right on time."),
+                ("Train", WordType.Noun, "The fast train connected major cities."),
+                ("Airplane", WordType.Noun, "The airplane soared high above clouds."),
+                ("Bicycle", WordType.Noun, "Her bicycle had twenty-one different gears."),
+                ("Motorcycle", WordType.Noun, "The motorcycle roared through mountain roads."),
+                ("Truck", WordType.Noun, "The delivery truck brought packages."),
+                ("Boat", WordType.Noun, "The fishing boat returned with catch."),
+                ("Ship", WordType.Noun, "The cruise ship sailed across oceans."),
+                ("Subway", WordType.Noun, "The subway system serves millions daily."),
+                ("Taxi", WordType.Noun, "The taxi took us to airport."),
+                ("Vehicle", WordType.Noun, "Every vehicle needs regular maintenance."),
+                
+                // Verbs
+                ("Drive", WordType.Verb, "She learned to drive at sixteen."),
+                ("Ride", WordType.Verb, "Children ride bicycles in the park."),
+                ("Fly", WordType.Verb, "Commercial jets fly at high altitudes."),
+                ("Sail", WordType.Verb, "Boats sail across the calm lake."),
+                ("Travel", WordType.Verb, "People travel using various transportation methods."),
+                ("Navigate", WordType.Verb, "GPS systems help drivers navigate routes."),
+                
+                // Adjectives
+                ("Fast", WordType.Adjective, "Fast trains reduce commuting time."),
+                ("Slow", WordType.Adjective, "Slow traffic caused delays everywhere."),
+                ("Public", WordType.Adjective, "Public transportation serves entire communities."),
+                ("Private", WordType.Adjective, "Private vehicles offer personal convenience."),
+                ("Electric", WordType.Adjective, "Electric cars produce zero emissions."),
+                ("Efficient", WordType.Adjective, "Efficient vehicles save fuel costs."),
+            },
+
+            ["business"] = new()
+            {
+                // Nouns
+                ("Company", WordType.Noun, "The technology company hired new employees."),
+                ("Office", WordType.Noun, "Her office overlooked the busy street."),
+                ("Manager", WordType.Noun, "The project manager coordinated team efforts."),
+                ("Employee", WordType.Noun, "Every employee received performance feedback."),
+                ("Customer", WordType.Noun, "Satisfied customers recommend our services."),
+                ("Meeting", WordType.Noun, "The weekly meeting discussed project progress."),
+                ("Profit", WordType.Noun, "Higher profits allowed company expansion."),
+                ("Budget", WordType.Noun, "The annual budget allocated resources."),
+                ("Market", WordType.Noun, "The global market offers new opportunities."),
+                ("Investment", WordType.Noun, "Smart investments generate long-term returns."),
+                ("Strategy", WordType.Noun, "Business strategy guides decision making."),
+                ("Report", WordType.Noun, "The quarterly report showed growth."),
+                
+                // Verbs
+                ("Manage", WordType.Verb, "Effective leaders manage teams successfully."),
+                ("Sell", WordType.Verb, "Companies sell products to customers."),
+                ("Buy", WordType.Verb, "Businesses buy supplies from vendors."),
+                ("Invest", WordType.Verb, "Smart entrepreneurs invest in technology."),
+                ("Market", WordType.Verb, "Teams market products to target audiences."),
+                ("Negotiate", WordType.Verb, "Professionals negotiate contract terms."),
+                
+                // Adjectives
+                ("Profitable", WordType.Adjective, "Profitable ventures attract more investors."),
+                ("Competitive", WordType.Adjective, "Competitive markets drive innovation."),
+                ("Professional", WordType.Adjective, "Professional behavior builds trust."),
+                ("Successful", WordType.Adjective, "Successful businesses serve customers well."),
+                ("Corporate", WordType.Adjective, "Corporate culture influences employee satisfaction."),
+                ("Commercial", WordType.Adjective, "Commercial activities drive economic growth."),
+            },
+
+            ["hobbies"] = new()
+            {
+                // Nouns
+                ("Painting", WordType.Noun, "Her painting captured the sunset perfectly."),
+                ("Reading", WordType.Noun, "Reading expands knowledge and imagination."),
+                ("Photography", WordType.Noun, "Digital photography has revolutionized art."),
+                ("Gardening", WordType.Noun, "Gardening provides fresh vegetables and flowers."),
+                ("Cooking", WordType.Noun, "Cooking brings families together around tables."),
+                ("Writing", WordType.Noun, "Creative writing expresses inner thoughts."),
+                ("Dancing", WordType.Noun, "Ballroom dancing requires practice and grace."),
+                ("Singing", WordType.Noun, "Choir singing builds community connections."),
+                ("Collecting", WordType.Noun, "Stamp collecting teaches geography and history."),
+                ("Crafting", WordType.Noun, "Hand crafting creates unique personal items."),
+                ("Fishing", WordType.Noun, "Peaceful fishing relaxes mind and body."),
+                ("Drawing", WordType.Noun, "Pencil drawing improves observation skills."),
+                
+                // Verbs
+                ("Paint", WordType.Verb, "Artists paint with various colors."),
+                ("Read", WordType.Verb, "Students read books to learn."),
+                ("Photograph", WordType.Verb, "Tourists photograph famous landmarks."),
+                ("Garden", WordType.Verb, "Families garden together on weekends."),
+                ("Cook", WordType.Verb, "Chefs cook gourmet meals professionally."),
+                ("Write", WordType.Verb, "Authors write stories to entertain."),
+                
+                // Adjectives
+                ("Creative", WordType.Adjective, "Creative hobbies express personal style."),
+                ("Relaxing", WordType.Adjective, "Relaxing activities reduce daily stress."),
+                ("Artistic", WordType.Adjective, "Artistic pursuits develop aesthetic appreciation."),
+                ("Enjoyable", WordType.Adjective, "Enjoyable hobbies provide pure pleasure."),
+                ("Rewarding", WordType.Adjective, "Rewarding activities bring personal satisfaction."),
+                ("Peaceful", WordType.Adjective, "Peaceful hobbies calm busy minds."),
+            },
+
+            ["entertainment"] = new()
+            {
+                // Nouns
+                ("Movie", WordType.Noun, "The action movie had spectacular effects."),
+                ("Theater", WordType.Noun, "The historic theater hosted Broadway shows."),
+                ("Concert", WordType.Noun, "The rock concert drew thousands of fans."),
+                ("Show", WordType.Noun, "The television show aired every Thursday."),
+                ("Game", WordType.Noun, "The board game brought family together."),
+                ("Comedy", WordType.Noun, "Stand-up comedy makes audiences laugh."),
+                ("Drama", WordType.Noun, "The drama explored complex human emotions."),
+                ("Festival", WordType.Noun, "The music festival lasted three days."),
+                ("Performance", WordType.Noun, "Her dance performance earned standing ovations."),
+                ("Actor", WordType.Noun, "The talented actor memorized lengthy scripts."),
+                ("Audience", WordType.Noun, "The enthusiastic audience applauded loudly."),
+                ("Stage", WordType.Noun, "Bright lights illuminated the theater stage."),
+                
+                // Verbs
+                ("Watch", WordType.Verb, "Families watch movies together regularly."),
+                ("Perform", WordType.Verb, "Musicians perform at local venues."),
+                ("Entertain", WordType.Verb, "Comedians entertain audiences with humor."),
+                ("Act", WordType.Verb, "Actors act in films and plays."),
+                ("Applaud", WordType.Verb, "Audiences applaud exceptional performances."),
+                ("Enjoy", WordType.Verb, "People enjoy various entertainment forms."),
+                
+                // Adjectives
+                ("Entertaining", WordType.Adjective, "Entertaining shows attract large audiences."),
+                ("Funny", WordType.Adjective, "Funny comedies make people laugh."),
+                ("Dramatic", WordType.Adjective, "Dramatic scenes evoke strong emotions."),
+                ("Popular", WordType.Adjective, "Popular shows have many viewers."),
+                ("Exciting", WordType.Adjective, "Exciting performances keep audiences engaged."),
+                ("Live", WordType.Adjective, "Live performances offer unique experiences."),
             }
         };
 
@@ -704,24 +974,97 @@
             var partialMatch = fallbackWordsByTheme.FirstOrDefault(kvp => 
                 theme.ToLower().Contains(kvp.Key) || 
                 kvp.Key.Contains(theme.ToLower()) ||
+                // Military & Air Force
                 (theme.ToLower().Contains("air") && kvp.Key == "air force") ||
                 (theme.ToLower().Contains("force") && kvp.Key == "air force") ||
                 (theme.ToLower().Contains("military") && kvp.Key == "air force") ||
                 (theme.ToLower().Contains("army") && kvp.Key == "military") ||
                 (theme.ToLower().Contains("navy") && kvp.Key == "military") ||
+                (theme.ToLower().Contains("airforce") && kvp.Key == "air force") ||
+                (theme.ToLower().Contains("soldier") && kvp.Key == "military") ||
+                (theme.ToLower().Contains("defense") && kvp.Key == "military") ||
+                // Technology
                 (theme.ToLower().Contains("tech") && kvp.Key == "technology") ||
                 (theme.ToLower().Contains("computer") && kvp.Key == "technology") ||
                 (theme.ToLower().Contains("digital") && kvp.Key == "technology") ||
+                (theme.ToLower().Contains("software") && kvp.Key == "technology") ||
+                (theme.ToLower().Contains("internet") && kvp.Key == "technology") ||
+                (theme.ToLower().Contains("cyber") && kvp.Key == "technology") ||
+                (theme.ToLower().Contains("code") && kvp.Key == "technology") ||
+                (theme.ToLower().Contains("programming") && kvp.Key == "technology") ||
+                // Education & School
                 (theme.ToLower().Contains("education") && kvp.Key == "school") ||
                 (theme.ToLower().Contains("student") && kvp.Key == "school") ||
                 (theme.ToLower().Contains("classroom") && kvp.Key == "school") ||
                 (theme.ToLower().Contains("learning") && kvp.Key == "school") ||
+                (theme.ToLower().Contains("teacher") && kvp.Key == "school") ||
+                (theme.ToLower().Contains("university") && kvp.Key == "school") ||
+                (theme.ToLower().Contains("academic") && kvp.Key == "school") ||
+                // Music & Entertainment
                 (theme.ToLower().Contains("instrument") && kvp.Key == "music") ||
                 (theme.ToLower().Contains("song") && kvp.Key == "music") ||
                 (theme.ToLower().Contains("sound") && kvp.Key == "music") ||
+                (theme.ToLower().Contains("melody") && kvp.Key == "music") ||
+                (theme.ToLower().Contains("concert") && kvp.Key == "music") ||
+                (theme.ToLower().Contains("movie") && kvp.Key == "entertainment") ||
+                (theme.ToLower().Contains("theater") && kvp.Key == "entertainment") ||
+                (theme.ToLower().Contains("show") && kvp.Key == "entertainment") ||
+                (theme.ToLower().Contains("film") && kvp.Key == "entertainment") ||
+                (theme.ToLower().Contains("drama") && kvp.Key == "entertainment") ||
+                (theme.ToLower().Contains("comedy") && kvp.Key == "entertainment") ||
+                // Food & Cooking
                 (theme.ToLower().Contains("cook") && kvp.Key == "food") ||
                 (theme.ToLower().Contains("recipe") && kvp.Key == "food") ||
-                (theme.ToLower().Contains("kitchen") && kvp.Key == "food"));
+                (theme.ToLower().Contains("kitchen") && kvp.Key == "food") ||
+                (theme.ToLower().Contains("meal") && kvp.Key == "food") ||
+                (theme.ToLower().Contains("dining") && kvp.Key == "food") ||
+                (theme.ToLower().Contains("nutrition") && kvp.Key == "food") ||
+                // Travel & Transportation
+                (theme.ToLower().Contains("journey") && kvp.Key == "travel") ||
+                (theme.ToLower().Contains("vacation") && kvp.Key == "travel") ||
+                (theme.ToLower().Contains("trip") && kvp.Key == "travel") ||
+                (theme.ToLower().Contains("tourism") && kvp.Key == "travel") ||
+                (theme.ToLower().Contains("adventure") && kvp.Key == "travel") ||
+                (theme.ToLower().Contains("vehicle") && kvp.Key == "transportation") ||
+                (theme.ToLower().Contains("car") && kvp.Key == "transportation") ||
+                (theme.ToLower().Contains("driving") && kvp.Key == "transportation") ||
+                (theme.ToLower().Contains("transport") && kvp.Key == "transportation") ||
+                // Health & Medicine
+                (theme.ToLower().Contains("medicine") && kvp.Key == "health") ||
+                (theme.ToLower().Contains("medical") && kvp.Key == "health") ||
+                (theme.ToLower().Contains("doctor") && kvp.Key == "health") ||
+                (theme.ToLower().Contains("hospital") && kvp.Key == "health") ||
+                (theme.ToLower().Contains("fitness") && kvp.Key == "health") ||
+                (theme.ToLower().Contains("wellness") && kvp.Key == "health") ||
+                // Business & Work
+                (theme.ToLower().Contains("work") && kvp.Key == "business") ||
+                (theme.ToLower().Contains("job") && kvp.Key == "business") ||
+                (theme.ToLower().Contains("career") && kvp.Key == "business") ||
+                (theme.ToLower().Contains("office") && kvp.Key == "business") ||
+                (theme.ToLower().Contains("company") && kvp.Key == "business") ||
+                (theme.ToLower().Contains("management") && kvp.Key == "business") ||
+                (theme.ToLower().Contains("economics") && kvp.Key == "business") ||
+                // Weather & Environment
+                (theme.ToLower().Contains("climate") && kvp.Key == "weather") ||
+                (theme.ToLower().Contains("season") && kvp.Key == "weather") ||
+                (theme.ToLower().Contains("temperature") && kvp.Key == "weather") ||
+                (theme.ToLower().Contains("environment") && kvp.Key == "nature") ||
+                (theme.ToLower().Contains("ecology") && kvp.Key == "nature") ||
+                (theme.ToLower().Contains("wildlife") && kvp.Key == "animals") ||
+                // Family & Relationships
+                (theme.ToLower().Contains("parent") && kvp.Key == "family") ||
+                (theme.ToLower().Contains("child") && kvp.Key == "family") ||
+                (theme.ToLower().Contains("relative") && kvp.Key == "family") ||
+                (theme.ToLower().Contains("relationship") && kvp.Key == "family") ||
+                (theme.ToLower().Contains("friendship") && kvp.Key == "family") ||
+                // Hobbies & Activities
+                (theme.ToLower().Contains("hobby") && kvp.Key == "hobbies") ||
+                (theme.ToLower().Contains("craft") && kvp.Key == "hobbies") ||
+                (theme.ToLower().Contains("art") && kvp.Key == "hobbies") ||
+                (theme.ToLower().Contains("painting") && kvp.Key == "hobbies") ||
+                (theme.ToLower().Contains("photography") && kvp.Key == "hobbies") ||
+                (theme.ToLower().Contains("reading") && kvp.Key == "hobbies") ||
+                (theme.ToLower().Contains("gardening") && kvp.Key == "hobbies"));
             
             if (partialMatch.Key != null)
             {
