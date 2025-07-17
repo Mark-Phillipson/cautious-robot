@@ -1,0 +1,298 @@
+@using BlazorApp.Client.Models
+
+<div class="word-type-snap-container">
+    <div class="snap-game-header">
+        <h3>🎯 Word Type Snap</h3>
+        <div class="snap-stats">
+            <div class="stat-item">
+                <span class="stat-label">Streak:</span>
+                <span class="stat-value">@Streak</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Best:</span>
+                <span class="stat-value">@BestStreak</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="snap-instructions">
+        <p>💡 Click <strong>Snap!</strong> when both words are the same type (e.g., both nouns or both verbs)</p>
+    </div>
+
+    <div class="words-display">
+        <div class="word-card @GetWordCardClass(currentWords[0])">
+            <div class="word-type-badge">
+                <span class="type-emoji">@currentWords[0].Type.GetEmoji()</span>
+                <span class="type-name">@currentWords[0].Type.GetDisplayName()</span>
+            </div>
+            <div class="word-text">@currentWords[0].Text</div>
+        </div>
+
+        <div class="snap-button-container">
+            <button @onclick="SnapAttempt" class="snap-button @(isProcessing ? "processing" : "")" disabled="@isProcessing">
+                @if (isProcessing)
+                {
+                    <span class="processing-text">⏳</span>
+                }
+                else
+                {
+                    <span class="snap-text">⚡ SNAP!</span>
+                }
+            </button>
+        </div>
+
+        <div class="word-card @GetWordCardClass(currentWords[1])">
+            <div class="word-type-badge">
+                <span class="type-emoji">@currentWords[1].Type.GetEmoji()</span>
+                <span class="type-name">@currentWords[1].Type.GetDisplayName()</span>
+            </div>
+            <div class="word-text">@currentWords[1].Text</div>
+        </div>
+    </div>
+
+    @if (showResult)
+    {
+        <div class="snap-result @(lastSnapCorrect ? "correct" : "incorrect")">
+            <div class="result-header">
+                @if (lastSnapCorrect)
+                {
+                    <span class="result-icon">🎉</span>
+                    <span class="result-text">Perfect Match!</span>
+                }
+                else
+                {
+                    <span class="result-icon">❌</span>
+                    <span class="result-text">Not a match!</span>
+                }
+            </div>
+            <div class="result-explanation">
+                @if (lastSnapCorrect)
+                {
+                    <p>Both words are <strong>@currentWords[0].Type.GetDisplayName()s</strong>! +@pointsEarned points</p>
+                }
+                else
+                {
+                    <p>
+                        <strong>@currentWords[0].Text</strong> is a @currentWords[0].Type.GetDisplayName() @currentWords[0].Type.GetEmoji(),
+                        but <strong>@currentWords[1].Text</strong> is a @currentWords[1].Type.GetDisplayName() @currentWords[1].Type.GetEmoji()
+                    </p>
+                }
+            </div>
+        </div>
+    }
+
+    @if (showNewGameButton)
+    {
+        <div class="new-game-section">
+            <button @onclick="StartNewGame" class="new-game-button">
+                🎮 New Game
+            </button>
+        </div>
+    }
+</div>
+
+@* Play sound for snap results *@
+<BlazorApp.Client.Pages.PlaySound Play="@PlayAudio" AnswerState="@lastSnapCorrect" />
+
+@code {
+    [Parameter] public EventCallback<int> OnScoreChanged { get; set; }
+    [Parameter] public bool PlayAudio { get; set; } = true;
+
+    private List<Word> wordBank = new();
+    private Word[] currentWords = new Word[2];
+    private Random random = new();
+    
+    private int mainGameScore = 0; // Track the main game score to update parent
+    private int Streak = 0;
+    private int BestStreak = 0;
+    private bool showResult = false;
+    private bool lastSnapCorrect = false;
+    private bool isProcessing = false;
+    private bool showNewGameButton = false;
+    private int pointsEarned = 0;
+
+    protected override void OnInitialized()
+    {
+        InitializeWordBank();
+        LoadNewWords();
+    }
+
+    private void InitializeWordBank()
+    {
+        wordBank = new List<Word>
+        {
+            // Nouns
+            new("Cat", WordType.Noun),
+            new("House", WordType.Noun),
+            new("Tree", WordType.Noun),
+            new("Book", WordType.Noun),
+            new("Ocean", WordType.Noun),
+            new("Mountain", WordType.Noun),
+            new("Star", WordType.Noun),
+            new("Friend", WordType.Noun),
+            new("Dream", WordType.Noun),
+            new("Music", WordType.Noun),
+            new("Flower", WordType.Noun),
+            new("Journey", WordType.Noun),
+
+            // Verbs
+            new("Run", WordType.Verb),
+            new("Jump", WordType.Verb),
+            new("Sing", WordType.Verb),
+            new("Dance", WordType.Verb),
+            new("Think", WordType.Verb),
+            new("Create", WordType.Verb),
+            new("Explore", WordType.Verb),
+            new("Laugh", WordType.Verb),
+            new("Discover", WordType.Verb),
+            new("Build", WordType.Verb),
+            new("Celebrate", WordType.Verb),
+            new("Transform", WordType.Verb),
+
+            // Adjectives
+            new("Beautiful", WordType.Adjective),
+            new("Happy", WordType.Adjective),
+            new("Brave", WordType.Adjective),
+            new("Mysterious", WordType.Adjective),
+            new("Colorful", WordType.Adjective),
+            new("Peaceful", WordType.Adjective),
+            new("Amazing", WordType.Adjective),
+            new("Gentle", WordType.Adjective),
+            new("Brilliant", WordType.Adjective),
+            new("Magical", WordType.Adjective),
+            new("Serene", WordType.Adjective),
+            new("Vibrant", WordType.Adjective),
+
+            // Adverbs
+            new("Quickly", WordType.Adverb),
+            new("Carefully", WordType.Adverb),
+            new("Silently", WordType.Adverb),
+            new("Gracefully", WordType.Adverb),
+            new("Boldly", WordType.Adverb),
+            new("Gently", WordType.Adverb),
+            new("Eagerly", WordType.Adverb),
+            new("Wisely", WordType.Adverb),
+            new("Joyfully", WordType.Adverb),
+            new("Confidently", WordType.Adverb),
+            new("Smoothly", WordType.Adverb),
+            new("Perfectly", WordType.Adverb),
+
+            // Prepositions
+            new("Under", WordType.Preposition),
+            new("Above", WordType.Preposition),
+            new("Between", WordType.Preposition),
+            new("Through", WordType.Preposition),
+            new("Around", WordType.Preposition),
+            new("Beyond", WordType.Preposition),
+            new("Within", WordType.Preposition),
+            new("Across", WordType.Preposition),
+
+            // Pronouns
+            new("They", WordType.Pronoun),
+            new("We", WordType.Pronoun),
+            new("You", WordType.Pronoun),
+            new("She", WordType.Pronoun),
+            new("He", WordType.Pronoun),
+            new("It", WordType.Pronoun),
+            new("Them", WordType.Pronoun),
+            new("Us", WordType.Pronoun),
+
+            // Conjunctions
+            new("And", WordType.Conjunction),
+            new("But", WordType.Conjunction),
+            new("Or", WordType.Conjunction),
+            new("So", WordType.Conjunction),
+            new("Because", WordType.Conjunction),
+            new("Although", WordType.Conjunction),
+            new("While", WordType.Conjunction),
+            new("Since", WordType.Conjunction),
+
+            // Interjections
+            new("Wow", WordType.Interjection),
+            new("Hey", WordType.Interjection),
+            new("Oops", WordType.Interjection),
+            new("Hooray", WordType.Interjection),
+            new("Ouch", WordType.Interjection),
+            new("Bravo", WordType.Interjection),
+            new("Alas", WordType.Interjection),
+            new("Yay", WordType.Interjection)
+        };
+    }
+
+    private void LoadNewWords()
+    {
+        var shuffled = wordBank.OrderBy(x => random.Next()).ToList();
+        currentWords[0] = shuffled[0];
+        currentWords[1] = shuffled[1];
+        showResult = false;
+        isProcessing = false;
+    }
+
+    private async Task SnapAttempt()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        await Task.Delay(300); // Brief pause for effect
+
+        bool isMatch = currentWords[0].Type == currentWords[1].Type;
+        lastSnapCorrect = isMatch;
+
+        if (isMatch)
+        {
+            // Correct match
+            pointsEarned = Math.Max(10, 10 + (Streak * 2)); // Base 10 points, bonus for streak
+            mainGameScore += pointsEarned;
+            Streak++;
+            if (Streak > BestStreak)
+            {
+                BestStreak = Streak;
+            }
+        }
+        else
+        {
+            // Incorrect match
+            pointsEarned = 0;
+            mainGameScore = Math.Max(0, mainGameScore - 5); // Lose 5 points, but don't go below 0
+            Streak = 0; // Reset streak
+        }
+
+        showResult = true;
+        StateHasChanged();
+
+        // Notify parent component of score change
+        await OnScoreChanged.InvokeAsync(mainGameScore);
+
+        // Auto-continue after showing result
+        await Task.Delay(2500);
+        LoadNewWords();
+        StateHasChanged();
+    }
+
+    private void StartNewGame()
+    {
+        mainGameScore = 0;
+        Streak = 0;
+        showResult = false;
+        showNewGameButton = false;
+        LoadNewWords();
+    }
+
+    private string GetWordCardClass(Word word)
+    {
+        return word.Type switch
+        {
+            WordType.Noun => "noun",
+            WordType.Verb => "verb",
+            WordType.Adjective => "adjective",
+            WordType.Adverb => "adverb",
+            WordType.Preposition => "preposition",
+            WordType.Pronoun => "pronoun",
+            WordType.Conjunction => "conjunction",
+            WordType.Interjection => "interjection",
+            _ => "default"
+        };
+    }
+}

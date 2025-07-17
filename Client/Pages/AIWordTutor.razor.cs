@@ -956,6 +956,7 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                 GameMode.ContextualLearning => "🎯 Contextual Learning",
                 GameMode.PersonalizedQuiz => "🧠 Personalized Quiz",
                 GameMode.Hangman => "🎪 Hangman",
+                GameMode.WordTypeSnap => "⚡ Word Type Snap",
                 _ => "Learning Mode"
             };
         }        private string GetDifficultyName(DifficultyLevel level)
@@ -2086,6 +2087,15 @@ Hint for '{word}':";
                 // Fallback to theme-based hint
                 return $"A word related to {themeInput?.ToLower() ?? "this topic"}";
             }
+        }
+
+        // Word Type Snap callback method
+        private Task OnWordTypeSnapScoreChanged(int newScore)
+        {
+            // Update the main game score with the Word Type Snap score
+            score = newScore;
+            StateHasChanged();
+            return Task.CompletedTask;
         }
     }
 }

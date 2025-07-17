@@ -1,0 +1,344 @@
+.word-type-snap-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.snap-game-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.snap-game-header h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.snap-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.snap-instructions {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #007bff;
+}
+
+.snap-instructions p {
+    margin: 0;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.words-display {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 30px;
+    min-height: 200px;
+}
+
+.word-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.word-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--word-color-primary), var(--word-color-secondary));
+}
+
+.word-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* Word type specific colors */
+.word-card.noun {
+    --word-color-primary: #ff6b6b;
+    --word-color-secondary: #ff8e8e;
+    border-color: #ff6b6b;
+}
+
+.word-card.verb {
+    --word-color-primary: #4ecdc4;
+    --word-color-secondary: #6ed5d0;
+    border-color: #4ecdc4;
+}
+
+.word-card.adjective {
+    --word-color-primary: #45b7d1;
+    --word-color-secondary: #64c5db;
+    border-color: #45b7d1;
+}
+
+.word-card.adverb {
+    --word-color-primary: #f9ca24;
+    --word-color-secondary: #f0932b;
+    border-color: #f9ca24;
+}
+
+.word-card.preposition {
+    --word-color-primary: #6c5ce7;
+    --word-color-secondary: #a29bfe;
+    border-color: #6c5ce7;
+}
+
+.word-card.pronoun {
+    --word-color-primary: #fd79a8;
+    --word-color-secondary: #fdcb6e;
+    border-color: #fd79a8;
+}
+
+.word-card.conjunction {
+    --word-color-primary: #00b894;
+    --word-color-secondary: #00cec9;
+    border-color: #00b894;
+}
+
+.word-card.interjection {
+    --word-color-primary: #e17055;
+    --word-color-secondary: #fab1a0;
+    border-color: #e17055;
+}
+
+.word-type-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding: 8px 12px;
+    background: rgba(var(--word-color-primary), 0.1);
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--word-color-primary);
+}
+
+.type-emoji {
+    font-size: 1.2rem;
+}
+
+.type-name {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.word-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 0;
+    text-transform: capitalize;
+    letter-spacing: 1px;
+}
+
+.snap-button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.snap-button {
+    background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.snap-button:hover:not(:disabled) {
+    transform: scale(1.1);
+    box-shadow: 0 12px 30px rgba(255, 107, 107, 0.6);
+}
+
+.snap-button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.snap-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.snap-button.processing {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.snap-text {
+    font-size: 1.3rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.processing-text {
+    font-size: 1.5rem;
+}
+
+.snap-result {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    animation: slideIn 0.5s ease;
+}
+
+.snap-result.correct {
+    background: linear-gradient(135deg, #00b894, #00cec9);
+    color: white;
+}
+
+.snap-result.incorrect {
+    background: linear-gradient(135deg, #e17055, #fab1a0);
+    color: white;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.result-icon {
+    font-size: 2rem;
+}
+
+.result-text {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.result-explanation {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.result-explanation p {
+    margin: 0;
+}
+
+.new-game-section {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.new-game-button {
+    background: linear-gradient(145deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.new-game-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .words-display {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .snap-button-container {
+        order: 3;
+        margin-top: 20px;
+    }
+    
+    .word-card {
+        padding: 20px;
+    }
+    
+    .word-text {
+        font-size: 1.5rem;
+    }
+    
+    .snap-button {
+        width: 100px;
+        height: 100px;
+        font-size: 1rem;
+    }
+    
+    .snap-stats {
+        gap: 15px;
+    }
+}

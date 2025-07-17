@@ -150,6 +150,14 @@
     background: linear-gradient(135deg, #00d2d3, #01a3a4);
 }
 
+.mode-button.hangman {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+}
+
+.mode-button.word-type-snap {
+    background: linear-gradient(135deg, #ff6348, #ff4757);
+}
+
 .difficulty-section {
     margin: 2rem 0;
 }
@@ -2237,10 +2245,25 @@ button.letter-btn:hover:not(:disabled) {
     
     .hint-play-btn {
         padding: 10px 14px;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
     
     .hint-play-btn .icon {
         font-size: 0.9rem;
     }
+}
+
+/* Word Type Snap Game Section */
+.word-type-snap-section {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 2px solid #e9ecef;
+}
+
+.word-type-snap-section h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #495057;
 }
