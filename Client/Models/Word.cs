@@ -87,4 +87,58 @@ namespace BlazorApp.Client.Models
             };
         }
     }
+
+    /// <summary>
+    /// Extension methods for Word class
+    /// </summary>
+    public static class WordExtensions
+    {
+        /// <summary>
+        /// Gets the example sentence with the word highlighted in bold
+        /// </summary>
+        /// <param name="word">The word object</param>
+        /// <returns>HTML string with the word highlighted in bold within the sentence</returns>
+        public static string GetHighlightedSentence(this Word word)
+        {
+            if (string.IsNullOrEmpty(word.ExampleSentence))
+            {
+                return string.Empty;
+            }
+
+            // Find the word in the sentence (case-insensitive) and replace it with bold version
+            var sentence = word.ExampleSentence;
+            var wordText = word.Text;
+            
+            // Handle different forms of the word (e.g., "run" in "running", "runs", etc.)
+            // First try exact match (case-insensitive)
+            var pattern = $@"\b{System.Text.RegularExpressions.Regex.Escape(wordText)}\b";
+            var highlightedSentence = System.Text.RegularExpressions.Regex.Replace(
+                sentence, 
+                pattern, 
+                $"<strong>{wordText}</strong>", 
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            );
+            
+            // If no exact match found, try to find variations (root word)
+            if (highlightedSentence == sentence)
+            {
+                // Try to find the word as part of another word (like "run" in "running")
+                var rootPattern = $@"\b\w*{System.Text.RegularExpressions.Regex.Escape(wordText.ToLower())}\w*\b";
+                var match = System.Text.RegularExpressions.Regex.Match(sentence, rootPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                
+                if (match.Success)
+                {
+                    var foundWord = match.Value;
+                    highlightedSentence = sentence.Replace(foundWord, $"<strong>{foundWord}</strong>", StringComparison.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    // Fallback: just bold the original word at the beginning of the sentence
+                    highlightedSentence = $"<strong>{wordText}</strong>: {sentence}";
+                }
+            }
+            
+            return highlightedSentence;
+        }
+    }
 }

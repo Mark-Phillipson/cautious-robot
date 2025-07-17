@@ -14,15 +14,15 @@
         <p>💡 Click <strong>SNAP!</strong> when both words are the same type, or <strong>NO MATCH</strong> when they're different types</p>
         @if (DifficultyLevel == DifficultyLevel.Beginner)
         {
-            <p><small>🎓 <strong>Beginner Mode:</strong> Word types and example sentences are shown to help you learn!</small></p>
+            <p><small>🎓 <strong>Beginner Mode:</strong> Word types and definitions are shown to help you learn! Look for the <strong>bold word</strong> in each sentence.</small></p>
         }
         else if (DifficultyLevel == DifficultyLevel.Intermediate)
         {
-            <p><small>📚 <strong>Intermediate Mode:</strong> Word type icons and labels are shown to guide you.</small></p>
+            <p><small>📚 <strong>Intermediate Mode:</strong> Word type icons and labels are shown to guide you. Look for the <strong>bold word</strong> in each sentence.</small></p>
         }
         else
         {
-            <p><small>🏆 <strong>Advanced Mode:</strong> Only word type icons are shown - use your knowledge!</small></p>
+            <p><small>🏆 <strong>Advanced Mode:</strong> Only word type icons are shown - use your knowledge! Look for the <strong>bold word</strong> in each sentence.</small></p>
         }
         
         @if (usingFallbackWordBank && !string.IsNullOrEmpty(Category) && !isFallbackAlertDismissed)
@@ -79,7 +79,9 @@
     {
         <div class="words-display">
             <div class="word-card @GetWordCardClass(currentWords[0])">
-                <div class="word-text @GetWordSizeClass(currentWords[0].Text)">@currentWords[0].Text</div>
+                <div class="word-sentence @GetWordSizeClass(currentWords[0].Text)">
+                    @((MarkupString)currentWords[0].GetHighlightedSentence())
+                </div>
                 @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
                 {
                     <div class="word-type-info">
@@ -103,16 +105,12 @@
                         <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
                     </div>
                 }
-                @if (DifficultyLevel == DifficultyLevel.Beginner && !string.IsNullOrEmpty(currentWords[0].ExampleSentence))
-                {
-                    <div class="example-sentence">
-                        <em>"@currentWords[0].ExampleSentence"</em>
-                    </div>
-                }
             </div>
 
             <div class="word-card @GetWordCardClass(currentWords[1])">
-                <div class="word-text @GetWordSizeClass(currentWords[1].Text)">@currentWords[1].Text</div>
+                <div class="word-sentence @GetWordSizeClass(currentWords[1].Text)">
+                    @((MarkupString)currentWords[1].GetHighlightedSentence())
+                </div>
                 @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
                 {
                     <div class="word-type-info">
@@ -134,12 +132,6 @@
                 {
                     <div class="word-type-info">
                         <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
-                    </div>
-                }
-                @if (DifficultyLevel == DifficultyLevel.Beginner && !string.IsNullOrEmpty(currentWords[1].ExampleSentence))
-                {
-                    <div class="example-sentence">
-                        <em>"@currentWords[1].ExampleSentence"</em>
                     </div>
                 }
             </div>
