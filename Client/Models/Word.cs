@@ -75,15 +75,15 @@ namespace BlazorApp.Client.Models
         {
             return wordType switch
             {
-                WordType.Noun => "A person, place, thing, or idea",
-                WordType.Verb => "An action or state of being",
-                WordType.Adjective => "Describes a noun",
-                WordType.Adverb => "Describes a verb, adjective, or other adverb",
-                WordType.Preposition => "Shows relationship between words",
-                WordType.Pronoun => "Replaces a noun",
-                WordType.Conjunction => "Connects words or phrases",
-                WordType.Interjection => "Expresses emotion or exclamation",
-                _ => "A word or part of speech"
+                WordType.Noun => "A person, place, thing, or idea (approximate)",
+                WordType.Verb => "An action or state of being (approximate)",
+                WordType.Adjective => "Describes a noun (approximate)",
+                WordType.Adverb => "Describes a verb, adjective, or other adverb (approximate)",
+                WordType.Preposition => "Shows relationship between words (approximate)",
+                WordType.Pronoun => "Replaces a noun (approximate)",
+                WordType.Conjunction => "Connects words or phrases (approximate)",
+                WordType.Interjection => "Expresses emotion or exclamation (approximate)",
+                _ => "A word or part of speech (approximate)"
             };
         }
     }
