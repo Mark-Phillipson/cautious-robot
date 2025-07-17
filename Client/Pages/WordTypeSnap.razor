@@ -15,7 +15,7 @@
         }
         else if (DifficultyLevel == DifficultyLevel.Intermediate)
         {
-            <p><small>📚 <strong>Intermediate Mode:</strong> Word type icons are shown to guide you.</small></p>
+            <p><small>📚 <strong>Intermediate Mode:</strong> Word type icons and labels are shown to guide you.</small></p>
         }
         else
         {
@@ -30,7 +30,7 @@
             {
                 <div class="word-type-info">
                     <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
-                    @if (DifficultyLevel == DifficultyLevel.Beginner)
+                    @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
                     {
                         <span class="word-type-label">@currentWords[0].Type.GetDisplayName()</span>
                     }
@@ -69,7 +69,7 @@
             {
                 <div class="word-type-info">
                     <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
-                    @if (DifficultyLevel == DifficultyLevel.Beginner)
+                    @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
                     {
                         <span class="word-type-label">@currentWords[1].Type.GetDisplayName()</span>
                     }
