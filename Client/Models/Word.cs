@@ -270,7 +270,11 @@ namespace BlazorApp.Client.Models
                 return WordType.Adjective;
             
             // Common verbs
-            if (word.EndsWith("ing") || word.EndsWith("ed") || word.EndsWith("s") && !word.EndsWith("ss"))
+            if (word.EndsWith("ing") || word.EndsWith("ed"))
+                return WordType.Verb;
+            
+            // Check for third-person singular verbs ending in 's' (but exclude common plural nouns)
+            if (word.EndsWith("s") && !word.EndsWith("ss") && !IsCommonPluralNoun(word))
                 return WordType.Verb;
             
             if (IsInList(word, "be", "is", "are", "was", "were", "been", "being", "have", "has", "had", "do", "does",
@@ -292,6 +296,25 @@ namespace BlazorApp.Client.Models
         private static bool IsInList(string word, params string[] wordList)
         {
             return wordList.Contains(word, StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Helper method to check if a word is a common plural noun that ends in 's'
+        /// This helps distinguish between plural nouns and third-person singular verbs
+        /// </summary>
+        /// <param name="word">The word to check</param>
+        /// <returns>True if the word is a common plural noun</returns>
+        private static bool IsCommonPluralNoun(string word)
+        {
+            // Common plural nouns that might be mistaken for verbs
+            return IsInList(word, "flowers", "books", "cars", "houses", "trees", "animals", "people", "children",
+                          "dogs", "cats", "birds", "shoes", "clothes", "games", "toys", "colors", "words", "letters",
+                          "numbers", "pictures", "stories", "friends", "family", "parents", "students", "teachers",
+                          "computers", "phones", "tables", "chairs", "windows", "doors", "keys", "glasses", "bags",
+                          "papers", "pencils", "pens", "minutes", "hours", "days", "weeks", "months", "years",
+                          "places", "countries", "cities", "streets", "roads", "buildings", "rooms", "bathrooms",
+                          "kitchens", "bedrooms", "gardens", "parks", "stores", "restaurants", "schools", "hospitals",
+                          "libraries", "museums", "theaters", "movies", "songs", "videos", "photos", "emails");
         }
     }
 }
