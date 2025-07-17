@@ -136,6 +136,7 @@
 
 @code {
     [Parameter] public EventCallback<int> OnScoreChanged { get; set; }
+    [Parameter] public EventCallback<int> OnStreakChanged { get; set; }
     [Parameter] public bool PlayAudio { get; set; } = true;
     [Parameter] public DifficultyLevel DifficultyLevel { get; set; } = DifficultyLevel.Intermediate;
 
@@ -342,8 +343,9 @@
         showResult = true;
         StateHasChanged();
 
-        // Notify parent component of score change
+        // Notify parent component of score and streak changes
         await OnScoreChanged.InvokeAsync(mainGameScore);
+        await OnStreakChanged.InvokeAsync(Streak);
 
         // Auto-continue after showing result
         await Task.Delay(2500);
@@ -351,7 +353,7 @@
         StateHasChanged();
     }
 
-    private void StartNewGame()
+    private async Task StartNewGame()
     {
         StopAutoChangeTimer(); // Clean up any existing timer
         mainGameScore = 0;
@@ -359,6 +361,10 @@
         showResult = false;
         showNewGameButton = false;
         LoadNewWords();
+        
+        // Notify parent component of score and streak reset
+        await OnScoreChanged.InvokeAsync(mainGameScore);
+        await OnStreakChanged.InvokeAsync(Streak);
     }
 
     private string GetWordCardClass(Word word)

@@ -2097,5 +2097,14 @@ Hint for '{word}':";
             StateHasChanged();
             return Task.CompletedTask;
         }
+
+        // Word Type Snap streak callback method
+        private Task OnWordTypeSnapStreakChanged(int newStreak)
+        {
+            // Update the main game streak with the Word Type Snap streak
+            streak = newStreak;
+            StateHasChanged();
+            return Task.CompletedTask;
+        }
     }
 }
