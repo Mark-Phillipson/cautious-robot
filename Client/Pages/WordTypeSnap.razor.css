@@ -604,7 +604,6 @@
 .word-type-label {
     font-size: 0.9rem;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #495057;
     margin-left: 5px;
