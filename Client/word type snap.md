@@ -27,3 +27,14 @@ Please draft:
 Use the same styling  as AI word tutor games and keep logic clear for later UI refinement. This is for an educational AI-based word learning game.
 
 it should be fun to play and  words should be beautiful and distinct to look at.
+
+ Level Integration
+
+Beginner:
+  Show both the icon, word type, and an example sentence using the word.
+
+Intermediate:
+  Show both the icon and word type.
+
+Advanced:
+  Show the icon only.

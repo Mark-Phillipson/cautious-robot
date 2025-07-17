@@ -315,7 +315,9 @@
                     else if (currentGameMode == GameMode.WordTypeSnap)
                     {
                         <div class="word-type-snap-section">
-                            <WordTypeSnap OnScoreChanged="OnWordTypeSnapScoreChanged" PlayAudio="@PlayAudio" />
+                            <WordTypeSnap OnScoreChanged="OnWordTypeSnapScoreChanged" 
+                                        PlayAudio="@PlayAudio" 
+                                        DifficultyLevel="@difficulty" />
                         </div>
                     }
             </div>

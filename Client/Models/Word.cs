@@ -7,13 +7,15 @@ namespace BlazorApp.Client.Models
     {
         public string Text { get; set; } = string.Empty;
         public WordType Type { get; set; }
+        public string ExampleSentence { get; set; } = string.Empty;
 
         public Word() { }
 
-        public Word(string text, WordType type)
+        public Word(string text, WordType type, string exampleSentence = "")
         {
             Text = text;
             Type = type;
+            ExampleSentence = exampleSentence;
         }
     }
 
