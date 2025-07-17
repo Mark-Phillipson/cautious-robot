@@ -86,7 +86,14 @@
                         <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
                         @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
                         {
-                            <span class="word-type-label">@currentWords[0].Type.GetDisplayName()</span>
+                            @if (DifficultyLevel == DifficultyLevel.Beginner)
+                            {
+                                <span class="word-type-label">@currentWords[0].Type.GetDisplayName() (@currentWords[0].Type.GetDefinition())</span>
+                            }
+                            else
+                            {
+                                <span class="word-type-label">@currentWords[0].Type.GetDisplayName()</span>
+                            }
                         }
                     </div>
                 }
@@ -112,7 +119,14 @@
                         <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
                         @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
                         {
-                            <span class="word-type-label">@currentWords[1].Type.GetDisplayName()</span>
+                            @if (DifficultyLevel == DifficultyLevel.Beginner)
+                            {
+                                <span class="word-type-label">@currentWords[1].Type.GetDisplayName() (@currentWords[1].Type.GetDefinition())</span>
+                            }
+                            else
+                            {
+                                <span class="word-type-label">@currentWords[1].Type.GetDisplayName()</span>
+                            }
                         }
                     </div>
                 }

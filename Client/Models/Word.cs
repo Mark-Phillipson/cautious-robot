@@ -70,5 +70,21 @@ namespace BlazorApp.Client.Models
                 _ => "📝"
             };
         }
+
+        public static string GetDefinition(this WordType wordType)
+        {
+            return wordType switch
+            {
+                WordType.Noun => "a person, place, thing, or idea",
+                WordType.Verb => "an action or state of being",
+                WordType.Adjective => "describes a noun",
+                WordType.Adverb => "describes a verb, adjective, or other adverb",
+                WordType.Preposition => "shows relationship between words",
+                WordType.Pronoun => "replaces a noun",
+                WordType.Conjunction => "connects words or phrases",
+                WordType.Interjection => "expresses emotion or exclamation",
+                _ => "a word or part of speech"
+            };
+        }
     }
 }
