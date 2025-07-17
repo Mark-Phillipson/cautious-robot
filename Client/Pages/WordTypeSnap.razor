@@ -7,39 +7,43 @@
 @inject IJSRuntime JSRuntime
 
 <div class="word-type-snap-container">
-    <div class="snap-game-header">
-        <h3>🎯 Word Type Snap</h3>
+    <div class="snap-game-header" style="cursor:pointer;user-select:none;" @onclick="ToggleInstructions">
+        <h3 style="display:inline-block; margin-right: 0.5rem;">🎯 Word Type Snap</h3>
+        <span class="collapse-caret" style="font-size:1.5rem; vertical-align:middle; transition: transform 0.2s; @(instructionsCollapsed ? "transform: rotate(180deg);" : "")">▼</span>
     </div>
 
-    <div class="snap-instructions">
-        <p>💡 Click <strong>SNAP!</strong> when both words are the same type, or <strong>NO MATCH</strong> when they're different types</p>
-        @if (DifficultyLevel == DifficultyLevel.Beginner)
-        {
-            <p><small>🎓 <strong>Beginner Mode:</strong> Word types and definitions are shown to help you learn! Look for the <strong>bold word</strong> in each sentence.</small></p>
-        }
-        else if (DifficultyLevel == DifficultyLevel.Intermediate)
-        {
-            <p><small>📚 <strong>Intermediate Mode:</strong> Word type icons and labels are shown to guide you. Look for the <strong>bold word</strong> in each sentence.</small></p>
-        }
-        else
-        {
-            <p><small>🏆 <strong>Advanced Mode:</strong> Only word type icons are shown - use your knowledge! Look for the <strong>bold word</strong> in each sentence.</small></p>
-        }
-        
-        @if (usingFallbackWordBank && !string.IsNullOrEmpty(Category) && !isFallbackAlertDismissed)
-        {
-            <div class="fallback-notice">
-                <div class="alert alert-warning d-flex align-items-center" role="alert">
-                    <span class="me-2">⚠️</span>
-                    <div class="flex-grow-1">
-                        <strong>Category Not Found:</strong> The category "<em>@Category</em>" isn't available yet, so we're using general words instead.
-                        <br><small>Available categories: clothing, food, animals, nature, sports, languages, military, air force, technology, science, school, music, travel, weather, family, health, transportation, business, hobbies, entertainment</small>
+    @if (!instructionsCollapsed)
+    {
+        <div class="snap-instructions">
+            <p>💡 Click <strong>SNAP!</strong> when both words are the same type, or <strong>NO MATCH</strong> when they're different types</p>
+            @if (DifficultyLevel == DifficultyLevel.Beginner)
+            {
+                <p><small>🎓 <strong>Beginner Mode:</strong> Word types and definitions are shown to help you learn! Look for the <strong>bold word</strong> in each sentence.</small></p>
+            }
+            else if (DifficultyLevel == DifficultyLevel.Intermediate)
+            {
+                <p><small>📚 <strong>Intermediate Mode:</strong> Word type icons and labels are shown to guide you. Look for the <strong>bold word</strong> in each sentence.</small></p>
+            }
+            else
+            {
+                <p><small>🏆 <strong>Advanced Mode:</strong> Only word type icons are shown - use your knowledge! Look for the <strong>bold word</strong> in each sentence.</small></p>
+            }
+            
+            @if (usingFallbackWordBank && !string.IsNullOrEmpty(Category) && !isFallbackAlertDismissed)
+            {
+                <div class="fallback-notice">
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <span class="me-2">⚠️</span>
+                        <div class="flex-grow-1">
+                            <strong>Category Not Found:</strong> The category "<em>@Category</em>" isn't available yet, so we're using general words instead.
+                            <br><small>Available categories: clothing, food, animals, nature, sports, languages, military, air force, technology, science, school, music, travel, weather, family, health, transportation, business, hobbies, entertainment</small>
+                        </div>
+                        <button type="button" class="btn-close ms-2" @onclick="DismissFallbackAlert" aria-label="Close alert"></button>
                     </div>
-                    <button type="button" class="btn-close ms-2" @onclick="DismissFallbackAlert" aria-label="Close alert"></button>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
 
     @if (isLoadingWords)
     {
@@ -239,6 +243,12 @@
 
 </div>
 @code {
+    private bool instructionsCollapsed = false;
+
+    private void ToggleInstructions()
+    {
+        instructionsCollapsed = !instructionsCollapsed;
+    }
     [Parameter] public EventCallback<int> OnScoreChanged { get; set; }
     [Parameter] public EventCallback<int> OnStreakChanged { get; set; }
     [Parameter] public bool PlayAudio { get; set; } = true;
