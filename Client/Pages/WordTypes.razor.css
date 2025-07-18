@@ -1,6 +1,6 @@
 .word-types-content {
     background: #fff;
-    color: #222;
+    color: #181818 !important;
     font-family: Arial, sans-serif;
     line-height: 1.6;
     padding: 2rem 2.5rem;
@@ -8,6 +8,15 @@
     margin: 2rem auto;
     border-radius: 18px;
     box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10), 0 1.5px 4px 0 rgba(0,0,0,0.08);
+}
+
+.word-types-content h1,
+.word-types-content h2,
+.word-types-content p,
+.word-types-content strong,
+.word-types-content em {
+    color: #181818 !important;
+}
 }
 
 .word-types-content h1 {
