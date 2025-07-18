@@ -209,6 +209,9 @@
                     </p>
                 }
             </div>
+            <div class="result-continue">
+                <button class="continue-button" @onclick="ContinueAfterResult">Continue</button>
+            </div>
         </div>
     }
 
@@ -252,6 +255,14 @@
     private bool isProcessing = false;
     private bool showNewGameButton = false;
     private int pointsEarned = 0;
+
+    private void ContinueAfterResult()
+    {
+        showResult = false;
+        showNewGameButton = false;
+        LoadNewWords();
+        StateHasChanged();
+    }
     private bool isLoadingWords = false;
     private string? loadingMessage = null;
     private bool usingFallbackWordBank = false; // Track if we're using fallback words
@@ -1375,10 +1386,7 @@
         await OnScoreChanged.InvokeAsync(mainGameScore);
         await OnStreakChanged.InvokeAsync(Streak);
 
-        // Auto-continue after showing result
-        await Task.Delay(2500);
-        LoadNewWords();
-        StateHasChanged();
+        // Do not auto-continue; wait for user to click Continue
     }
 
     private async Task StartNewGame()
