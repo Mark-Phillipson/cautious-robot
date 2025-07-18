@@ -83,7 +83,7 @@
     else
     {
         <div class="words-display">
-            <div class="word-card @GetWordCardClass(currentWords[0])">
+            <div class="word-card @GetWordCardClass(currentWords[0]) @(DifficultyLevel == DifficultyLevel.Advanced ? "advanced-mode" : "")">
                 <div class="word-sentence @GetWordSizeClass(currentWords[0].Text)">
                     @((MarkupString)currentWords[0].GetSentenceWithClickableWords())
                 </div>
@@ -91,28 +91,20 @@
                 {
                     <div class="word-type-info">
                         <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
-                        @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
+                        @if (DifficultyLevel == DifficultyLevel.Beginner)
                         {
-                            @if (DifficultyLevel == DifficultyLevel.Beginner)
-                            {
-                                <span class="word-type-label">@currentWords[0].Type.GetDisplayName() (@currentWords[0].Type.GetDefinition())</span>
-                            }
-                            else
-                            {
-                                <span class="word-type-label">@currentWords[0].Type.GetDisplayName()</span>
-                            }
+                            <span class="word-type-label">@currentWords[0].Type.GetDisplayName() (@currentWords[0].Type.GetDefinition())</span>
+                        }
+                        else
+                        {
+                            <span class="word-type-label">@currentWords[0].Type.GetDisplayName()</span>
                         }
                     </div>
                 }
-                else
-                {
-                    <div class="word-type-info">
-                        <span class="word-type-emoji">@currentWords[0].Type.GetEmoji()</span>
-                    </div>
-                }
+                <!-- Advanced: no icon, no label -->
             </div>
 
-            <div class="word-card @GetWordCardClass(currentWords[1])">
+            <div class="word-card @GetWordCardClass(currentWords[1]) @(DifficultyLevel == DifficultyLevel.Advanced ? "advanced-mode" : "")">
                 <div class="word-sentence @GetWordSizeClass(currentWords[1].Text)">
                     @((MarkupString)currentWords[1].GetSentenceWithClickableWords())
                 </div>
@@ -120,25 +112,17 @@
                 {
                     <div class="word-type-info">
                         <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
-                        @if (DifficultyLevel == DifficultyLevel.Beginner || DifficultyLevel == DifficultyLevel.Intermediate)
+                        @if (DifficultyLevel == DifficultyLevel.Beginner)
                         {
-                            @if (DifficultyLevel == DifficultyLevel.Beginner)
-                            {
-                                <span class="word-type-label">@currentWords[1].Type.GetDisplayName() (@currentWords[1].Type.GetDefinition())</span>
-                            }
-                            else
-                            {
-                                <span class="word-type-label">@currentWords[1].Type.GetDisplayName()</span>
-                            }
+                            <span class="word-type-label">@currentWords[1].Type.GetDisplayName() (@currentWords[1].Type.GetDefinition())</span>
+                        }
+                        else
+                        {
+                            <span class="word-type-label">@currentWords[1].Type.GetDisplayName()</span>
                         }
                     </div>
                 }
-                else
-                {
-                    <div class="word-type-info">
-                        <span class="word-type-emoji">@currentWords[1].Type.GetEmoji()</span>
-                    </div>
-                }
+                <!-- Advanced: no icon, no label -->
             </div>
         </div>
 

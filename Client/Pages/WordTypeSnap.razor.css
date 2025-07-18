@@ -1,3 +1,19 @@
+/* Advanced mode: hide icon/label and unify card color */
+.word-card.advanced-mode {
+    background: #f7f7f7 !important;
+    border-color: #bdbdbd !important;
+    --word-color-primary: #bdbdbd !important;
+    --word-color-secondary: #bdbdbd !important;
+    color: #222 !important;
+}
+.word-card.advanced-mode .word-type-info {
+    display: none !important;
+}
+.word-card.advanced-mode .word-sentence {
+    background: #f7f7f7 !important;
+    border-left: 3px solid #bdbdbd !important;
+    color: #222 !important;
+}
 .word-type-snap-container {
     max-width: 1200px !important;
     width: 100% !important;
