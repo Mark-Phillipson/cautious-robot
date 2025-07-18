@@ -226,7 +226,7 @@
 
 
 @* Play sound for snap results *@
-<BlazorApp.Client.Pages.PlaySound Play="@PlayAudio" AnswerState="@lastSnapCorrect" />
+<BlazorApp.Client.Pages.PlaySound Play="@ShouldPlaySound" AnswerState="@lastSnapCorrect" @key=resultKey />
 
 </div>
 @code {
@@ -245,6 +245,9 @@
 
     private List<Word> wordBank = new();
     private Word[] currentWords = new Word[2];
+
+    private bool ShouldPlaySound => showResult;
+    private int resultKey = 0;
     private Random random = new();
     private bool isInitialized = false;
     
@@ -1380,6 +1383,7 @@
         }
 
         showResult = true;
+        resultKey++;
         StateHasChanged();
 
         // Notify parent component of score and streak changes
