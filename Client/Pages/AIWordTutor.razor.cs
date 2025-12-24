@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using System.Text.Json;
 using System.Text;
+using System.Net.Http.Json;
 using BlazorApp.Client.Shared;
 
 namespace BlazorApp.Client.Pages
@@ -25,6 +26,7 @@ namespace BlazorApp.Client.Pages
         private int score = 0;
         private int streak = 0;
         private bool isLoading = false;
+        private const bool PictureGuessEnabled = false; // Feature flag to disable expensive image generation
         private string errorMessage = "";
 
         // Learning session data
@@ -86,6 +88,10 @@ namespace BlazorApp.Client.Pages
         private bool showPictureGuessToast = false;
         private string pictureGuessToastMessage = string.Empty;
         private Timer? pictureGuessToastTimer;
+        // Support using a curated, static set of images shipped in wwwroot/images/picture-game/
+        private const bool PictureGuessUseStaticAssets = true; // Set to true while we prepare curated assets
+        private Dictionary<string, PictureManifestEntry> pictureManifest = new(StringComparer.OrdinalIgnoreCase);
+
 
         private static readonly HashSet<string> PictureGuessBlockedWords = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -128,6 +134,12 @@ namespace BlazorApp.Client.Pages
             
             // Detect browser type
             await DetectBrowser();
+
+            // Load picture manifest if static assets are enabled
+            if (PictureGuessUseStaticAssets)
+            {
+                await LoadPictureManifestAsync();
+            }
         }
 
         private string GetRandomTheme()
@@ -177,6 +189,42 @@ namespace BlazorApp.Client.Pages
             }
         }
 
+        private async Task LoadPictureManifestAsync()
+        {
+            try
+            {
+                var manifest = await HttpClient.GetFromJsonAsync<PictureManifest>("/images/picture-game/manifest.json");
+                if (manifest?.Entries != null)
+                {
+                    foreach (var entry in manifest.Entries)
+                    {
+                        if (!string.IsNullOrWhiteSpace(entry.Word) && !string.IsNullOrWhiteSpace(entry.FileName))
+                        {
+                            pictureManifest[entry.Word.Trim().ToLowerInvariant()] = entry;
+                        }
+                    }
+                    Console.WriteLine($"Loaded picture manifest with {pictureManifest.Count} entries.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load picture manifest: {ex.Message}");
+            }
+        }
+
+        private class PictureManifest
+        {
+            public List<PictureManifestEntry> Entries { get; set; } = new();
+        }
+
+        private class PictureManifestEntry
+        {
+            public string Word { get; set; } = "";
+            public string FileName { get; set; } = "";
+            public string? License { get; set; }
+            public string? Source { get; set; }
+        }
+
         private async Task EnsureMobileDetection()
         {
             try
@@ -216,6 +264,14 @@ namespace BlazorApp.Client.Pages
             if (string.IsNullOrWhiteSpace(themeInput))
             {
                 errorMessage = "Please enter a theme to start the game.";
+                StateHasChanged();
+                return;
+            }
+
+            // Disable Picture Guess mode if the feature flag is off
+            if (mode == GameMode.PictureGuess && !PictureGuessEnabled)
+            {
+                errorMessage = "Picture Guess is currently disabled.";
                 StateHasChanged();
                 return;
             }
@@ -324,6 +380,31 @@ namespace BlazorApp.Client.Pages
 
             // Best-effort focus immediately so the user can type while the image loads.
             await FocusPictureGuessInputAsync();
+
+            if (PictureGuessUseStaticAssets)
+            {
+                // Try to pick a word that has a static image in the manifest.
+                for (var attempt = 0; attempt < 5; attempt++)
+                {
+                    var word = await GetPictureGuessWordFromAIAsync();
+                    pictureGuessTargetWord = word;
+                    if (!string.IsNullOrWhiteSpace(pictureGuessTargetWord))
+                    {
+                        pictureGuessUsedWords.Add(pictureGuessTargetWord);
+                    }
+
+                    if (pictureManifest.TryGetValue(pictureGuessTargetWord.Trim().ToLowerInvariant(), out var entry))
+                    {
+                        pictureGuessImageDataUrl = $"/images/picture-game/{entry.FileName}";
+                        pictureGuessHint = await GetPictureGuessHintAsync(pictureGuessTargetWord);
+                        await FocusPictureGuessInputAsync();
+                        return;
+                    }
+                }
+
+                pictureGuessStatusMessage = "No static image found for generated words. Try a different theme.";
+                return;
+            }
 
             for (var attempt = 0; attempt < 3; attempt++)
             {

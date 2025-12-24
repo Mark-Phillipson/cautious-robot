@@ -65,10 +65,13 @@
                             <small>Match words by their grammatical type!</small>
                         </button>
 
-                        <button @onclick="() => StartGame(GameMode.PictureGuess)" class="mode-button">
-                            🖼️ Picture Guess
-                            <small>Guess the word from an AI picture</small>
-                        </button>
+                        @if (PictureGuessEnabled)
+                        {
+                            <button @onclick="() => StartGame(GameMode.PictureGuess)" class="mode-button">
+                                🖼️ Picture Guess
+                                <small>Guess the word from an AI picture</small>
+                            </button>
+                        }
                     </div>
                 </div>
 
@@ -223,7 +226,7 @@
                             </div>
                         </div>
                     }
-                    else if (currentGameMode == GameMode.PictureGuess)
+                    else if (currentGameMode == GameMode.PictureGuess && PictureGuessEnabled)
                     {
                         <div class="picture-guess-section">
                             @if (showPictureGuessToast)
@@ -271,6 +274,13 @@
                                     <strong>Hint:</strong> @pictureGuessHint
                                 </div>
                             }
+                        </div>
+                    }
+                    else if (currentGameMode == GameMode.PictureGuess && !PictureGuessEnabled)
+                    {
+                        <div class="disabled-section">
+                            <h3>🖼️ Picture Guess (disabled)</h3>
+                            <p>This feature is temporarily disabled due to cost and performance concerns. Please try another mode.</p>
                         </div>
                     }
                     else if (currentGameMode == GameMode.ContextualLearning)
