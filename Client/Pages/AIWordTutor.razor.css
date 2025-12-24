@@ -195,6 +195,72 @@
     border-color: #667eea;
 }
 
+/* Picture Guess */
+.picture-guess-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.picture-guess-image {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    border-radius: 12px;
+    border: 2px solid #dee2e6;
+    background: #f8f9fa;
+}
+
+.picture-guess-placeholder {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+    background: #f8f9fa;
+    padding: 18px;
+    color: #666;
+    text-align: center;
+}
+
+.picture-guess-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.picture-guess-input {
+    min-width: 240px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 2px solid #dee2e6;
+    background: #fff;
+    font-size: 1rem;
+}
+
+.picture-guess-submit {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.picture-guess-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.picture-guess-status {
+    text-align: center;
+    color: #333;
+    font-weight: 600;
+}
+
 .error-message {
     background: #ffebee;
     color: #c62828;

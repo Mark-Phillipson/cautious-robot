@@ -7,11 +7,13 @@ namespace BlazorApp.Client.Shared
     public interface IOpenAIService
     {
         Task<string> GenerateContentAsync(string prompt, string systemMessage = "You are a helpful English language tutor.");
+        Task<OpenAIImageResult> GenerateImageAsync(string prompt, string size = "256x256");
     }    public class OpenAIService : IOpenAIService
     {
         private readonly HttpClient _httpClient;
         private readonly IOpenAIApiKeyService _apiKeyService;
         private const string OpenAIBaseUrl = "https://api.openai.com/v1/chat/completions";
+        private const string OpenAIImagesUrl = "https://api.openai.com/v1/images/generations";
 
         public OpenAIService(HttpClient httpClient, IOpenAIApiKeyService apiKeyService)
         {
@@ -73,6 +75,63 @@ namespace BlazorApp.Client.Shared
                 return "Sorry, there was an error generating AI content. Please try again.";
             }
         }
+
+        public async Task<OpenAIImageResult> GenerateImageAsync(string prompt, string size = "256x256")
+        {
+            try
+            {
+                var apiKey = await _apiKeyService.GetApiKeyAsync();
+                if (string.IsNullOrWhiteSpace(apiKey))
+                {
+                    return OpenAIImageResult.Fail("Please set your OpenAI API key first to use AI-generated content.");
+                }
+
+                // Keep defaults conservative and inexpensive.
+                var request = new OpenAIImageRequest
+                {
+                    Model = "gpt-image-1",
+                    Prompt = prompt,
+                    Size = size,
+                    ResponseFormat = "b64_json"
+                };
+
+                var json = JsonSerializer.Serialize(request, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                });
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, OpenAIImagesUrl);
+                httpRequest.Headers.Add("Authorization", $"Bearer {apiKey}");
+                httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.SendAsync(httpRequest);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"OpenAI Image API Error: {response.StatusCode} - {errorContent}");
+                    return OpenAIImageResult.Fail("Sorry, there was an error generating the image. Please check your API key and try again.");
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var openAIResponse = JsonSerializer.Deserialize<OpenAIImageResponse>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                });
+
+                var b64 = openAIResponse?.Data?.FirstOrDefault()?.B64Json;
+                if (string.IsNullOrWhiteSpace(b64))
+                {
+                    return OpenAIImageResult.Fail("No image was returned by the AI service.");
+                }
+
+                return OpenAIImageResult.Ok($"data:image/png;base64,{b64}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calling OpenAI Image API: {ex.Message}");
+                return OpenAIImageResult.Fail("Sorry, there was an error generating the image. Please try again.");
+            }
+        }
     }
 
     // OpenAI API Models
@@ -110,5 +169,42 @@ namespace BlazorApp.Client.Shared
     {
         [JsonPropertyName("message")]
         public OpenAIMessage? Message { get; set; }
+    }
+
+    public sealed class OpenAIImageResult
+    {
+        public string? DataUrl { get; init; }
+        public string? Error { get; init; }
+        public bool Success => !string.IsNullOrWhiteSpace(DataUrl) && string.IsNullOrWhiteSpace(Error);
+
+        public static OpenAIImageResult Ok(string dataUrl) => new() { DataUrl = dataUrl };
+        public static OpenAIImageResult Fail(string error) => new() { Error = error };
+    }
+
+    public class OpenAIImageRequest
+    {
+        [JsonPropertyName("model")]
+        public string Model { get; set; } = "gpt-image-1";
+
+        [JsonPropertyName("prompt")]
+        public string Prompt { get; set; } = string.Empty;
+
+        [JsonPropertyName("size")]
+        public string Size { get; set; } = "256x256";
+
+        [JsonPropertyName("response_format")]
+        public string ResponseFormat { get; set; } = "b64_json";
+    }
+
+    public class OpenAIImageResponse
+    {
+        [JsonPropertyName("data")]
+        public OpenAIImageData[]? Data { get; set; }
+    }
+
+    public class OpenAIImageData
+    {
+        [JsonPropertyName("b64_json")]
+        public string? B64Json { get; set; }
     }
 }

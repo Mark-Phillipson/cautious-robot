@@ -64,6 +64,11 @@
                             ⚡ Word Type Snap
                             <small>Match words by their grammatical type!</small>
                         </button>
+
+                        <button @onclick="() => StartGame(GameMode.PictureGuess)" class="mode-button">
+                            🖼️ Picture Guess
+                            <small>Guess the word from an AI picture</small>
+                        </button>
                     </div>
                 </div>
 
@@ -72,15 +77,15 @@
                     <div class="difficulty-buttons">
                         <button @onclick="() => SetDifficulty(DifficultyLevel.Beginner)" 
                                 class="difficulty-btn @(difficulty == DifficultyLevel.Beginner ? "active" : "")">
-                            🌱 Beginner
+                            🙂 Easy
                         </button>
                         <button @onclick="() => SetDifficulty(DifficultyLevel.Intermediate)" 
                                 class="difficulty-btn @(difficulty == DifficultyLevel.Intermediate ? "active" : "")">
-                            🌿 Intermediate
+                            😅 Medium
                         </button>
                         <button @onclick="() => SetDifficulty(DifficultyLevel.Advanced)" 
                                 class="difficulty-btn @(difficulty == DifficultyLevel.Advanced ? "active" : "")">
-                            🌳 Advanced
+                            😈 Difficult
                         </button>
                     </div>
                 </div>
@@ -216,6 +221,43 @@
                                        placeholder="Type your response..." class="chat-input" />
                                 <button @onclick="SendMessage" class="send-btn">Send</button>
                             </div>
+                        </div>
+                    }
+                    else if (currentGameMode == GameMode.PictureGuess)
+                    {
+                        <div class="picture-guess-section">
+                            <h3>🖼️ Guess the word</h3>
+
+                            <div class="hangman-info">
+                                <div class="hangman-card theme-display">
+                                    <h4>Theme</h4>
+                                    <p>@themeInput</p>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(pictureGuessImageDataUrl))
+                            {
+                                <img class="picture-guess-image" src="@pictureGuessImageDataUrl" alt="AI generated picture" />
+                            }
+                            else
+                            {
+                                <div class="picture-guess-placeholder">
+                                    @(string.IsNullOrWhiteSpace(pictureGuessStatusMessage) ? "Generating picture..." : pictureGuessStatusMessage)
+                                </div>
+                            }
+
+                            <div class="picture-guess-input-row">
+                                <input class="picture-guess-input" type="text"
+                                       @bind="pictureGuessUserGuess" @bind:event="oninput"
+                                       @onkeypress="HandlePictureGuessKeyPress"
+                                       placeholder="Type your guess..." />
+                                <button class="picture-guess-submit" @onclick="SubmitPictureGuessAsync" disabled="@(isLoading)">Guess</button>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(pictureGuessStatusMessage))
+                            {
+                                <div class="picture-guess-status">@pictureGuessStatusMessage</div>
+                            }
                         </div>
                     }
                     else if (currentGameMode == GameMode.ContextualLearning)

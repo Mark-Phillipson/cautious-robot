@@ -71,6 +71,12 @@ namespace BlazorApp.Client.Pages
         private bool isMobileDevice = false;
 
         private string? themeInput = string.Empty;
+
+        // Picture guess mode state
+        private string? pictureGuessImageDataUrl;
+        private string pictureGuessTargetWord = string.Empty;
+        private string pictureGuessUserGuess = string.Empty;
+        private string pictureGuessStatusMessage = string.Empty;
         private static readonly string[] DefaultThemes = new[]
         {
             "Nature", "Travel", "Food", "Technology", "Sports", "Music", "Friendship", "Adventure", "School", "Weather",
@@ -265,6 +271,9 @@ namespace BlazorApp.Client.Pages
                     case GameMode.PersonalizedQuiz:
                         await GeneratePersonalizedQuiz(wordsToUse);
                         break;
+                    case GameMode.PictureGuess:
+                        await StartNewPictureGuessRoundAsync();
+                        break;
                 }
             }
             catch (Exception ex)
@@ -277,6 +286,138 @@ namespace BlazorApp.Client.Pages
                 isLoading = false;
                 StateHasChanged();
             }
+        }
+
+        private async Task StartNewPictureGuessRoundAsync()
+        {
+            pictureGuessStatusMessage = string.Empty;
+            pictureGuessUserGuess = string.Empty;
+            pictureGuessImageDataUrl = null;
+            pictureGuessTargetWord = string.Empty;
+
+            var word = await GetPictureGuessWordFromAIAsync();
+            pictureGuessTargetWord = word;
+
+            var imagePrompt = BuildPictureGuessImagePrompt(word);
+            var imageResult = await OpenAIService.GenerateImageAsync(imagePrompt, size: "256x256");
+            if (!imageResult.Success)
+            {
+                pictureGuessStatusMessage = imageResult.Error ?? "Failed to generate image.";
+                return;
+            }
+
+            pictureGuessImageDataUrl = imageResult.DataUrl;
+            await FocusPictureGuessInputAsync();
+        }
+
+        private async Task SubmitPictureGuessAsync()
+        {
+            if (isLoading) return;
+            if (string.IsNullOrWhiteSpace(pictureGuessUserGuess)) return;
+            if (string.IsNullOrWhiteSpace(pictureGuessTargetWord)) return;
+
+            var guess = NormalizeGuess(pictureGuessUserGuess);
+            var target = NormalizeGuess(pictureGuessTargetWord);
+
+            if (string.Equals(guess, target, StringComparison.OrdinalIgnoreCase))
+            {
+                lastAnswerCorrect = true;
+                streak++;
+                score += 10;
+                pictureGuessStatusMessage = "✅ Correct! Generating a new picture...";
+                isLoading = true;
+                StateHasChanged();
+                try
+                {
+                    await StartNewPictureGuessRoundAsync();
+                }
+                finally
+                {
+                    isLoading = false;
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                lastAnswerCorrect = false;
+                streak = 0;
+                pictureGuessStatusMessage = "❌ Wrong guess. Try again.";
+                await FocusPictureGuessInputAsync();
+            }
+        }
+
+        private async Task HandlePictureGuessKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter")
+            {
+                await SubmitPictureGuessAsync();
+            }
+        }
+
+        private async Task FocusPictureGuessInputAsync()
+        {
+            try
+            {
+                // Delay to ensure the element is rendered.
+                await Task.Delay(50);
+                await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.picture-guess-input')?.focus()");
+            }
+            catch
+            {
+                // No-op; focus is best-effort.
+            }
+        }
+
+        private string NormalizeGuess(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            var lettersOnly = new string(value.Trim().Where(char.IsLetter).ToArray());
+            return lettersOnly.ToLowerInvariant();
+        }
+
+        private string BuildPictureGuessImagePrompt(string targetWord)
+        {
+            var theme = themeInput!.Trim();
+            var difficultyLabel = GetDifficultyName(difficulty);
+
+            // Intentionally low-quality image request; also forbid text to avoid giving away the answer.
+            return $@"Create a deliberately low-quality, low-resolution, blurry, grainy image that clearly shows a single '{targetWord}'.\n\nConstraints:\n- No text, letters, captions, watermarks, or logos\n- One main object only; centered and easy to see\n- Plain background\n- Looks like a cheap camera / low quality screenshot\n\nTheme context: {theme}\nDifficulty: {difficultyLabel}";
+        }
+
+        private async Task<string> GetPictureGuessWordFromAIAsync()
+        {
+            var theme = themeInput!.Trim();
+
+            // Use the UI-facing labels (Easy/Medium/Difficult) for clarity.
+            var difficultyLabel = GetDifficultyName(difficulty);
+            var lengthRule = difficulty switch
+            {
+                DifficultyLevel.Beginner => "3-6 letters",
+                DifficultyLevel.Intermediate => "6-9 letters",
+                DifficultyLevel.Advanced => "8-12 letters",
+                _ => "3-9 letters"
+            };
+
+            var prompt = $@"Pick 1 single-word English NOUN the student can guess from a picture.\n\nRequirements:\n- Must be a concrete, drawable object (not abstract)\n- Must be relevant to the theme '{theme}'\n- Must be exactly one word (no spaces, hyphens, or punctuation)\n- Must be singular\n- Length: {lengthRule}\n\nReturn ONLY the word.";
+
+            var systemMessage = "Return ONLY the noun as a single word. No extra text.";
+
+            var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
+            var cleaned = CleanWord(aiResponse.Trim());
+            if (string.IsNullOrWhiteSpace(cleaned) || cleaned.Length < 3)
+            {
+                // Fallback to general theme words and pick the most concrete-looking option.
+                var fallback = GetFallbackWords(theme, 5).FirstOrDefault() ?? "Chair";
+                return CleanWord(fallback);
+            }
+
+            // Ensure we keep it as a single word.
+            if (cleaned.Contains(' '))
+            {
+                cleaned = CleanWord(cleaned.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? cleaned);
+            }
+
+            return cleaned;
         }
 
         private async Task<List<string>> GetWordsFromAI(int count)
@@ -958,15 +1099,16 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                 GameMode.PersonalizedQuiz => "🧠 Personalized Quiz",
                 GameMode.Hangman => "🎪 Hangman",
                 GameMode.WordTypeSnap => "⚡ Word Type Snap",
+                GameMode.PictureGuess => "🖼️ Picture Guess",
                 _ => "Learning Mode"
             };
         }        private string GetDifficultyName(DifficultyLevel level)
         {
             return level switch
             {
-                DifficultyLevel.Beginner => "Beginner",
-                DifficultyLevel.Intermediate => "Intermediate", 
-                DifficultyLevel.Advanced => "Advanced",
+                DifficultyLevel.Beginner => "Easy",
+                DifficultyLevel.Intermediate => "Medium",
+                DifficultyLevel.Advanced => "Difficult",
                 _ => "Unknown"
             };        }        private Task ExitGame()
         {
@@ -990,6 +1132,12 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
             hangmanGameOver = false;
             hangmanWin = false;
             hangmanWord = string.Empty;
+
+            pictureGuessImageDataUrl = null;
+            pictureGuessTargetWord = string.Empty;
+            pictureGuessUserGuess = string.Empty;
+            pictureGuessStatusMessage = string.Empty;
+
             StateHasChanged();
             return Task.CompletedTask;
         }        private async Task HandleKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
@@ -1051,6 +1199,9 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                                 await GenerateNewConversationTopic();
                             }
                             // else: continue current conversation - no action needed
+                            break;
+                        case GameMode.PictureGuess:
+                            await StartNewPictureGuessRoundAsync();
                             break;
                     }
                     currentChallengeIndex = 0;
