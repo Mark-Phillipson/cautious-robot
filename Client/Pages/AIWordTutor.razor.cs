@@ -268,13 +268,7 @@ namespace BlazorApp.Client.Pages
                 return;
             }
 
-            // Disable Picture Guess mode if the feature flag is off
-            if (mode == GameMode.PictureGuess && !PictureGuessEnabled)
-            {
-                errorMessage = "Picture Guess is currently disabled.";
-                StateHasChanged();
-                return;
-            }
+
 
             currentGameMode = mode;
             gameStarted = true;
@@ -352,9 +346,7 @@ namespace BlazorApp.Client.Pages
                     case GameMode.PersonalizedQuiz:
                         await GeneratePersonalizedQuiz(wordsToUse);
                         break;
-                    case GameMode.PictureGuess:
-                        await StartNewPictureGuessRoundAsync();
-                        break;
+
                 }
             }
             catch (Exception ex)
@@ -369,268 +361,6 @@ namespace BlazorApp.Client.Pages
             }
         }
 
-        private async Task StartNewPictureGuessRoundAsync()
-        {
-            pictureGuessStatusMessage = string.Empty;
-            pictureGuessUserGuess = string.Empty;
-            pictureGuessImageDataUrl = null;
-            pictureGuessTargetWord = string.Empty;
-            pictureGuessHint = string.Empty;
-            pictureGuessWrongGuesses = 0;
-
-            // Best-effort focus immediately so the user can type while the image loads.
-            await FocusPictureGuessInputAsync();
-
-            if (PictureGuessUseStaticAssets)
-            {
-                // Try to pick a word that has a static image in the manifest.
-                for (var attempt = 0; attempt < 5; attempt++)
-                {
-                    var word = await GetPictureGuessWordFromAIAsync();
-                    pictureGuessTargetWord = word;
-                    if (!string.IsNullOrWhiteSpace(pictureGuessTargetWord))
-                    {
-                        pictureGuessUsedWords.Add(pictureGuessTargetWord);
-                    }
-
-                    if (pictureManifest.TryGetValue(pictureGuessTargetWord.Trim().ToLowerInvariant(), out var entry))
-                    {
-                        pictureGuessImageDataUrl = $"/images/picture-game/{entry.FileName}";
-                        pictureGuessHint = await GetPictureGuessHintAsync(pictureGuessTargetWord);
-                        await FocusPictureGuessInputAsync();
-                        return;
-                    }
-                }
-
-                pictureGuessStatusMessage = "No static image found for generated words. Try a different theme.";
-                return;
-            }
-
-            for (var attempt = 0; attempt < 3; attempt++)
-            {
-                var word = await GetPictureGuessWordFromAIAsync();
-                pictureGuessTargetWord = word;
-                if (!string.IsNullOrWhiteSpace(pictureGuessTargetWord))
-                {
-                    pictureGuessUsedWords.Add(pictureGuessTargetWord);
-                }
-
-                pictureGuessHint = await GetPictureGuessHintAsync(pictureGuessTargetWord);
-
-                var imagePrompt = BuildPictureGuessImagePrompt(word);
-                var imageResult = await OpenAIService.GenerateImageAsync(imagePrompt, size: "1024x1024");
-                if (imageResult.Success)
-                {
-                    pictureGuessImageDataUrl = imageResult.DataUrl;
-                    await FocusPictureGuessInputAsync();
-                    return;
-                }
-
-                var err = imageResult.Error ?? "Failed to generate image.";
-                var isSafetyRejection = err.Contains("rejected by the safety system", StringComparison.OrdinalIgnoreCase)
-                    || err.Contains("safety_violations", StringComparison.OrdinalIgnoreCase);
-
-                if (!isSafetyRejection)
-                {
-                    pictureGuessStatusMessage = err;
-                    return;
-                }
-
-                pictureGuessStatusMessage = "Image blocked by safety filters. Trying a different word...";
-                StateHasChanged();
-            }
-
-            pictureGuessStatusMessage = "Image generation failed after multiple attempts. Please try again.";
-        }
-
-        private async Task SubmitPictureGuessAsync()
-        {
-            if (isLoading) return;
-            if (string.IsNullOrWhiteSpace(pictureGuessUserGuess)) return;
-            if (string.IsNullOrWhiteSpace(pictureGuessTargetWord)) return;
-
-            var guess = NormalizeGuess(pictureGuessUserGuess);
-            var target = NormalizeGuess(pictureGuessTargetWord);
-
-            if (string.Equals(guess, target, StringComparison.OrdinalIgnoreCase))
-            {
-                lastAnswerCorrect = true;
-                streak++;
-                score += 10;
-
-                ShowPictureGuessToast($"✅ Correct! The word was '{pictureGuessTargetWord}'.");
-
-                pictureGuessStatusMessage = "✅ Correct! Generating a new picture...";
-                isLoading = true;
-                StateHasChanged();
-                try
-                {
-                    await StartNewPictureGuessRoundAsync();
-                }
-                finally
-                {
-                    isLoading = false;
-                    StateHasChanged();
-                }
-            }
-            else
-            {
-                lastAnswerCorrect = false;
-                streak = 0;
-                pictureGuessWrongGuesses++;
-                pictureGuessStatusMessage = pictureGuessWrongGuesses > 0 && !string.IsNullOrWhiteSpace(pictureGuessHint)
-                    ? "❌ Wrong guess. Try again (hint below)."
-                    : "❌ Wrong guess. Try again.";
-                await FocusPictureGuessInputAsync();
-            }
-        }
-
-        private void ShowPictureGuessToast(string message)
-        {
-            pictureGuessToastMessage = message;
-            showPictureGuessToast = true;
-            pictureGuessToastTimer?.Dispose();
-            pictureGuessToastTimer = new Timer(async _ =>
-            {
-                try
-                {
-                    await InvokeAsync(() =>
-                    {
-                        showPictureGuessToast = false;
-                        StateHasChanged();
-                    });
-                }
-                catch
-                {
-                    // Ignore; component may be disposed.
-                }
-            }, null, TimeSpan.FromSeconds(5), Timeout.InfiniteTimeSpan);
-        }
-
-        private async Task HandlePictureGuessKeyPress(KeyboardEventArgs e)
-        {
-            if (e.Key == "Enter")
-            {
-                await SubmitPictureGuessAsync();
-            }
-        }
-
-        private async Task FocusPictureGuessInputAsync()
-        {
-            try
-            {
-                // Delay to ensure the element is rendered.
-                await Task.Delay(50);
-                await pictureGuessInputElement.FocusAsync();
-            }
-            catch
-            {
-                // Fallback for cases where ElementReference is not available yet.
-                try
-                {
-                    await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.picture-guess-input')?.focus()");
-                }
-                catch
-                {
-                    // No-op; focus is best-effort.
-                }
-            }
-        }
-
-        private string NormalizeGuess(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
-            var lettersOnly = new string(value.Trim().Where(char.IsLetter).ToArray());
-            return lettersOnly.ToLowerInvariant();
-        }
-
-        private string BuildPictureGuessImagePrompt(string targetWord)
-        {
-            var theme = themeInput!.Trim();
-            var difficultyLabel = GetDifficultyName(difficulty);
-
-            // Intentionally low-quality image request; also forbid text to avoid giving away the answer.
-            return $@"Create a deliberately low-quality, low-resolution, blurry, grainy image that represents the single word '{targetWord}'.\n\nConstraints:\n- No text, letters, captions, watermarks, or logos\n- One main subject only; centered and easy to see\n- Plain background\n- Looks like a cheap camera / low quality screenshot\n- If the word is abstract, depict a simple everyday scene that clearly represents it\n\nSafety:\n- Safe for all ages\n- No nudity or sexual content\n- No violence, weapons, gore, or self-harm\n\nTheme context: {theme}\nDifficulty: {difficultyLabel}";
-        }
-
-        private async Task<string> GetPictureGuessWordFromAIAsync()
-        {
-            var theme = themeInput!.Trim();
-
-            // Add a time-based seed to encourage randomness across rounds.
-            var randomSeed = DateTime.UtcNow.Ticks % 100000;
-
-            // Use the UI-facing labels (Easy/Medium/Difficult) for clarity.
-            var difficultyLabel = GetDifficultyName(difficulty);
-            var lengthRule = difficulty switch
-            {
-                DifficultyLevel.Beginner => "3-6 letters",
-                DifficultyLevel.Intermediate => "6-9 letters",
-                DifficultyLevel.Advanced => "8-12 letters",
-                _ => "3-9 letters"
-            };
-
-            var usedWordsText = pictureGuessUsedWords.Count == 0
-                ? "(none)"
-                : string.Join(", ", pictureGuessUsedWords.TakeLast(50));
-
-            const int candidateCount = 12;
-            var prompt = $@"Generate exactly {candidateCount} single English words the student can guess from a picture.\n\nWord types:\n- Include a mix of nouns, verbs, and adjectives (varied across rounds)\n- Each word must be visually depictable (object/action/state); avoid purely abstract concepts\n\nSafety requirements:\n- Safe for all ages\n- Avoid sexual/adult terms, violence, weapons, gore, self-harm\n\nOther requirements:\n- Relevant to theme: '{theme}'\n- Exactly one word each (letters only; no spaces/hyphens/punctuation/numbers)\n- Common enough to guess\n- Length guideline: {lengthRule}\n- Must NOT include any of these words (already used this session): {usedWordsText}\n\nRandom seed: {randomSeed}\n\nReturn ONLY a comma-separated list like: word1, word2, word3";
-
-            var systemMessage = "Return ONLY a comma-separated list of single English words. No extra text.";
-
-            for (var attempt = 0; attempt < 5; attempt++)
-            {
-                var aiResponse = await OpenAIService.GenerateContentAsync(prompt, systemMessage);
-                var candidates = ParsePictureGuessCandidates(aiResponse)
-                    .Where(w => !pictureGuessUsedWords.Contains(w))
-                    .Where(IsPictureGuessAllowedWord)
-                    .ToList();
-
-                if (candidates.Count > 0)
-                {
-                    return candidates[_random.Next(candidates.Count)];
-                }
-
-                randomSeed = (randomSeed + _random.Next(1, 9999)) % 100000;
-                usedWordsText = pictureGuessUsedWords.Count == 0
-                    ? "(none)"
-                    : string.Join(", ", pictureGuessUsedWords.TakeLast(75));
-
-                prompt = $@"Generate exactly {candidateCount} single English words the student can guess from a picture.\n\nWord types:\n- Include a mix of nouns, verbs, and adjectives (varied across rounds)\n- Each word must be visually depictable (object/action/state); avoid purely abstract concepts\n\nSafety requirements:\n- Safe for all ages\n- Avoid sexual/adult terms, violence, weapons, gore, self-harm\n\nOther requirements:\n- Relevant to theme: '{theme}'\n- Exactly one word each (letters only; no spaces/hyphens/punctuation/numbers)\n- Common enough to guess\n- Length guideline: {lengthRule}\n- Must NOT include any of these words (already used this session): {usedWordsText}\n\nRandom seed: {randomSeed}\n\nReturn ONLY a comma-separated list like: word1, word2, word3";
-            }
-
-            var fallbacks = GetFallbackWords(theme, 15)
-                .Select(CleanWord)
-                .Where(w => !string.IsNullOrWhiteSpace(w) && w.Length >= 3 && !pictureGuessUsedWords.Contains(w))
-                .Where(IsPictureGuessAllowedWord)
-                .ToList();
-
-            return fallbacks.FirstOrDefault() ?? "Example";
-        }
-
-        private List<string> ParsePictureGuessCandidates(string aiResponse)
-        {
-            if (string.IsNullOrWhiteSpace(aiResponse)) return new List<string>();
-
-            // Prefer comma-separated lists.
-            var commaSplit = aiResponse.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-            var words = commaSplit
-                .Select(w => CleanWord(w.Trim()))
-                .Where(w => !string.IsNullOrWhiteSpace(w) && w.All(char.IsLetter) && w.Length >= 3)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            if (words.Count > 0) return words;
-
-            // Fallback to whitespace/newline splitting.
-            var whitespaceSplit = aiResponse.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            return whitespaceSplit
-                .Select(w => CleanWord(w.Trim()))
-                .Where(w => !string.IsNullOrWhiteSpace(w) && w.All(char.IsLetter) && w.Length >= 3)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-        }
 
         private async Task<string> GetPictureGuessHintAsync(string targetWord)
         {
@@ -1329,8 +1059,6 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                 GameMode.ContextualLearning => "🎯 Contextual Learning",
                 GameMode.PersonalizedQuiz => "🧠 Personalized Quiz",
                 GameMode.Hangman => "🎪 Hangman",
-                GameMode.WordTypeSnap => "⚡ Word Type Snap",
-                GameMode.PictureGuess => "🖼️ Picture Guess",
                 _ => "Learning Mode"
             };
         }        private string GetDifficultyName(DifficultyLevel level)
@@ -1431,9 +1159,7 @@ private async Task<string> GetSimpleDefinitionAsync(string word)
                             }
                             // else: continue current conversation - no action needed
                             break;
-                        case GameMode.PictureGuess:
-                            await StartNewPictureGuessRoundAsync();
-                            break;
+
                     }
                     currentChallengeIndex = 0;
                 }
