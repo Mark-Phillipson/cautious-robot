@@ -65,13 +65,8 @@
                             <small>Match words by their grammatical type!</small>
                         </button>
 
-                        @if (PictureGuessEnabled)
-                        {
-                            <button @onclick="() => StartGame(GameMode.PictureGuess)" class="mode-button">
-                                🖼️ Picture Guess
-                                <small>Guess the word from an AI picture</small>
-                            </button>
-                        }
+
+
                     </div>
                 </div>
 
@@ -88,7 +83,7 @@
                         </button>
                         <button @onclick="() => SetDifficulty(DifficultyLevel.Advanced)" 
                                 class="difficulty-btn @(difficulty == DifficultyLevel.Advanced ? "active" : "")">
-                            😈 Difficult
+                            😈 Advanced
                         </button>
                     </div>
                 </div>
@@ -226,63 +221,8 @@
                             </div>
                         </div>
                     }
-                    else if (currentGameMode == GameMode.PictureGuess && PictureGuessEnabled)
-                    {
-                        <div class="picture-guess-section">
-                            @if (showPictureGuessToast)
-                            {
-                                <div class="picture-guess-toast">@pictureGuessToastMessage</div>
-                            }
 
-                            <h3>🖼️ Guess the word</h3>
 
-                            <div class="hangman-info">
-                                <div class="hangman-card theme-display">
-                                    <h4>Theme</h4>
-                                    <p>@themeInput</p>
-                                </div>
-                            </div>
-
-                            @if (!string.IsNullOrWhiteSpace(pictureGuessImageDataUrl))
-                            {
-                                <img class="picture-guess-image" src="@pictureGuessImageDataUrl" alt="AI generated picture" />
-                            }
-                            else
-                            {
-                                <div class="picture-guess-placeholder">
-                                    @(string.IsNullOrWhiteSpace(pictureGuessStatusMessage) ? "Generating picture..." : pictureGuessStatusMessage)
-                                </div>
-                            }
-
-                            <div class="picture-guess-input-row">
-                                <input class="picture-guess-input" type="text"
-                                       @bind="pictureGuessUserGuess" @bind:event="oninput"
-                                       @onkeydown="HandlePictureGuessKeyPress"
-                                       @ref="pictureGuessInputElement"
-                                       placeholder="Type your guess..." />
-                                <button class="picture-guess-submit" @onclick="SubmitPictureGuessAsync" disabled="@(isLoading)">Guess</button>
-                            </div>
-
-                            @if (!string.IsNullOrWhiteSpace(pictureGuessStatusMessage))
-                            {
-                                <div class="picture-guess-status">@pictureGuessStatusMessage</div>
-                            }
-
-                            @if (pictureGuessWrongGuesses > 0 && !string.IsNullOrWhiteSpace(pictureGuessHint))
-                            {
-                                <div class="picture-guess-hint">
-                                    <strong>Hint:</strong> @pictureGuessHint
-                                </div>
-                            }
-                        </div>
-                    }
-                    else if (currentGameMode == GameMode.PictureGuess && !PictureGuessEnabled)
-                    {
-                        <div class="disabled-section">
-                            <h3>🖼️ Picture Guess (disabled)</h3>
-                            <p>This feature is temporarily disabled due to cost and performance concerns. Please try another mode.</p>
-                        </div>
-                    }
                     else if (currentGameMode == GameMode.ContextualLearning)
                     {
                         <div class="contextual-section">
@@ -387,6 +327,7 @@
                                         Category="@themeInput" />
                         </div>
                     }
+
             </div>
             
             <!-- Inline Feedback Section -->
