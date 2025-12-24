@@ -7,6 +7,7 @@ namespace BlazorApp.Client.Pages
         ConversationPractice,
         ContextualLearning,
         PersonalizedQuiz,
-        Hangman // Hangman mode
+        Hangman, // Hangman mode
+        WordTypeSnap // Word Type Snap mode
     }
 }

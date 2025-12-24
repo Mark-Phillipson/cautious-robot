@@ -252,6 +252,8 @@ namespace BlazorApp.Client.Pages
             difficulty = newDifficulty;
             StateHasChanged();
         }
+
+
           private void OnApiKeySaved()
           {
               hasApiKey = true;

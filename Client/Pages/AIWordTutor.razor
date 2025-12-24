@@ -60,6 +60,10 @@
                             🎪 Hangman
                             <small>Guess the word, letter by letter!</small>
                         </button>
+                        <button @onclick="() => StartGame(GameMode.WordTypeSnap)" class="mode-button word-type-snap">
+                            ⚡ Word Type Snap
+                            <small>Match words by their grammatical type!</small>
+                        </button>
 
 
 
@@ -311,6 +315,16 @@
                                 @* Play sound for individual hangman guesses *@
                                 <BlazorApp.Client.Pages.PlaySound Play="@PlayAudio" AnswerState="@lastAnswerCorrect" />
                             }
+                        </div>
+                    }
+                    else if (currentGameMode == GameMode.WordTypeSnap)
+                    {
+                        <div class="word-type-snap-section">
+                            <WordTypeSnap OnScoreChanged="OnWordTypeSnapScoreChanged" 
+                                        OnStreakChanged="OnWordTypeSnapStreakChanged"
+                                        PlayAudio="@PlayAudio" 
+                                        DifficultyLevel="@difficulty"
+                                        Category="@themeInput" />
                         </div>
                     }
 
