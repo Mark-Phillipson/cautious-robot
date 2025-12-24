@@ -202,6 +202,21 @@
     gap: 16px;
 }
 
+.picture-guess-toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 9999;
+    max-width: min(420px, calc(100vw - 40px));
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid rgba(72, 187, 120, 0.35);
+    background: rgba(72, 187, 120, 0.15);
+    color: #1f6f3a;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    font-weight: 600;
+}
+
 .picture-guess-image {
     width: 100%;
     max-width: 360px;
@@ -259,6 +274,17 @@
     text-align: center;
     color: #333;
     font-weight: 600;
+}
+
+.picture-guess-hint {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(102, 126, 234, 0.1);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    color: #333;
+    text-align: center;
 }
 
 .error-message {
