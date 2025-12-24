@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client.csproj", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client.Tests", "..\Client.Tests\Client.Tests.csproj", "{B49960D3-C6DD-40FA-9A86-D06F0A817E0F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeleLogic", "..\CodeleLogic\CodeleLogic.csproj", "{070DE8D1-B4D5-480D-97E0-C885E657189F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{B49960D3-C6DD-40FA-9A86-D06F0A817E0F}.Release|x64.Build.0 = Release|Any CPU
 		{B49960D3-C6DD-40FA-9A86-D06F0A817E0F}.Release|x86.ActiveCfg = Release|Any CPU
 		{B49960D3-C6DD-40FA-9A86-D06F0A817E0F}.Release|x86.Build.0 = Release|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Debug|x64.Build.0 = Debug|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Debug|x86.Build.0 = Debug|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Release|x64.ActiveCfg = Release|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Release|x64.Build.0 = Release|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Release|x86.ActiveCfg = Release|Any CPU
+		{070DE8D1-B4D5-480D-97E0-C885E657189F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
